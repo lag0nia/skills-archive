@@ -5,6 +5,7 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. Each skill 
 | Skill | What it does |
 |---|---|
 | [`recap`](skills/recap/SKILL.md) | Catches you up on the current plan: goal, phases with progress, where things stand, recent decisions, risks and the next step. Works mid-task without stopping the work. |
+| [`quiet`](skills/quiet/SKILL.md) | Quiet mode for long workflows: once on, the agent (and its subagents) only writes when the work is done, when you must intervene, or to answer you. |
 
 ## Install
 
@@ -62,6 +63,12 @@ install.sh [--claude] [--codex] [--hermes] [--all] [--list] [--uninstall] [skill
 
 - **Claude Code / Codex:** type `/recap` (or just "recap", "ponme al día", "¿por dónde vamos?"). While the agent is working, send it as a message: it answers and carries on.
 - **Hermes:** `/recap` when idle. While a turn is running, use `/steer recap` so the turn is not interrupted. If you type it normally and your `busy_input_mode` interrupts the turn, the skill resumes the interrupted work after the recap.
+
+## Using `quiet`
+
+- Turn it on once per conversation: `/quiet` (or "modo silencio", "avísame solo al terminar"). It stays on until you say "quiet off" or "modo normal".
+- Works the same in Claude Code, Codex and Hermes (`/quiet`). Delegated workers get the same rule.
+- You can combine it with `/recap` at any time: a question always gets an answer, and the work carries on.
 
 ## Adding a skill
 
