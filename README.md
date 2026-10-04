@@ -36,7 +36,7 @@ Hermes installs skills straight from GitHub:
 hermes skills install lag0nia/skills-archive/skills/recap --yes
 ```
 
-Or, where `hermes` is on the PATH, `./install.sh --hermes` installs every skill this way. Start a new session (`/new`) to pick up a new skill.
+Or, where `hermes` is on the PATH, `./install.sh --hermes` installs every skill this way. In a running Hermes, `/reload-skills` picks up a new skill without a restart.
 
 ### Other agents (skills.sh)
 
