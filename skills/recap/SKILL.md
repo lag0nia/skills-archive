@@ -26,6 +26,8 @@ Give the user a clear picture of the plan, where it stands and what comes next. 
 
 ## 3. Write the recap
 
+**Business language, always.** Write the recap as if for a non-technical stakeholder: what the product does for its users, which features are done, which are coming. Name features by what a user can do with them ("change between your Hermes servers without logging in again"), never by internal labels. Never mention phase codes, unit/round/release ids (G3, R5, W6, B1, UI.A7…), hashes, leases, test counts, file names, branches or tooling. Technical detail belongs in the state files, not in the recap. If the user asks for detail, give it; otherwise do not.
+
 Write in the language the user is using. Use only markdown, so it renders in any client (Claude, Codex, Hermes CLI). Keep it to roughly 20–40 lines. Omit a section that would be empty, except **Next step**.
 
 Template (labels shown in English; translate them):
@@ -64,11 +66,11 @@ Template (labels shown in English; translate them):
 Rules:
 
 - Progress bar: 10 cells, filled cells = round(done / total × 10). Count only finished phases as done.
-- Plan table: at most 8 rows. Group older finished phases into one row (`✅ | F0–F3 | done`) if needed. Use the plan's own phase names.
-- **Where we are**: 2–4 bullets, concrete (files, units, jobs, numbers), no history lesson.
+- Plan table: at most 8 rows. Group older finished phases into one row if needed. Describe each phase by the features it gives the user, not by its code name.
+- **Where we are**: 2–4 bullets, concrete in product terms (which feature is being built, what the user can already try), no history lesson.
 - **Recent decisions**: at most 3, only ones that shape what comes next.
 - **Next step**: exactly one action. If the plan has a fork the user must decide, name the options in one line.
-- Separate what you verified from what someone reported, when it matters.
+- Separate "done and tried" from "built but not yet tried by the user", in plain words, when it matters.
 
 ## 4. Continue or stop
 
