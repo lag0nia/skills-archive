@@ -6,6 +6,7 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. Each skill 
 |---|---|
 | [`recap`](skills/recap/SKILL.md) | Catches you up on the current plan: goal, phases with progress, where things stand, recent decisions, risks and the next step. Works mid-task without stopping the work. |
 | [`quiet`](skills/quiet/SKILL.md) | Quiet mode for long workflows: once on, the agent (and its subagents) only writes when the work is done, when you must intervene, or to answer you. |
+| [`repo-workflow`](skills/repo-workflow/SKILL.md) | Change procedure for any git repository: a branch per feature, small commits, a PR for every change, and a merge into the default branch only through that PR and only with your approval. |
 
 ## Install
 
@@ -70,11 +71,25 @@ install.sh [--claude] [--codex] [--hermes] [--all] [--list] [--uninstall] [skill
 - Works the same in Claude Code, Codex and Hermes (`/quiet`). Delegated workers get the same rule.
 - You can combine it with `/recap` at any time: a question always gets an answer, and the work carries on.
 
+## Using `repo-workflow`
+
+The skill triggers by itself when an agent is about to change files, commit, push or merge in a git repository. To make it apply in **every** repository, add this line once to each agent's global instructions:
+
+> In any git repository, follow the `repo-workflow` skill before changing files: never commit or push to the default branch; every change goes through a branch and a pull request that is merged only with my approval.
+
+| Agent | Global instructions file |
+|---|---|
+| Claude Code | `~/.claude/CLAUDE.md` |
+| Codex | `~/.codex/AGENTS.md` |
+| Hermes | `SOUL.md` in the Hermes home (`$HERMES_HOME`) |
+
+To approve a merge, tell the agent "merge" (or "mergea") for that PR, or merge it yourself on GitHub.
+
 ## Adding a skill
 
 1. Create `skills/<name>/SKILL.md` with `name` and `description` frontmatter (keep to those plus `license` so every client accepts it).
 2. Add a row to the table above.
-3. Push to `main`, then re-run the installer wherever you use it.
+3. Commit on a branch, open a pull request and merge it (see `repo-workflow`), then re-run the installer wherever you use it.
 
 ## License
 
