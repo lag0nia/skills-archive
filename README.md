@@ -8,6 +8,7 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. Each skill 
 | [`quiet`](skills/quiet/SKILL.md) | Quiet mode for long workflows: once on, the agent (and its subagents) only writes when the work is done, when you must intervene, or to answer you. |
 | [`repo-workflow`](skills/repo-workflow/SKILL.md) | Change procedure for any git repository: a branch per feature, small commits, a PR for every change, and a merge into the default branch only through that PR and only with your approval. |
 | [`software-design`](skills/software-design/SKILL.md) | Design software behavior, architecture, UI/UX, contracts and delivery readiness. [Installation and requirements](docs/skills/software-design.md). |
+| [`software-design-intake`](skills/software-design-intake/SKILL.md) | Turn rough software requirements into a reviewed software brief. [Installation and requirements](docs/skills/software-design-intake.md). |
 
 ## Install
 
