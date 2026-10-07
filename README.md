@@ -12,6 +12,7 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. Each skill 
 | [`delivery-planning`](skills/delivery-planning/SKILL.md) | Turn a ready software-design handoff into a verifiable delivery workpack. [Installation and requirements](docs/skills/delivery-planning.md). |
 | [`delivery-workpack-execution`](skills/delivery-workpack-execution/SKILL.md) | Implement and verify a delivery workpack, including bounded later changes. [Installation and requirements](docs/skills/delivery-workpack-execution.md). |
 | [`codebase-cleanup`](skills/codebase-cleanup/SKILL.md) | Remove obsolete code and unnecessary complexity while preserving supported behavior. [Installation and requirements](docs/skills/codebase-cleanup.md). |
+| [`codebase-restructure`](skills/codebase-restructure/SKILL.md) | Assess architecture and plan or implement behavior-preserving restructuring. [Installation and requirements](docs/skills/codebase-restructure.md). |
 
 ## Install
 

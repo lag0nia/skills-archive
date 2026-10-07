@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{{Repository}}: architecture review</title>
+<!--
+  Architecture report starter. Copy this file to the report location, then:
+  - replace every {{...}} placeholder, and delete sections, cards and diagram patterns that do
+    not apply; leave no empty headings, placeholder text or unused navigation entries;
+  - escape inserted text, including paths, code, user-written content and SVG labels:
+    & becomes &amp;, < becomes &lt;, > becomes &gt;, and " becomes &quot; inside attributes;
+  - keep every id unique, and every href="#..." and aria-labelledby pointing at an existing id;
+  - keep the page self-contained and static: no external scripts, styles, fonts, images or
+    requests, and no forms, buttons, stored state or tracking;
+  - set lang on the html element to the report's language.
+-->
+<style>
+:root {
+  color-scheme: light;
+  --page: #f4f5f7;
+  --paper: #ffffff;
+  --sunken: #eef0f3;
+  --ink: #1d2330;
+  --muted: #545d6b;
+  --line: #d5dae1;
+  --line-strong: #9aa3b0;
+  --current: #3f4a5a;
+  --proposed: #0b57d0;
+  --proposed-bg: #eaf1fd;
+  --problem: #b3261e;
+  --problem-bg: #fdeceb;
+  --caution: #7a4f00;
+  --caution-bg: #fff3d6;
+  --good: #146c2e;
+  --good-bg: #e6f4ea;
+  --radius: 10px;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, "Liberation Mono", monospace;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.55;
+  color: var(--ink);
+  background: var(--page);
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); }
+.page { width: min(100% - 2rem, 70rem); margin: 0 auto; padding: 2.5rem 0 4rem; }
+a { color: var(--proposed); text-underline-offset: .15em; }
+a:focus-visible, summary:focus-visible, [tabindex]:focus-visible { outline: 3px solid var(--proposed); outline-offset: 2px; border-radius: 4px; }
+.skip-link { position: absolute; left: -100vw; }
+.skip-link:focus { left: 1rem; top: 1rem; z-index: 1; padding: .5rem .75rem; background: var(--paper); }
+h1, h2, h3, h4 { margin: 0; line-height: 1.2; }
+h1 { max-width: 32ch; margin: .35rem 0 1rem; font-size: clamp(1.8rem, 4vw, 2.6rem); letter-spacing: -.015em; }
+h2 { margin-bottom: 1rem; font-size: clamp(1.35rem, 2.6vw, 1.8rem); }
+h3 { font-size: 1.25rem; }
+h4 { margin: 1.5rem 0 .4rem; font-size: 1rem; }
+p, li, dd { max-width: 72ch; }
+p { margin: .5rem 0; }
+code, pre { font-family: var(--mono); font-size: .9em; }
+code { padding: .05em .3em; border-radius: 4px; background: var(--sunken); overflow-wrap: anywhere; }
+.eyebrow { margin: 0; color: var(--muted); font-size: .78rem; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; }
+.meta { display: flex; flex-wrap: wrap; gap: .25rem 1.5rem; margin: 0 0 1.25rem; padding: 0; color: var(--muted); list-style: none; }
+.meta strong { color: var(--ink); font-weight: 600; }
+.notice { max-width: none; margin: 0; padding: .8rem 1rem; border-left: 4px solid var(--caution); border-radius: 0 var(--radius) var(--radius) 0; background: var(--caution-bg); }
+.card { padding: clamp(1rem, 3vw, 1.75rem); border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); }
+.block { margin-top: 3rem; }
+.section-note { color: var(--muted); }
+.toc { margin-top: 2rem; }
+.toc h2 { margin-bottom: .5rem; font-size: 1rem; }
+.toc ol { margin: 0; padding-left: 1.25rem; }
+.toc > ol { columns: 2 16rem; column-gap: 2.5rem; }
+.toc li { margin: .15rem 0; break-inside: avoid; }
+.legend { display: flex; flex-wrap: wrap; gap: .4rem 1.5rem; margin: 1rem 0 0; padding: 0; font-size: .9rem; list-style: none; }
+.swatch { display: inline-block; width: 1.5rem; height: .95rem; margin-right: .45rem; border-radius: 3px; vertical-align: -.1rem; }
+.swatch.current { border: 2px solid var(--current); background: var(--paper); }
+.swatch.proposed { border: 2px dashed var(--proposed); background: var(--proposed-bg); }
+.swatch.problem { border: 2px solid var(--problem); background: var(--problem-bg); }
+.swatch.uncertain { border: 2px dotted var(--caution); background: var(--caution-bg); }
+.summary-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 18rem), 1fr)); gap: 1rem; }
+.summary-grid h3 { margin-bottom: .4rem; color: var(--muted); font-size: .8rem; letter-spacing: .06em; text-transform: uppercase; }
+.summary-grid .emphasis { border: 2px solid var(--good); }
+.coverage { display: grid; grid-template-columns: minmax(8rem, 13rem) 1fr; gap: .6rem 1.5rem; margin: 0; }
+.coverage dt { font-weight: 600; }
+.coverage dd { margin: 0; }
+.candidate + .candidate { margin-top: 2rem; }
+.badges { display: flex; flex-wrap: wrap; gap: .5rem; margin: .75rem 0; padding: 0; list-style: none; }
+.badge { padding: .15rem .7rem; border: 1px solid var(--line-strong); border-radius: 999px; background: var(--paper); font-size: .85rem; font-weight: 600; }
+.badge.strength-strong { border-color: var(--good); background: var(--good-bg); color: var(--good); }
+.badge.strength-explore { border-color: var(--caution); background: var(--caution-bg); color: var(--caution); }
+.badge.strength-speculative { border-style: dashed; color: var(--muted); }
+.badge.state-proposed { border-color: var(--proposed); background: var(--proposed-bg); color: var(--proposed); }
+.badge.state-approved { border-color: var(--current); background: var(--sunken); color: var(--ink); }
+.badge.state-implemented { border-color: var(--good); background: var(--good-bg); color: var(--good); }
+.badge.conflict { border-color: var(--caution); color: var(--caution); }
+.strength-reason { color: var(--muted); }
+details { margin: .75rem 0; }
+summary { cursor: pointer; font-weight: 600; }
+.evidence { margin: .5rem 0 0; padding-left: 1.25rem; }
+.evidence li { margin: .3rem 0; }
+.callout { margin: 1.25rem 0; padding: .8rem 1rem; border: 1px solid; border-radius: 8px; }
+.callout p { margin: .25rem 0; }
+.callout.conflict { border-color: var(--caution); background: var(--caution-bg); }
+.callout.uncertain { border-style: dashed; border-color: var(--caution); background: var(--paper); }
+.compare { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: 1rem; margin: 1.25rem 0; }
+.view { min-width: 0; margin: 0; padding: 1rem; border: 1px solid var(--line); border-radius: var(--radius); background: #fbfbfc; }
+.view.current { border-top: 4px solid var(--current); }
+.view.proposed { border-top: 4px solid var(--proposed); background: #f7faff; }
+.view-label { margin: 0 0 .75rem; font-size: .78rem; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; }
+.view.current .view-label { color: var(--current); }
+.view.proposed .view-label { color: var(--proposed); }
+.view figcaption { margin-top: .75rem; color: var(--muted); font-size: .9rem; }
+.facts { margin: 1.25rem 0; border-top: 1px solid var(--line); }
+.fact { display: grid; grid-template-columns: minmax(8rem, 11rem) 1fr; gap: .2rem 1.5rem; padding: .7rem 0 .7rem .9rem; border-bottom: 1px solid var(--line); border-left: 4px solid var(--line); }
+.fact h4 { margin: .15rem 0 0; color: var(--muted); font-size: .78rem; letter-spacing: .06em; text-transform: uppercase; }
+.fact p, .fact ul { margin: 0; }
+.fact ul { padding-left: 1.1rem; }
+.fact.change { border-left-color: var(--proposed); }
+.fact.gain { border-left-color: var(--good); }
+.fact.cost { border-left-color: var(--problem); }
+.fact.compat { border-left-color: var(--current); }
+.fact.risk { border-left-color: var(--caution); }
+.steps { padding-left: 1.4rem; }
+.steps li { margin: .3rem 0; }
+.readiness { color: var(--muted); }
+svg.diagram { display: block; width: 100%; max-width: 24rem; height: auto; margin: 0 auto; }
+.diagram .box { fill: #ffffff; stroke: var(--current); stroke-width: 1.5; }
+.diagram .box.proposed { fill: var(--proposed-bg); stroke: var(--proposed); stroke-dasharray: 6 4; }
+.diagram .box.problem { fill: var(--problem-bg); stroke: var(--problem); }
+.diagram .box.uncertain { fill: var(--caution-bg); stroke: var(--caution); stroke-dasharray: 2 3; }
+.diagram .name { fill: var(--ink); font: 600 14px var(--mono); }
+.diagram .sub { fill: var(--muted); font: 13px system-ui, sans-serif; }
+.diagram .sub.problem { fill: var(--problem); font-weight: 700; }
+.diagram .sub.proposed { fill: var(--proposed); font-weight: 700; }
+.diagram .sub.uncertain { fill: var(--caution); font-weight: 700; }
+.diagram .edge { fill: none; stroke: var(--current); stroke-width: 1.5; marker-end: url(#arrow-current); }
+.diagram .edge.proposed { stroke: var(--proposed); stroke-dasharray: 6 4; marker-end: url(#arrow-proposed); }
+.diagram .edge.problem { stroke: var(--problem); marker-end: url(#arrow-problem); }
+.diagram .label { fill: var(--ink); font: 13px system-ui, sans-serif; paint-order: stroke; stroke: #ffffff; stroke-width: 4px; stroke-linejoin: round; }
+.diagram .label.problem { fill: var(--problem); font-weight: 700; }
+.sequence { margin: 0; padding: 0; list-style: none; counter-reset: step; }
+.sequence li { position: relative; margin-left: .8rem; padding: .35rem .25rem .6rem 1.6rem; border-left: 2px solid var(--line); counter-increment: step; }
+.sequence li::before { content: counter(step); position: absolute; top: .3rem; left: -.85rem; display: grid; width: 1.6rem; height: 1.6rem; place-items: center; border: 2px solid var(--current); border-radius: 50%; background: var(--paper); font-size: .8rem; font-weight: 700; }
+.view.proposed .sequence li::before { border-color: var(--proposed); border-style: dashed; color: var(--proposed); }
+.sequence li.problem { border-left-color: var(--problem); }
+.sequence li.problem::before { border-color: var(--problem); border-style: solid; color: var(--problem); }
+.sequence .flow { font-weight: 600; }
+.sequence .note { display: block; color: var(--muted); font-size: .9rem; }
+.sequence .problem .note { color: var(--problem); font-weight: 600; }
+.boundary { margin: .6rem 0; padding: .75rem; border: 2px solid var(--current); border-radius: 8px; background: var(--paper); }
+.boundary.proposed { border-style: dashed; border-color: var(--proposed); background: var(--proposed-bg); }
+.boundary-label { margin: 0 0 .5rem; font-size: .8rem; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; }
+.parts { display: flex; flex-wrap: wrap; gap: .5rem; margin: 0; padding: 0; list-style: none; }
+.part { padding: .3rem .6rem; border: 1px solid var(--line-strong); border-radius: 6px; background: var(--paper); font-family: var(--mono); font-size: .85rem; overflow-wrap: anywhere; }
+.part.problem { border-color: var(--problem); background: var(--problem-bg); }
+.part.proposed { border-style: dashed; border-color: var(--proposed); }
+.connection { margin: .4rem 0 0; font-size: .9rem; }
+.connection.problem { color: var(--problem); font-weight: 600; }
+pre { margin: 0; padding: .8rem 1rem; border: 1px solid var(--line); border-radius: 8px; background: var(--paper); line-height: 1.5; overflow-x: auto; }
+pre.code { background: var(--sunken); }
+pre.tree { white-space: pre-wrap; overflow-wrap: anywhere; }
+.tree .added { color: var(--proposed); font-weight: 700; }
+.tree .removed { color: var(--problem); text-decoration: line-through; }
+.table-wrap { margin: 1rem 0; border: 1px solid var(--line); border-radius: var(--radius); background: var(--paper); overflow-x: auto; }
+table { width: 100%; min-width: 44rem; border-collapse: separate; border-spacing: 0; font-size: .95rem; }
+.table-wrap.compact table { min-width: 30rem; }
+.table-wrap.wide table { min-width: 60rem; }
+caption { padding: .75rem 1rem; font-weight: 700; text-align: left; }
+th, td { min-width: 7rem; padding: .6rem .8rem; border-top: 1px solid var(--line); text-align: left; vertical-align: top; }
+thead th { background: var(--sunken); font-size: .85rem; }
+tbody th { font-weight: 600; }
+.table-wrap tr > :first-child { position: sticky; left: 0; z-index: 1; background: var(--paper); box-shadow: 1px 0 0 var(--line); }
+.table-wrap thead tr > :first-child { background: var(--sunken); }
+.recommended { background: var(--good-bg); }
+.tag { display: inline-block; margin-left: .25rem; padding: 0 .45rem; border: 1px solid currentColor; border-radius: 999px; font-size: .75rem; font-weight: 700; white-space: nowrap; }
+.tag.good { color: var(--good); }
+.tag.problem { color: var(--problem); }
+.tag.caution { color: var(--caution); }
+.question { padding: clamp(1rem, 3vw, 1.5rem); border: 1px solid var(--line); border-left: 5px solid var(--proposed); border-radius: var(--radius); background: var(--paper); }
+.question + .question { margin-top: 1.25rem; }
+.question h3 { font-size: 1.15rem; }
+.qid { color: var(--proposed); }
+.options { margin: .5rem 0; padding: 0; list-style: none; }
+.options li { padding: .6rem 0; border-top: 1px solid var(--line); }
+.options li:last-child { border-bottom: 1px solid var(--line); }
+.recommendation { margin: .75rem 0; padding: .7rem .9rem; border-radius: 8px; background: var(--good-bg); }
+.recommendation.provisional { background: var(--caution-bg); }
+.affects, .branch { color: var(--muted); }
+.question.later { border-left-style: dashed; border-left-color: var(--line-strong); background: transparent; }
+.next-list { padding-left: 1.25rem; }
+footer { margin-top: 3rem; color: var(--muted); font-size: .9rem; }
+@media (max-width: 40rem) {
+  .coverage, .fact { grid-template-columns: 1fr; gap: .2rem; }
+  .candidate { padding: .75rem; }
+  .table-wrap caption::after { content: " (scroll sideways)"; color: var(--muted); font-weight: 400; }
+  .view { padding: .6rem; }
+  .coverage dd { margin-bottom: .6rem; }
+}
+@media print {
+  :root, body { background: #ffffff; }
+  :root { font-size: 11pt; }
+  .page { width: auto; padding: 0; }
+  .skip-link, .toc { display: none; }
+  .block { margin-top: 1.5rem; }
+  .card, .question { border-color: #bbbbbb; }
+  .view, .fact, .callout, .question, table, pre, .options li, .recommendation { break-inside: avoid; }
+  h2, h3, h4 { break-after: avoid; }
+  .table-wrap { overflow: visible; border: 0; }
+  table, .table-wrap.compact table, .table-wrap.wide table, th, td { min-width: 0; }
+  .table-wrap tr > :first-child { position: static; box-shadow: none; }
+  pre { white-space: pre-wrap; overflow: visible; }
+  a { color: inherit; text-decoration: none; }
+}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#summary">Skip to summary</a>
+<svg aria-hidden="true" focusable="false" width="0" height="0" style="position: absolute">
+  <defs>
+    <marker id="arrow-current" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#3f4a5a"/></marker>
+    <marker id="arrow-proposed" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#0b57d0"/></marker>
+    <marker id="arrow-problem" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0,0 L10,5 L0,10 z" fill="#b3261e"/></marker>
+  </defs>
+</svg>
+<main class="page">
+
+<header>
+  <p class="eyebrow">Architecture review</p>
+  <h1>{{Descriptive title, for example: Where shipping rules live and why changes spread}}</h1>
+  <ul class="meta">
+    <li><strong>Repository:</strong> {{name}}</li>
+    <li><strong>Scope:</strong> {{whole repository, a module, a responsibility or an objective}}</li>
+    <li><strong>Date:</strong> {{YYYY-MM-DD}}</li>
+    <li><strong>Plan:</strong> <code>{{plan path}}</code> ({{plan status}})</li>
+  </ul>
+  <p class="notice"><strong>Proposals, not decisions.</strong> Everything below is proposed unless it is marked approved or implemented. Answer questions in the conversation; the plan records the answers and remains the authoritative record. This page is a disposable view of it.</p>
+  <ul class="legend" aria-label="Diagram legend">
+    <li><span class="swatch current" aria-hidden="true"></span>Exists today (verified)</li>
+    <li><span class="swatch proposed" aria-hidden="true"></span>Proposed</li>
+    <li><span class="swatch problem" aria-hidden="true"></span>Problem</li>
+    <li><span class="swatch uncertain" aria-hidden="true"></span>Uncertain</li>
+  </ul>
+</header>
+
+<!-- Navigation: keep it when there are several candidates or decisions; list only sections that remain. -->
+<nav class="toc card" aria-labelledby="toc-title">
+  <h2 id="toc-title">Contents</h2>
+  <ol>
+    <li><a href="#summary">Summary</a></li>
+    <li><a href="#scope">Scope and evidence</a></li>
+    <li><a href="#target">Overall target</a></li>
+    <li><a href="#candidates">Candidates</a>
+      <ol>
+        <li><a href="#candidate-1">{{Candidate 1 title}}</a></li>
+      </ol>
+    </li>
+    <li><a href="#alternatives">Alternatives</a></li>
+    <li><a href="#scenarios">Scenario checks</a></li>
+    <li><a href="#questions">Questions</a></li>
+    <li><a href="#next">Next action</a></li>
+  </ol>
+</nav>
+
+<section id="summary" class="block" aria-labelledby="summary-title">
+  <h2 id="summary-title">Summary</h2>
+  <div class="summary-grid">
+    <div class="card">
+      <h3>Objective</h3>
+      <p>{{The request, and the problem to solve or outcome sought.}}</p>
+    </div>
+    <div class="card emphasis">
+      <h3>Recommendation</h3>
+      <p>{{The key recommendation in two or three sentences, with its main reason. Or: why the current organization should stay.}}</p>
+    </div>
+    <div class="card">
+      <h3>Next action</h3>
+      <p>{{What is ready and what waits on which question or evidence, and whether anything was executed.}}</p>
+    </div>
+  </div>
+
+  <!-- Candidates at a glance: useful with three or more candidates.
+       Tables scroll sideways on narrow screens: add class "wide" to .table-wrap for five or more
+       columns, or "compact" for two or three. -->
+  <div class="table-wrap wide" role="region" aria-labelledby="glance-caption" tabindex="0">
+    <table>
+      <caption id="glance-caption">Candidates at a glance</caption>
+      <thead>
+        <tr><th scope="col">Candidate</th><th scope="col">Recommendation</th><th scope="col">Priority</th><th scope="col">Effort</th><th scope="col">State</th><th scope="col">Relation to other candidates</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row"><a href="#candidate-1">{{Candidate 1 title}}</a></th><td>{{Strong, Worth exploring or Speculative}}</td><td>{{first, later or not now}}</td><td>{{small, moderate or large}}</td><td>{{Proposed, Approved or Implemented}}</td><td>{{independent; complements, depends on or conflicts with a named candidate}}</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="scope" class="block" aria-labelledby="scope-title">
+  <h2 id="scope-title">Scope and evidence</h2>
+  <div class="card">
+    <dl class="coverage">
+      <dt>Investigated</dt><dd>{{Parts read in depth.}}</dd>
+      <dt>Traced</dt><dd>{{Flows followed end to end, from which entry points.}}</dd>
+      <dt>History and checks</dt><dd>{{History read, and baseline checks with their results, including failures that already existed.}}</dd>
+      <dt>Sampled or inaccessible</dt><dd>{{What, and which conclusions it limits.}}</dd>
+      <dt>Uncertain</dt><dd>{{Open leads, and what would settle each.}}</dd>
+    </dl>
+  </div>
+</section>
+
+<section id="target" class="block" aria-labelledby="target-title">
+  <h2 id="target-title">Overall target</h2>
+  <p>{{For repository-wide or multi-candidate work: how the candidates form one coherent organization. For a single objective: the target in two or three sentences.}}</p>
+
+  <!-- Pattern: ownership table. Shows who owns each responsibility today and afterwards. -->
+  <div class="table-wrap" role="region" aria-labelledby="owners-caption" tabindex="0">
+    <table>
+      <caption id="owners-caption">Who owns what</caption>
+      <thead>
+        <tr><th scope="col">Responsibility</th><th scope="col">Today (verified)</th><th scope="col">Proposed</th><th scope="col">Why this owner</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">{{responsibility or state}}</th><td>{{where it lives now, with paths}}</td><td>{{where it would live, or "unchanged"}}</td><td>{{the part whose rules, data or state define it}}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>How the candidates relate</h3>
+  <ul>
+    <li><strong>{{Candidate}} and {{candidate}}:</strong> {{complementary and independent; one depends on the other and why; or they conflict and what the choice is}}</li>
+  </ul>
+  <p><strong>Deliberately unchanged:</strong> {{Areas left alone, and similar implementations kept independent, with reasons.}}</p>
+</section>
+
+<section id="candidates" class="block" aria-labelledby="candidates-title">
+  <h2 id="candidates-title">Candidates</h2>
+  <p class="section-note">Each candidate addresses a different problem. Alternatives for one problem are compared under <a href="#alternatives">Alternatives</a>.</p>
+
+  <article id="candidate-1" class="card candidate" aria-labelledby="candidate-1-title">
+    <p class="eyebrow">Candidate 1</p>
+    <h3 id="candidate-1-title">{{Descriptive title naming the change}}</h3>
+    <ul class="badges" aria-label="Candidate labels">
+      <li class="badge strength-strong">Recommendation: {{Strong}}</li>
+      <li class="badge">Priority: {{first}}</li>
+      <li class="badge">Effort: {{moderate}}</li>
+      <li class="badge state-proposed">State: {{Proposed}}</li>
+    </ul>
+    <p class="strength-reason"><strong>Why {{Strong}}:</strong> {{The evidence and remedy that support this strength. Strength is not priority or effort.}}</p>
+
+    <h4>Problem</h4>
+    <p>{{The concrete problem and the cost it causes.}}</p>
+    <details open>
+      <summary>Evidence and paths</summary>
+      <ul class="evidence">
+        <li><code>{{path or symbol}}</code>: {{what it shows}}</li>
+        <li>{{History: commits or co-change evidence}}</li>
+      </ul>
+    </details>
+
+    <!-- Keep only when the candidate contradicts an existing recorded decision. -->
+    <aside class="callout conflict" aria-label="Conflict with a recorded decision">
+      <p><strong>Conflicts with a recorded decision:</strong> {{decision title, where it is recorded, its status}}.</p>
+      <p><strong>What changed since:</strong> {{new need, evidence or constraint}}</p>
+      <p><strong>Why reconsidering is justified:</strong> {{reason; mention the decision's own reconsider-when condition when it applies}}</p>
+    </aside>
+
+    <!-- Diagram patterns. Choose the form that shows this candidate's claim and delete the others:
+         dependency graph (who depends on whom), sequence (ordering, failure, lifecycle),
+         build or deployment boundaries (what ships and runs together), folder tree (only where
+         placement itself matters, paired with the change that produces the benefit), and
+         interface and caller example (what callers must know).
+         Keep element names and positions the same in both views so only the change differs. -->
+
+    <!-- Pattern: dependency graph (inline SVG). Box: rect.box plus one or two text lines. Edge: path.edge.
+         A 145-unit box fits about 16 monospace characters: use short names and give full paths
+         in the caption. Keep boxes and labels inside the viewBox. -->
+    <div class="compare">
+      <figure class="view current">
+        <p class="view-label">Current (verified)</p>
+        <svg class="diagram" viewBox="0 0 320 200" role="img" aria-labelledby="c1-before-title c1-before-desc">
+          <title id="c1-before-title">{{Current dependencies}}</title>
+          <desc id="c1-before-desc">{{One sentence stating the relationships shown.}}</desc>
+          <rect class="box" x="10" y="10" width="145" height="40" rx="6"/>
+          <text class="name" x="82.5" y="35" text-anchor="middle">{{caller-a}}</text>
+          <rect class="box" x="165" y="10" width="145" height="40" rx="6"/>
+          <text class="name" x="237.5" y="35" text-anchor="middle">{{caller-b}}</text>
+          <rect class="box" x="10" y="90" width="145" height="56" rx="6"/>
+          <text class="name" x="82.5" y="113" text-anchor="middle">{{module-a}}</text>
+          <text class="sub" x="82.5" y="132" text-anchor="middle">{{rules, copy 1}}</text>
+          <rect class="box problem" x="165" y="90" width="145" height="56" rx="6"/>
+          <text class="name" x="237.5" y="113" text-anchor="middle">{{module-b}}</text>
+          <text class="sub problem" x="237.5" y="132" text-anchor="middle">{{copy 2, drifted}}</text>
+          <path class="edge" d="M82.5,50 V88"/>
+          <path class="edge" d="M237.5,50 V88"/>
+          <text class="label problem" x="160" y="180" text-anchor="middle">{{what the problem is}}</text>
+        </svg>
+        <figcaption>{{What this view shows, with full paths where labels are shortened.}}</figcaption>
+      </figure>
+      <figure class="view proposed">
+        <p class="view-label">Proposed</p>
+        <svg class="diagram" viewBox="0 0 320 236" role="img" aria-labelledby="c1-after-title c1-after-desc">
+          <title id="c1-after-title">{{Proposed dependencies}}</title>
+          <desc id="c1-after-desc">{{One sentence stating the proposed relationships.}}</desc>
+          <rect class="box" x="10" y="10" width="145" height="40" rx="6"/>
+          <text class="name" x="82.5" y="35" text-anchor="middle">{{caller-a}}</text>
+          <rect class="box" x="165" y="10" width="145" height="40" rx="6"/>
+          <text class="name" x="237.5" y="35" text-anchor="middle">{{caller-b}}</text>
+          <rect class="box" x="10" y="90" width="145" height="40" rx="6"/>
+          <text class="name" x="82.5" y="115" text-anchor="middle">{{module-a}}</text>
+          <rect class="box" x="165" y="90" width="145" height="40" rx="6"/>
+          <text class="name" x="237.5" y="115" text-anchor="middle">{{module-b}}</text>
+          <rect class="box proposed" x="50" y="170" width="220" height="56" rx="6"/>
+          <text class="name" x="160" y="193" text-anchor="middle">{{new-owner}}</text>
+          <text class="sub proposed" x="160" y="212" text-anchor="middle">{{one owner (new)}}</text>
+          <path class="edge" d="M82.5,50 V88"/>
+          <path class="edge" d="M237.5,50 V88"/>
+          <path class="edge proposed" d="M82.5,130 L125,168"/>
+          <path class="edge proposed" d="M237.5,130 L195,168"/>
+        </svg>
+        <figcaption>{{What changes, and what the diagram does not claim.}}</figcaption>
+      </figure>
+    </div>
+
+    <!-- Pattern: sequence (HTML ordered steps). Mark failing steps with class="problem" and a text note. -->
+    <div class="compare">
+      <figure class="view current">
+        <p class="view-label">Current (verified)</p>
+        <ol class="sequence" aria-label="{{Current sequence}}">
+          <li><span class="flow">{{Actor}} → {{actor}}</span>: {{message}}</li>
+          <li class="problem"><span class="flow">{{Actor}} → {{actor}}</span>: {{message}} <span class="note">Problem: {{what goes wrong here}}</span></li>
+        </ol>
+        <figcaption>{{What this sequence shows.}}</figcaption>
+      </figure>
+      <figure class="view proposed">
+        <p class="view-label">Proposed</p>
+        <ol class="sequence" aria-label="{{Proposed sequence}}">
+          <li><span class="flow">{{Actor}} → {{actor}}</span>: {{message}}</li>
+          <li><span class="flow">{{Actor}} → {{actor}}</span>: {{message}} <span class="note">{{what changes}}</span></li>
+        </ol>
+        <figcaption>{{What changes in the ordering or failure behavior.}}</figcaption>
+      </figure>
+    </div>
+
+    <!-- Pattern: build or deployment boundaries (nested HTML boxes). -->
+    <div class="compare">
+      <figure class="view current">
+        <p class="view-label">Current (verified)</p>
+        <div class="boundary">
+          <p class="boundary-label">{{Deployable or build output}}</p>
+          <ul class="parts">
+            <li class="part">{{part}}</li>
+            <li class="part problem">{{coupled part}}</li>
+          </ul>
+          <p class="connection problem">{{how parts find each other, when that is the problem}}</p>
+        </div>
+        <figcaption>{{What ships and runs together today.}}</figcaption>
+      </figure>
+      <figure class="view proposed">
+        <p class="view-label">Proposed</p>
+        <div class="boundary">
+          <p class="boundary-label">{{Deployable}}</p>
+          <ul class="parts"><li class="part">{{part}}</li></ul>
+        </div>
+        <div class="boundary proposed">
+          <p class="boundary-label">{{New deployable (proposed)}}</p>
+          <ul class="parts"><li class="part proposed">{{part}}</li></ul>
+          <p class="connection">{{how it finds its counterpart, and the contract it relies on}}</p>
+        </div>
+        <figcaption>{{What would ship separately, and what is not yet verified.}}</figcaption>
+      </figure>
+    </div>
+
+    <!-- Pattern: folder tree. Mark changes with text as well as color. -->
+    <div class="compare">
+      <figure class="view current">
+        <p class="view-label">Current (verified)</p>
+        <pre class="tree">{{src/
+  area/
+    file}}</pre>
+        <figcaption>{{Why placement matters here.}}</figcaption>
+      </figure>
+      <figure class="view proposed">
+        <p class="view-label">Proposed</p>
+        <pre class="tree">{{src/
+  area/
+    <span class="added">new-file (new)</span>
+    <span class="removed">old-file (removed)</span>}}</pre>
+        <figcaption>{{The ownership or dependency change this layout expresses.}}</figcaption>
+      </figure>
+    </div>
+
+    <!-- Pattern: interface and caller example. Label sketches as proposals. -->
+    <h4>Interface sketch (proposal, not an approved contract)</h4>
+    <pre class="code"><code>{{The interface callers would use, and one caller written against it.}}</code></pre>
+    <p>{{What callers must know: data shapes, invariants, ordering, errors, configuration, authority, lifecycle, where relevant. What it hides.}}</p>
+
+    <div class="facts">
+      <div class="fact change"><h4>Proposed change</h4><p>{{What would change.}}</p></div>
+      <div class="fact gain"><h4>Gains</h4><p>{{Meaningful gains for this repository.}}</p></div>
+      <div class="fact cost"><h4>Costs</h4><p>{{Migration and ongoing costs.}}</p></div>
+      <div class="fact compat"><h4>Compatibility</h4><p>{{Contracts kept, transitions, behavior affected.}}</p></div>
+      <div class="fact risk"><h4>Uncertainty</h4><p>{{What is unknown and what would settle it.}}</p></div>
+    </div>
+
+    <h4>Migration outline</h4>
+    <ol class="steps">
+      <li><strong>{{Step name}}</strong> <span class="readiness">({{ready, or every unmet condition}})</span></li>
+    </ol>
+  </article>
+</section>
+
+<section id="alternatives" class="block" aria-labelledby="alternatives-title">
+  <h2 id="alternatives-title">Alternatives: {{the one decision being compared}}</h2>
+  <p>{{The problem these options solve, and the constraints every option must meet.}}</p>
+  <!-- Options are columns; keep only the rows that distinguish them. Include leaving things as they are when credible. -->
+  <div class="table-wrap" role="region" aria-labelledby="alternatives-caption" tabindex="0">
+    <table>
+      <caption id="alternatives-caption">{{Options compared}}</caption>
+      <thead>
+        <tr><th scope="col">Dimension</th><th scope="col">{{Leave as is}}</th><th scope="col">{{Option B}}</th><th scope="col" class="recommended">{{Option C}} <span class="tag good">Recommended</span></th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">What changes</th><td>{{...}}</td><td>{{...}}</td><td class="recommended">{{...}}</td></tr>
+        <tr><th scope="row">Benefit</th><td>{{...}}</td><td>{{...}}</td><td class="recommended">{{...}}</td></tr>
+        <tr><th scope="row">Implementation and migration cost</th><td>{{...}}</td><td>{{...}}</td><td class="recommended">{{...}}</td></tr>
+        <tr><th scope="row">Ongoing cost</th><td>{{...}}</td><td>{{...}}</td><td class="recommended">{{...}}</td></tr>
+        <tr><th scope="row">Compatibility</th><td>{{...}}</td><td>{{...}}</td><td class="recommended">{{...}}</td></tr>
+        <tr><th scope="row">Verification</th><td>{{...}}</td><td>{{...}}</td><td class="recommended">{{...}}</td></tr>
+        <tr><th scope="row">Uncertainty</th><td>{{...}}</td><td>{{...}}</td><td class="recommended">{{...}}</td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="recommendation"><strong>Recommendation:</strong> {{Option and the reason it wins on the dimensions that matter here.}}</p>
+</section>
+
+<section id="scenarios" class="block" aria-labelledby="scenarios-title">
+  <h2 id="scenarios-title">Scenario checks</h2>
+  <p>{{Which proposal these scenarios test.}}</p>
+  <div class="table-wrap" role="region" aria-labelledby="scenarios-caption" tabindex="0">
+    <table>
+      <caption id="scenarios-caption">{{Proposal}} under representative and awkward scenarios</caption>
+      <thead>
+        <tr><th scope="col">Scenario</th><th scope="col">Today (verified)</th><th scope="col">With the proposal</th><th scope="col">Result</th></tr>
+      </thead>
+      <tbody>
+        <tr><th scope="row">{{missing capability, failure, ordering or lifecycle, new consumer, other deployment}}</th><td>{{...}}</td><td>{{...}}</td><td>{{improvement; design gap and where it is handled; or a behavior question <span class="tag caution">Q2</span>}}</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<section id="questions" class="block" aria-labelledby="questions-title">
+  <h2 id="questions-title">Questions</h2>
+  <p class="section-note">Answer in the conversation. Each answer is recorded in the plan under the same identifier.</p>
+
+  <article class="question" aria-labelledby="q1-title">
+    <h3 id="q1-title"><span class="qid">Q1</span> {{Descriptive question title}}</h3>
+    <p><strong>Decision:</strong> {{The precise choice.}}</p>
+    <p><strong>Why it matters:</strong> {{What it changes in the target or migration.}}</p>
+    <ul class="options">
+      <li><strong>(a) {{option}}</strong>: {{benefits, costs, risks and compatibility consequences}}</li>
+      <li><strong>(b) {{option}}</strong>: {{...}}</li>
+    </ul>
+    <p class="recommendation provisional"><strong>Recommendation (provisional):</strong> {{Option and reasoning. Say what missing evidence would change it; drop "provisional" when the evidence is sufficient.}}</p>
+    <p class="affects"><strong>Affects:</strong> {{Design choices or steps, and which steps do not depend on the answer. Whether those steps are executed meanwhile depends on the mode: in inspect and plan they stay planned.}}</p>
+    <p class="branch">{{Only if it helps: "If you choose (b), a follow-up decision about ... will follow."}}</p>
+  </article>
+</section>
+
+<section id="next" class="block" aria-labelledby="next-title">
+  <h2 id="next-title">Next action</h2>
+  <div class="card">
+    <ul class="next-list">
+      <li><strong>Ready now:</strong> {{steps whose conditions are all met; readiness is not authorization}}</li>
+      <li><strong>Waiting:</strong> {{steps and the question, step or evidence each waits for}}</li>
+      <li><strong>Mode:</strong> {{inspect and plan, plan and implement, or execute; what was and was not changed}}</li>
+    </ul>
+    <p><strong>Plan:</strong> <code>{{plan path}}</code>, status {{plan status}}. It holds the evidence, questions, answers, target and migration order; this page only presents them.</p>
+  </div>
+</section>
+
+<footer>
+  <p>{{Generated YYYY-MM-DD from the repository at revision ... and the plan above.}} This is a disposable view; nothing here is approved by being shown.</p>
+</footer>
+</main>
+</body>
+</html>
