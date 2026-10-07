@@ -7,6 +7,7 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. Each skill 
 | [`recap`](skills/recap/SKILL.md) | Catches you up on the current plan: goal, phases with progress, where things stand, recent decisions, risks and the next step. Works mid-task without stopping the work. |
 | [`quiet`](skills/quiet/SKILL.md) | Quiet mode for long workflows: once on, the agent (and its subagents) only writes when the work is done, when you must intervene, or to answer you. |
 | [`repo-workflow`](skills/repo-workflow/SKILL.md) | Change procedure for any git repository: a branch per feature, small commits, a PR for every change, and a merge into the default branch only through that PR and only with your approval. |
+| [`delivery-planning`](skills/delivery-planning/SKILL.md) | Turn a ready software-design handoff into a verifiable delivery workpack. [Installation and requirements](docs/skills/delivery-planning.md). |
 
 ## Install
 
