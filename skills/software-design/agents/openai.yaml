@@ -1,0 +1,4 @@
+interface:
+  display_name: "Software Design"
+  short_description: "Design software behavior, UI/UX, architecture, and delivery"
+  default_prompt: "Use $software-design to continue a software blueprint, organize Technical Decisions and tickets, define Stage 8 build design, or prepare strictly sequential Stage 9 handoffs."

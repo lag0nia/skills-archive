@@ -1,0 +1,10 @@
+{
+  "schema": "consumer-install-receipt",
+  "evidence_scope": "consumer-install",
+  "consumer_repository": "<canonical consumer repository>",
+  "artifact": "<canonical artifact or package identity>",
+  "version": "<exact immutable version>",
+  "resolved": "<exact resolved location or identity>",
+  "integrity": "<algorithm and digest>",
+  "install_result": "PASS"
+}
