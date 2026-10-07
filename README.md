@@ -112,7 +112,7 @@ hermes skills install lag0nia/skills-archive/skills/hermes-ui-workflow --yes
 
 That command installs only `hermes-ui-workflow`; make sure `quiet` and `repo-workflow` are already installed, or use `./install.sh --hermes` above.
 
-In Claude Code or Codex, invoke `$hermes-ui-workflow` when starting a Hermes UI change; in Hermes, ask to use `hermes-ui-workflow` for the change.
+In Claude Code, Codex or Hermes, ask in natural language: “Use hermes-ui-workflow for this Hermes UI change.”
 
 ## Adding a skill
 

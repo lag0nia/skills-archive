@@ -8,6 +8,8 @@ Prepare one feature branch and pull request with the implementation, required de
 
 Use the existing release channel to put the candidate in the final installed Mac/Android apps. The user performs the functional walkthrough in those apps; keep the steps short and under ten minutes. Do not create standalone demos, test APKs or per-attempt installers. If there is no usable delivery mechanism or authorization, leave the candidate reviewable and report the blocker clearly.
 
+Before delivery, verify backend availability and the installed version through the repository's documented read-only status mechanism. Check required package/version and contract compatibility without installing, updating, starting or restarting anything, and make no model or Jev call. If no such read-only mechanism exists, state that limitation and leave availability verification to the user; do not invent an endpoint or path.
+
 After the user accepts the visible behavior, obtain explicit approval for the specific pull request before merging it. Acceptance alone does not authorize merge, production publication, backend activation or restart. After merge, finalize release metadata and history. When the candidate's approved bits are identical, finalize that candidate without rebuilding identical artifacts. Never overwrite an immutable published version; code fixes require a higher app version. If a final release requires a new binary or backend activation, get the corresponding authorization first.
 
 ## Release notes and history
@@ -49,6 +51,7 @@ Adapt this compact record to the repository's existing release mechanism; do not
 - Known limitations:
 - Backend: no update required / package name and exact version, tag or commit
 - Backend download location in the existing release mechanism:
+- Read-only backend availability/installation verification (method and result):
 - Minimum compatible Hermes/UI contracts:
 - Supported environments:
 - Verified environments:

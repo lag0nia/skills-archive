@@ -12,9 +12,13 @@ Before work, read the repository's `AGENTS.md`, its role and delivery instructio
 
 Use the repository and user's current instructions to determine the architect, builder, clients and model choices. The architect inspects the actual UI and backend code and contracts, decides the design, then gives the builder a bounded assignment. The builder implements that design without redesigning it. The architect reviews once and sends any needed correction to the same builder. Do not assume a machine, a shared backend, or a model from another developer's setup. If the selected builder model is unavailable, report it to the architect and wait for a choice; never switch models silently.
 
+Write builder assignments and the builder's final factual report in English. The report names changed files, the compile/typecheck/packaging checks actually run and their results, and any gaps. The architect communicates with the user in Spanish.
+
 Deliver one feature per branch and pull request. Keep the implementation reviewable and include its required dependencies, release notes and exact backend package or an explicit statement that no backend update is required. Follow the existing `repo-workflow` procedure; merge only after the user explicitly approves that pull request.
 
 Until the user says the app works and restores test execution, preserve existing test files and do not add or run unit tests or test suites. Use relevant compile, typecheck and packaging checks, then let the user test the visible feature in the final installed Mac/Android apps. Give the user a Spanish walkthrough that takes no more than ten minutes. The walkthrough happens inside those installed apps; do not make a separate demo, test APK or per-attempt installer. Do not use native UI automation as a gate.
+
+Do not require evidence hashes, leases, evidence manifests or a docs-only pull request for each manual testing attempt. Keep integrity and signature checks that the actual release protocol requires.
 
 Prepare the candidate and all review materials before requesting any missing publication or activation authorization. Publish only through the existing release mechanism and only with that authorization. A successful compile, package or PR does not mean the feature has been delivered. After the user accepts the installed-app behavior, get separate explicit approval to merge; acceptance does not imply merge, publication or restart approval. Finalize release records after the merge. If publication or activation is blocked or unavailable, say so plainly and hand off the completed PR and candidate materials. Do not start the next roadmap feature automatically.
 
