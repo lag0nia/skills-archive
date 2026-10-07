@@ -4,7 +4,7 @@ Use this reference for product features that need a candidate release or backend
 
 ## Candidate and user review
 
-Prepare one feature branch and pull request with the implementation, required dependencies, in-app release notes and exact backend package or an explicit `No backend update required` statement. Prepare the package, installation/update guide and Spanish user walkthrough before asking for missing publication or activation authorization. Do not publish or activate until that authorization exists.
+Prepare one feature branch and pull request with the implementation, required dependencies, in-app release notes and a detailed backend support guide, or an explicit `No backend update required` statement. Release notes link to the guide and summarize the required backend work. Prepare the guide and Spanish user walkthrough before asking for missing publication or activation authorization. Do not publish or activate until that authorization exists.
 
 Use the existing release channel to put the candidate in the final installed Mac/Android apps. The user performs the functional walkthrough in those apps; keep the steps short and under ten minutes. Do not create standalone demos, test APKs or per-attempt installers. If there is no usable delivery mechanism or authorization, leave the candidate reviewable and report the blocker clearly.
 
@@ -25,18 +25,21 @@ This is a required product target; do not imply the history mechanism already ex
 
 ## Reproducible backend delivery
 
-When a feature needs backend changes, provide an exact downloadable implementation for the release in its own plugin, package or service. Record its version/tag/commit, minimum compatible Hermes and UI contracts, and supported environments. Start in the same source repository; use a separate repository only for a component maintained independently.
+When a feature needs backend changes, provide a detailed, reproducible support guide tied to the app release. The implementation must be obtainable and its version fixed. Link the exact source and version (tag, commit or equivalent), relevant modules and dependencies; a downloadable source/module/dependency set or explicit config-only changes are acceptable. A new package or artificial artifact is not required. Start in the same source repository; use a separate repository only for a component maintained independently.
 
-Include one documented installation/update command and a guide that states:
+The guide must give technologies and components, the architecture and approach used to support the UI, and the UI/backend contract connection, including minimum compatible contracts. An architecture explanation supplements concrete reproduction steps; it never authorizes AI to invent a different backend adaptation for an environment.
 
-- what is installed or updated, prerequisites and relevant dependencies (for example, the satisfaction package, Jev or Hindsight service);
-- which restart is needed, if any; the guide describes it, but the agent executes a restart only with explicit authorization;
-- how to preserve existing configuration additively, with optional user-supplied templates containing no secrets;
-- backup and rollback steps, including limits caused by persistent-data migrations;
-- how the app reports a missing or incompatible backend without breaking unrelated app features;
-- the target portability and the environments actually verified, stated separately.
+Document, in order:
 
-Fail with an actionable explanation on unsupported environments. Do not create AI-generated environment adaptations or install unspecified `main` branches. Do not patch native Hermes.
+1. prerequisites, dependencies (for example, the satisfaction package, Jev or Hindsight service), and the supported starting environment;
+2. exact source/version links and the implementation components to obtain;
+3. concrete install, update and configuration commands plus any manual steps, with user-specific inputs identified and no secrets included;
+4. how to preserve existing configuration and data, back up state, and roll back, including persistent-data migration limits;
+5. a safe, read-only way to verify backend availability and installed version, without model/Jev calls, writes, installation or restart;
+6. the restart required, if any; the guide describes it, but the agent executes it only with explicit authorization;
+7. the target portability and environments actually verified, stated separately, plus actionable behavior for unsupported environments.
+
+A script or single-command installer is optional and appropriate only when it is reliable for the documented supported environments. It is not a universal installer or a required next project. Do not install unspecified `main` branches, create AI-generated environment adaptations, or patch native Hermes.
 
 ## Reusable feature delivery template
 
@@ -49,15 +52,19 @@ Adapt this compact record to the repository's existing release mechanism; do not
 - Date:
 - Visible changes and how to use:
 - Known limitations:
-- Backend: no update required / package name and exact version, tag or commit
-- Backend download location in the existing release mechanism:
+- Backend work: no update required / summary of required work
+- Backend support guide linked from release notes:
+- Exact implementation components, source and fixed version links (or config-only change):
+- Architecture/approach and UI/backend contract connection:
+- Prerequisites, dependencies and supported starting environment:
 - Read-only backend availability/installation verification (method and result):
-- Minimum compatible Hermes/UI contracts:
-- Supported environments:
+- Ordered install/update/configuration commands and manual steps:
+- User-specific inputs (no secrets):
+- Configuration/data preservation, backup and rollback:
+- Minimum compatible UI/backend contracts:
+- Target portability and supported environments:
 - Verified environments:
-- Installation/update command and guide:
-- Prerequisites and dependencies:
-- Configuration preservation, backup and rollback:
+- Optional script/single command and environments where it is reliable:
 - Restart required:
 - Candidate publication/activation authorization:
 - Installed-app walkthrough (Spanish, <= 10 minutes):
