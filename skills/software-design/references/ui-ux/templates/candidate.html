@@ -1,0 +1,268 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototype mechanics starter</title>
+  <style>
+    :root {
+      color-scheme: light;
+      font-family: ui-sans-serif, system-ui, sans-serif;
+      background: #f5f6f7;
+      color: #20242a;
+      --paper: #ffffff;
+      --ink: #20242a;
+      --muted: #5f6772;
+      --line: #d7dce2;
+      --accent: #175cd3;
+      --accent-strong: #1849a9;
+      --notice: #fff7db;
+      --danger: #b42318;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 18rem; }
+    button, select { font: inherit; }
+    button:focus-visible, select:focus-visible, summary:focus-visible, [tabindex]:focus-visible {
+      outline: 3px solid #1677d2;
+      outline-offset: 3px;
+    }
+    .prototype-disclosure {
+      margin: 0;
+      padding: .65rem clamp(1rem, 4vw, 2.5rem);
+      border-bottom: 1px solid #e7cc86;
+      background: var(--notice);
+      color: #5d4513;
+      font-size: .9rem;
+    }
+    .product-shell { min-height: calc(100vh - 2.5rem); background: var(--paper); }
+    .product-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem clamp(1rem, 5vw, 4rem);
+      border-bottom: 1px solid var(--line);
+    }
+    .product-name { margin: 0; font-size: 1.05rem; font-weight: 750; }
+    .account-context { color: var(--muted); font-size: .9rem; }
+    main { width: min(100% - 2rem, 68rem); margin: 0 auto; padding: clamp(2rem, 7vw, 5rem) 0; }
+    .state-view { display: grid; gap: 1.5rem; }
+    .state-view[hidden] { display: none; }
+    .eyebrow { margin: 0; color: var(--accent-strong); font-size: .78rem; font-weight: 800; letter-spacing: .04em; text-transform: uppercase; }
+    h1, h2 { margin: 0; line-height: 1.15; letter-spacing: -.015em; }
+    h1 { max-width: 20ch; font-size: clamp(2rem, 5vw, 3.25rem); }
+    h2 { font-size: clamp(1.45rem, 3vw, 2rem); }
+    .lead { max-width: 42rem; margin: 0; color: var(--muted); font-size: clamp(1.05rem, 2vw, 1.2rem); line-height: 1.65; }
+    .task-card, .decision-card, .outcome-card {
+      max-width: 46rem;
+      padding: clamp(1.25rem, 4vw, 2.25rem);
+      border: 1px solid var(--line);
+      border-radius: .75rem;
+      background: #fff;
+      box-shadow: 0 .25rem .75rem rgba(20, 30, 45, .06);
+    }
+    .task-card { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 1.5rem; align-items: end; }
+    .task-card p, .decision-card p, .outcome-card p { line-height: 1.6; }
+    .task-meta { display: grid; grid-template-columns: repeat(3, minmax(7rem, 1fr)); gap: .75rem; margin: 1.5rem 0 0; }
+    .task-meta div { padding-top: .75rem; border-top: 1px solid var(--line); }
+    .task-meta dt { color: var(--muted); font-size: .78rem; }
+    .task-meta dd { margin: .25rem 0 0; font-weight: 750; }
+    .actions { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; margin-top: .5rem; }
+    .primary, .secondary, .text-action { min-height: 2.9rem; border-radius: .65rem; cursor: pointer; font-weight: 750; }
+    .primary { padding: .75rem 1.05rem; border: 1px solid var(--accent); background: var(--accent); color: white; }
+    .primary:hover { background: var(--accent-strong); }
+    .secondary { padding: .75rem 1.05rem; border: 1px solid #9eaaa4; background: white; color: var(--ink); }
+    .text-action { padding: .55rem .25rem; border: 0; background: transparent; color: var(--accent-strong); text-decoration: underline; text-underline-offset: .2rem; }
+    .decision-summary { display: grid; gap: .75rem; margin: 1.5rem 0; padding: 1rem; border-left: .25rem solid var(--accent); background: #f1f7f4; }
+    .decision-summary p { margin: 0; }
+    .preference-change { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .75rem; margin: 1.5rem 0 0; }
+    .preference-change div { padding: 1rem; border: 1px solid var(--line); border-radius: .5rem; background: #f8fafc; }
+    .preference-change dt { color: var(--muted); font-size: .78rem; font-weight: 750; text-transform: uppercase; letter-spacing: .05em; }
+    .preference-change dd { margin: .4rem 0 0; font-weight: 750; line-height: 1.45; }
+    .optional-detail { max-width: 40rem; padding: 1rem 0 0; color: var(--muted); }
+    .outcome-mark { display: inline-grid; width: 2.5rem; height: 2.5rem; place-items: center; border-radius: 50%; background: #e8f1ff; color: var(--accent-strong); font-weight: 900; }
+    .error .outcome-mark { background: #fbe4e1; color: var(--danger); }
+    .reviewer-wrap { padding: 1rem clamp(1rem, 5vw, 4rem) 2rem; background: #232826; color: #f5f2e9; }
+    .reviewer-tools { max-width: 68rem; margin: 0 auto; }
+    .reviewer-tools summary { cursor: pointer; font-weight: 800; }
+    .reviewer-body { display: grid; grid-template-columns: minmax(12rem, .7fr) minmax(18rem, 1.3fr); gap: 1.5rem; padding-top: 1rem; }
+    .reviewer-body p { margin-top: 0; color: #c8d0cb; line-height: 1.5; }
+    .reviewer-body label { display: grid; gap: .4rem; font-size: .85rem; font-weight: 750; }
+    .reviewer-body select { width: 100%; min-height: 2.7rem; padding: .55rem; border: 1px solid #69736e; border-radius: .5rem; background: #151917; color: white; }
+    .reviewer-states { display: flex; flex-wrap: wrap; gap: .5rem; }
+    .reviewer-states button { padding: .55rem .75rem; border: 1px solid #69736e; border-radius: 999px; background: transparent; color: white; cursor: pointer; }
+    .reviewer-states button[aria-pressed="true"] { background: #f5f2e9; color: #17201c; }
+    .reviewer-reset { margin-top: 1rem; padding: .65rem .85rem; border: 1px solid #f5f2e9; border-radius: .5rem; background: #f5f2e9; color: #17201c; cursor: pointer; font-weight: 800; }
+    @media (max-width: 720px) {
+      .product-header { align-items: flex-start; flex-direction: column; }
+      .task-card { grid-template-columns: 1fr; }
+      .task-meta { grid-template-columns: 1fr; }
+      .preference-change { grid-template-columns: 1fr; }
+      .reviewer-body { grid-template-columns: 1fr; }
+      .primary, .secondary { width: 100%; }
+    }
+  </style>
+</head>
+<body data-demo-only="representative fake data and simulated external behavior">
+  <p class="prototype-disclosure" data-prototype-disclosure role="note">
+    <strong>Interactive prototype.</strong> Records are fictional and external activity is simulated. No real product action is performed.
+  </p>
+
+  <div class="product-shell">
+    <header class="product-header">
+      <p class="product-name">Example delivery service</p>
+      <span class="account-context">Your account</span>
+    </header>
+
+    <main data-product-surface data-prototype-state="arrival" aria-live="polite">
+      <section class="state-view" data-state-view="arrival" aria-labelledby="arrival-title">
+        <p class="eyebrow">One item needs your attention</p>
+        <h1 id="arrival-title" tabindex="-1">Review an upcoming change</h1>
+        <p class="lead">See what will change, when it takes effect, and whether it can be undone before you decide.</p>
+        <article class="task-card">
+          <div>
+            <h2>Send future deliveries to Market Street locker</h2>
+            <p>Your current preference is home delivery to 14 Willow Lane. Review the proposed change before it takes effect.</p>
+            <dl class="task-meta">
+              <div><dt>Takes effect</dt><dd>18 October</dd></div>
+              <div><dt>Cost</dt><dd>No charge</dd></div>
+              <div><dt>Can be changed later</dt><dd>Yes</dd></div>
+            </dl>
+          </div>
+          <button class="primary" type="button" data-product-action data-action-target="review">Review change</button>
+        </article>
+      </section>
+
+      <section class="state-view" data-state-view="review" aria-labelledby="review-title" hidden>
+        <p class="eyebrow">Confirm the consequence</p>
+        <h2 id="review-title" tabindex="-1">Send future deliveries to Market Street locker?</h2>
+        <p class="lead">If you confirm, the locker becomes your delivery preference on 18 October.</p>
+        <div class="decision-card">
+          <dl class="preference-change" aria-label="Delivery preference change">
+            <div><dt>Current</dt><dd>Home delivery<br>14 Willow Lane</dd></div>
+            <div><dt>Proposed</dt><dd>Parcel locker<br>Market Street</dd></div>
+          </dl>
+          <div class="decision-summary">
+            <p><strong>From 18 October:</strong> new deliveries will be sent to the Market Street locker.</p>
+            <p><strong>Already scheduled:</strong> deliveries arranged before 18 October will still go to 14 Willow Lane.</p>
+            <p><strong>Cost:</strong> no charge.</p>
+          </div>
+          <div class="actions">
+            <button class="primary" type="button" data-product-action data-action-target="success">Confirm change</button>
+            <button class="secondary" type="button" data-cancel-action data-action-target="cancelled">Cancel</button>
+            <button class="text-action" type="button" aria-expanded="false" aria-controls="optional-detail">What happens to scheduled deliveries?</button>
+          </div>
+          <div class="optional-detail" id="optional-detail" hidden tabindex="-1">
+            Deliveries already scheduled before 18 October keep their existing destination. You can change your preference again later in Delivery settings.
+          </div>
+        </div>
+      </section>
+
+      <section class="state-view" data-state-view="success" data-product-outcome aria-labelledby="success-title" hidden>
+        <span class="outcome-mark" aria-hidden="true">✓</span>
+        <h2 id="success-title" tabindex="-1">Your preference is updated</h2>
+        <p class="lead">From 18 October, new deliveries will go to the Market Street locker. Existing scheduled deliveries have not changed.</p>
+        <div class="actions"><button class="primary" type="button" data-next-step data-action-target="tasks-complete">Return to your tasks</button></div>
+      </section>
+
+      <section class="state-view" data-state-view="tasks-complete" aria-labelledby="tasks-complete-title" hidden>
+        <p class="eyebrow">Your tasks</p>
+        <h1 id="tasks-complete-title" tabindex="-1">You are up to date</h1>
+        <p class="lead">Your delivery preference change is complete.</p>
+        <article class="task-card">
+          <div>
+            <h2>Market Street locker</h2>
+            <p>Your selected destination for new deliveries from 18 October.</p>
+            <dl class="task-meta">
+              <div><dt>Status</dt><dd>Updated</dd></div>
+              <div><dt>Previous destination</dt><dd>14 Willow Lane</dd></div>
+              <div><dt>Cost</dt><dd>No charge</dd></div>
+            </dl>
+          </div>
+        </article>
+      </section>
+
+      <section class="state-view" data-state-view="cancelled" data-product-outcome aria-labelledby="cancelled-title" hidden>
+        <span class="outcome-mark" aria-hidden="true">—</span>
+        <h2 id="cancelled-title" tabindex="-1">Nothing was changed</h2>
+        <p class="lead">Home delivery to 14 Willow Lane remains your preference. You can review this again whenever you are ready.</p>
+        <div class="actions"><button class="secondary" type="button" data-next-step data-action-target="arrival">Return to your tasks</button></div>
+      </section>
+
+      <section class="state-view error" data-state-view="error" data-product-outcome aria-labelledby="error-title" hidden>
+        <span class="outcome-mark" aria-hidden="true">!</span>
+        <h2 id="error-title" tabindex="-1">We could not save the change</h2>
+        <p class="lead">Nothing was updated. Your review is still available, so you can try again without starting over.</p>
+        <div class="actions">
+          <button class="primary" type="button" data-recovery-action data-action-target="review">Try again</button>
+          <button class="secondary" type="button" data-next-step data-action-target="arrival">Return to your tasks</button>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <aside class="reviewer-wrap" aria-label="Prototype review tools">
+    <details class="reviewer-tools" data-prototype-reviewer>
+      <summary>Prototype reviewer tools</summary>
+      <div class="reviewer-body">
+        <div>
+          <p>These controls are not product navigation. They expose representative fake actors and states for review.</p>
+          <p>This disposable starter demonstrates interaction mechanics only. Replace its layout, typography, colors, information architecture, copy, and fictional scenario with a direction suited to the intended user and task.</p>
+          <label for="reviewer-actor">Simulated actor
+            <select id="reviewer-actor" data-review-actor>
+              <option>First-time user</option>
+              <option>Returning user</option>
+              <option>Authorized operator</option>
+            </select>
+          </label>
+        </div>
+        <div>
+          <p>Jump directly to a state when reviewing coverage. Use the product controls above when reviewing the actual task flow.</p>
+          <div class="reviewer-states" aria-label="Representative prototype states">
+            <button type="button" data-review-state-target="arrival" aria-pressed="true">Arrival</button>
+            <button type="button" data-review-state-target="review" aria-pressed="false">Decision</button>
+            <button type="button" data-review-state-target="success" aria-pressed="false">Success</button>
+            <button type="button" data-review-state-target="tasks-complete" aria-pressed="false">Completed tasks</button>
+            <button type="button" data-review-state-target="cancelled" aria-pressed="false">Cancellation</button>
+            <button type="button" data-review-state-target="error" aria-pressed="false">Failure &amp; recovery</button>
+          </div>
+          <button class="reviewer-reset" type="button" data-review-reset>Reset prototype</button>
+        </div>
+      </div>
+    </details>
+  </aside>
+
+  <script>
+    const product = document.querySelector("[data-product-surface]");
+    const views = [...document.querySelectorAll("[data-state-view]")];
+    const reviewButtons = [...document.querySelectorAll("[data-review-state-target]")];
+
+    function showState(state, { focus = true } = {}) {
+      product.dataset.prototypeState = state;
+      for (const view of views) view.hidden = view.dataset.stateView !== state;
+      for (const button of reviewButtons) button.setAttribute("aria-pressed", String(button.dataset.reviewStateTarget === state));
+      if (focus) document.querySelector(`[data-state-view="${state}"] h1, [data-state-view="${state}"] h2`)?.focus();
+    }
+
+    document.querySelectorAll("[data-action-target]").forEach((button) => {
+      button.addEventListener("click", () => showState(button.dataset.actionTarget));
+    });
+    reviewButtons.forEach((button) => {
+      button.addEventListener("click", () => showState(button.dataset.reviewStateTarget));
+    });
+    const optionalDetailButton = document.querySelector('[aria-controls="optional-detail"]');
+    optionalDetailButton.addEventListener("click", (event) => {
+      const detail = document.getElementById("optional-detail");
+      detail.hidden = !detail.hidden;
+      event.currentTarget.setAttribute("aria-expanded", String(!detail.hidden));
+      if (!detail.hidden) detail.focus();
+    });
+    document.querySelector("[data-review-reset]").addEventListener("click", () => {
+      document.querySelector("[data-review-actor]").selectedIndex = 0;
+      document.getElementById("optional-detail").hidden = true;
+      optionalDetailButton.setAttribute("aria-expanded", "false");
+      showState("arrival");
+    });
+  </script>
+</body>
+</html>

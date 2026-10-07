@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Prototype candidates</title>
+  <!--
+    Prototype launcher starter: the one page a recipient opens first. Keep this
+    design unchanged so every package's launcher looks and works the same, and
+    keep it static, with no script. Replace the heading and introduction, then
+    give each candidate one card: its name, one sentence describing the
+    direction, one button per entry page (labelled by role or purpose, such as
+    "Customer view"), and a View slides button once that candidate's slides.html
+    exists. Mark only the selected candidate as Selected. To group related
+    candidates, put an h2 class="group" heading before each group's own list and
+    use h3 card titles.
+  -->
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      --page: #f4f5f7;
+      --surface: #ffffff;
+      --ink: #1f2328;
+      --muted: #5e6670;
+      --line: #d6dbe1;
+      --accent: #1a73e8;
+      --accent-ink: #ffffff;
+      --focus: #1a73e8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --page: #151719;
+        --surface: #202327;
+        --ink: #e9ecef;
+        --muted: #a6aeb7;
+        --line: #3a4047;
+        --accent: #8ab4f8;
+        --accent-ink: #0b1a33;
+        --focus: #8ab4f8;
+      }
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; background: var(--page); color: var(--ink); line-height: 1.5; }
+    a { color: var(--accent); }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+    .launcher { width: min(100% - 2rem, 68rem); margin: 0 auto; padding: clamp(2rem, 6vw, 4rem) 0 3rem; }
+    .launcher-head { max-width: 46rem; margin-bottom: 2rem; }
+    .kicker { margin: 0; color: var(--muted); font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { margin: .3rem 0 .75rem; font-size: clamp(1.9rem, 5vw, 2.75rem); line-height: 1.1; letter-spacing: -.02em; }
+    .lead { margin: 0; color: var(--muted); font-size: 1.05rem; }
+    .group { margin: 2.25rem 0 .9rem; color: var(--muted); font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 20rem), 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+    .card { display: flex; flex-direction: column; gap: .6rem; padding: 1.25rem 1.35rem; border: 1px solid var(--line); border-radius: .9rem; background: var(--surface); }
+    .card.is-selected { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent); }
+    .card-title { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; margin: 0; font-size: 1.2rem; line-height: 1.25; }
+    .tag { padding: .1rem .55rem; border-radius: 999px; background: var(--accent); color: var(--accent-ink); font-size: .72rem; font-weight: 700; }
+    .card-text { flex: 1; margin: 0; color: var(--muted); }
+    .card-actions { display: flex; flex-wrap: wrap; gap: .5rem; margin: .4rem 0 0; }
+    .button {
+      display: inline-flex; align-items: center; gap: .45rem; min-height: 2.75rem; padding: 0 1.05rem;
+      border: 1px solid var(--line); border-radius: 999px; background: var(--surface); color: var(--ink);
+      font-weight: 650; text-decoration: none;
+    }
+    .button:hover { border-color: var(--ink); }
+    .button-slides { border-color: var(--accent); background: var(--accent); color: var(--accent-ink); }
+    .button-slides:hover { border-color: var(--accent); filter: brightness(1.08); }
+    .button svg { width: 1rem; height: 1rem; fill: currentColor; }
+  </style>
+</head>
+<body>
+  <main class="launcher">
+    <header class="launcher-head">
+      <p class="kicker">Prototypes</p>
+      <h1>Prototype candidates</h1>
+      <p class="lead">Open a candidate to try it. Selection, reviewed journeys, pending changes, and limitations are recorded in the <a href="./specification.md">UI/UX specification</a>.</p>
+    </header>
+
+    <ul class="cards">
+      <!-- For the selected candidate only: <li class="card is-selected"> and <span class="tag">Selected</span> after the title text. -->
+      <li class="card">
+        <h2 class="card-title">Main candidate</h2>
+        <p class="card-text">One sentence describing this direction.</p>
+        <p class="card-actions">
+          <a class="button" href="./alternatives/main/index.html">Open prototype</a>
+          <!-- Add this button only after a candidate's review slideshow exists; it opens straight into the slides:
+          <a class="button button-slides" href="./alternatives/main/slides.html#view"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg>View slides</a>
+          Label it "View slides (outdated)" when its last refresh failed. -->
+        </p>
+      </li>
+    </ul>
+  </main>
+</body>
+</html>

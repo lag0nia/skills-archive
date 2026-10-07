@@ -1,0 +1,4 @@
+interface:
+  display_name: "Find Bugs"
+  short_description: "Discover defects across code and product artifacts"
+  default_prompt: "Use $find-bugs to audit this target for defects at medium intensity."
