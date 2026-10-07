@@ -34,6 +34,6 @@ Ask the agent to use `software-design` for the task described above. Codex also 
 
 ## Source
 
-Imported from [Alangr6/ai-prompts](https://github.com/Alangr6/ai-prompts/tree/ef249ef32d4e50183d4669741332a4d51078ce40/skills/blueprint-development/technical/software-design) at revision `ef249ef32d4e50183d4669741332a4d51078ce40`. The complete directory is retained, including its tests and any third-party notices. The repository-level software-design.zip and all legacy skills are excluded.
+Imported from [Alangr6/ai-prompts](https://github.com/Alangr6/ai-prompts/tree/ef249ef32d4e50183d4669741332a4d51078ce40/skills/blueprint-development/technical/software-design) at revision `ef249ef32d4e50183d4669741332a4d51078ce40`. The complete directory is retained, including its tests and any third-party notices. The presentation-contract test is corrected to parse only the views table rather than also reading the later color table; the skill instructions and runtime code are unchanged. The repository-level software-design.zip and all legacy skills are excluded.
 
 The upstream repository does not declare a repository-wide license in this revision. This import does not assert a new license for upstream material; preserve any included notices.

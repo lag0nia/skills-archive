@@ -21,7 +21,7 @@ function section(text, start, end) {
 }
 
 test("the presentation table renders PROJECT_VIEW_CONTRACT instead of maintaining a second contract", () => {
-  const rows = section(reference, "## Project Presentation Contract", "### Setup And Explicit View Repair")
+  const rows = section(reference, "| View | Layout | Filter | Slice | Grouping | Sorting | Visible fields |", "\n\n")
     .split("\n")
     .filter((line) => line.startsWith("| ") && !line.startsWith("| View |"));
   const table = rows.map((line) => {
