@@ -1,0 +1,11 @@
+{
+  "schema": "producer-publication-receipt",
+  "evidence_scope": "producer-publication",
+  "artifact": "<canonical artifact or package identity>",
+  "version": "<exact immutable version>",
+  "source_revision": "<exact source revision>",
+  "location": "<registry or immutable publication location>",
+  "integrity": "<algorithm and digest>",
+  "resolution": "<exact resolvable artifact identity>",
+  "result": "PASS"
+}
