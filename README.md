@@ -14,6 +14,7 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. Each skill 
 | [`codebase-cleanup`](skills/codebase-cleanup/SKILL.md) | Remove obsolete code and unnecessary complexity while preserving supported behavior. [Installation and requirements](docs/skills/codebase-cleanup.md). |
 | [`codebase-restructure`](skills/codebase-restructure/SKILL.md) | Assess architecture and plan or implement behavior-preserving restructuring. [Installation and requirements](docs/skills/codebase-restructure.md). |
 | [`find-bugs`](skills/find-bugs/SKILL.md) | Discover and independently confirm defects without implementing fixes. [Installation and requirements](docs/skills/find-bugs.md). |
+| [`hermes-ui-workflow`](skills/hermes-ui-workflow/SKILL.md) | Architect, implement, review and deliver Hermes UI changes across independently maintained backends, with installed-app user testing and release handoff. |
 | [`task-brief`](skills/task-brief/SKILL.md) | Capture a durable task brief and plan in one Markdown file. [Installation and requirements](docs/skills/task-brief.md). |
 
 ## Install
@@ -92,6 +93,26 @@ The skill triggers by itself when an agent is about to change files, commit, pus
 | Hermes | `SOUL.md` in the Hermes home (`$HERMES_HOME`) |
 
 To approve a merge, tell the agent "merge" (or "mergea") for that PR, or merge it yourself on GitHub.
+
+## Using `hermes-ui-workflow`
+
+Use `hermes-ui-workflow` for every change in a Hermes UI repository. Link the installed skill from that repository's `AGENTS.md` to make it mandatory for agents working there. The workflow depends on the installed `quiet` and `repo-workflow` skills; install and read both before starting. The normal archive installer installs all archive skills, including both dependencies.
+
+For Hermes, install all archive skills, including the dependencies, from a merged clone:
+
+```bash
+./install.sh --hermes
+```
+
+After this skill has been merged to `main`, you can install only this skill with:
+
+```bash
+hermes skills install lag0nia/skills-archive/skills/hermes-ui-workflow --yes
+```
+
+That command installs only `hermes-ui-workflow`; make sure `quiet` and `repo-workflow` are already installed, or use `./install.sh --hermes` above.
+
+In Claude Code, Codex or Hermes, ask in natural language: “Use hermes-ui-workflow for this Hermes UI change.”
 
 ## Adding a skill
 
