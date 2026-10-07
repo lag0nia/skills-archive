@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>TBD candidate</title>
+  <!--
+    Review slideshow starter. Save a populated copy only as
+    ui-ux/alternatives/<candidate>/slides.html, after real screenshots of that
+    candidate exist. Keep this design and script unchanged so every deck looks
+    and works the same: fill only the marked deck-header, deck-about, and
+    deck-slides regions, replacing every TBD. Repeat one <figure data-slide> per
+    screenshot and embed each image as a base64 PNG, JPEG, or WebP data URL.
+    Linking to slides.html#view opens the viewer directly, as the launcher's
+    View slides button does.
+    Order and label slides by one rule: data-slide-viewport desktop, then tablet,
+    then phone; within each, one data-slide-role at a time, in the order roles
+    first appear and the same in every viewport; within each role,
+    data-slide-part journey (in the order that role meets it), then other; and
+    data-slide-part reviewer last. Captions say what is happening on the screen;
+    the viewer shows viewport, role, and step. An unpopulated copy is not a deck:
+    do not deliver or link it.
+  -->
+  <style>
+    :root {
+      color-scheme: light dark;
+      font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+      --page: #f4f5f7;
+      --surface: #ffffff;
+      --ink: #1f2328;
+      --muted: #5e6670;
+      --line: #d6dbe1;
+      --accent: #1a73e8;
+      --accent-ink: #ffffff;
+      --notice: #fef3d6;
+      --notice-ink: #5b4410;
+      --focus: #1a73e8;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --page: #151719;
+        --surface: #202327;
+        --ink: #e9ecef;
+        --muted: #a6aeb7;
+        --line: #3a4047;
+        --accent: #8ab4f8;
+        --accent-ink: #0b1a33;
+        --notice: #3a3018;
+        --notice-ink: #f4dfa8;
+        --focus: #8ab4f8;
+      }
+    }
+    * { box-sizing: border-box; }
+    [hidden] { display: none !important; }
+    body { margin: 0; background: var(--page); color: var(--ink); line-height: 1.5; }
+    body:has(.viewer[open]) { overflow: hidden; }
+    a { color: var(--accent); }
+    :focus-visible { outline: 3px solid var(--focus); outline-offset: 3px; }
+    svg { display: block; width: 1.5rem; height: 1.5rem; fill: none; stroke: currentColor; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+    .deck { width: min(100% - 2rem, 58rem); margin: 0 auto; padding: clamp(2rem, 7vw, 4.5rem) 0 3rem; display: grid; gap: 1.5rem; }
+    .deck-cover { display: grid; gap: .75rem; justify-items: center; text-align: center; }
+    .deck-kicker { margin: 0; color: var(--muted); font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(1.9rem, 6vw, 3rem); line-height: 1.1; letter-spacing: -.02em; }
+    .deck-alert { margin: 0; padding: .5rem .85rem; border-radius: .5rem; background: var(--notice); color: var(--notice-ink); font-weight: 600; }
+    .deck-launch { display: grid; gap: 1.5rem; justify-items: center; }
+    .deck-poster {
+      position: relative; display: block; width: 100%; padding: 0;
+      border: 1px solid var(--line); border-radius: .9rem; overflow: hidden;
+      background: var(--surface); cursor: pointer;
+      box-shadow: 0 1rem 2.5rem rgba(20, 30, 45, .14);
+    }
+    .deck-poster img { display: block; width: 100%; aspect-ratio: 16 / 10; object-fit: cover; object-position: top; }
+    .deck-play {
+      position: absolute; inset: 0; margin: auto; display: grid; place-items: center;
+      width: 4.5rem; height: 4.5rem; border-radius: 50%;
+      background: rgba(0, 0, 0, .55); color: #fff; opacity: .85; transition: opacity .15s;
+    }
+    .deck-play svg { width: 1.9rem; height: 1.9rem; margin-left: .2rem; fill: currentColor; stroke: none; }
+    .deck-poster:hover .deck-play, .deck-poster:focus-visible .deck-play { opacity: 1; }
+    .deck-about { color: var(--muted); font-size: .92rem; border-top: 1px solid var(--line); padding-top: 1rem; }
+    .deck-about summary { cursor: pointer; font-weight: 650; color: var(--ink); }
+    .deck-about p { margin: .6rem 0 0; }
+
+    /* The plain list is the readable fallback without scripting, and for print. */
+    .deck-list { display: grid; gap: 2rem; }
+    .js-slides .deck-list { display: none; }
+    .deck-section { margin: .5rem 0 -1rem; color: var(--muted); font-size: .8rem; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
+    .slide { display: grid; gap: .5rem; margin: 0; }
+    .slide img { display: block; max-width: 100%; height: auto; border: 1px solid var(--line); border-radius: .5rem; background: var(--surface); }
+    figcaption { display: grid; gap: .25rem; font-weight: 600; }
+    .slide-note { justify-self: start; padding: .2rem .5rem; border-radius: .3rem; background: var(--notice); color: var(--notice-ink); font-weight: 600; }
+
+    .viewer {
+      position: fixed; inset: 0; width: 100%; height: 100vh; height: 100dvh; max-width: none; max-height: none;
+      margin: 0; padding: 0; border: 0; background: #0f1012; color: #e8eaed;
+      display: none;
+    }
+    .viewer[open] { display: block; }
+    .viewer-frame { position: relative; display: grid; grid-template-rows: auto minmax(0, 1fr) auto; width: 100%; height: 100%; background: #0f1012; color: #e8eaed; }
+    .viewer::backdrop { background: #000; }
+    .viewer :focus-visible { outline-color: #8ab4f8; }
+    .viewer:focus-visible, .viewer-frame:focus-visible { outline: none; }
+    .viewer button {
+      display: inline-grid; place-items: center; width: 2.75rem; height: 2.75rem; padding: 0;
+      border: 0; border-radius: 50%; background: transparent; color: inherit; cursor: pointer;
+    }
+    .viewer button:hover { background: rgba(255, 255, 255, .12); }
+    .viewer button[aria-pressed="true"] { background: rgba(138, 180, 248, .25); color: #d2e3fc; }
+    .viewer-bar { display: flex; align-items: center; gap: .75rem; padding: .4rem .5rem .4rem 1.1rem; }
+    .viewer-title { flex: 1; min-width: 0; margin: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: #c4c7cc; }
+    .viewer-group { margin: 0; padding: .2rem .65rem; border-radius: 999px; background: rgba(255, 255, 255, .1); color: #dadce0; font-size: .85rem; white-space: nowrap; }
+    .viewer-group:empty { display: none; }
+    .viewer-status { margin: 0; color: #c4c7cc; font-variant-numeric: tabular-nums; }
+    .viewer-tools { display: flex; gap: .15rem; }
+    .viewer-stage { position: relative; min-height: 0; margin: .25rem 5.5rem; overflow: hidden; touch-action: pan-y pinch-zoom; }
+    .viewer-stage img {
+      position: absolute; inset: 0; margin: auto; max-width: 100%; max-height: 100%; width: auto; height: auto;
+      border-radius: .25rem; background: #fff; cursor: zoom-in;
+      box-shadow: 0 0 0 1px rgba(255, 255, 255, .08), 0 1.25rem 3rem rgba(0, 0, 0, .55);
+    }
+    .viewer-stage.is-full { overflow: auto; touch-action: auto; }
+    .viewer-stage.is-full img { position: static; display: block; max-width: none; max-height: none; margin: 0 auto; cursor: zoom-out; }
+    .viewer-foot { display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: .5rem; padding: .5rem 1rem 1rem; }
+    .viewer-caption { grid-column: 2; display: grid; gap: .3rem; justify-items: center; margin: 0; text-align: center; color: #dadce0; font-size: .95rem; }
+    .viewer-caption .slide-note { justify-self: center; background: #4a3b12; color: #fde293; }
+    .viewer .viewer-arrow { position: absolute; top: 50%; width: 3.25rem; height: 3.25rem; transform: translateY(-50%); background: rgba(255, 255, 255, .1); }
+    .viewer .viewer-arrow:hover { background: rgba(255, 255, 255, .2); }
+    .viewer .viewer-arrow[aria-disabled="true"] { opacity: .25; cursor: default; background: rgba(255, 255, 255, .1); }
+    .viewer-prev { left: 1rem; }
+    .viewer-next { right: 1rem; }
+    @media (max-width: 40rem) {
+      .viewer-stage { margin: .25rem; }
+      .viewer .viewer-arrow { position: static; transform: none; }
+      .viewer-prev { grid-column: 1; grid-row: 1; }
+      .viewer-next { grid-column: 3; grid-row: 1; }
+      .viewer-caption { grid-row: 1; font-size: .88rem; }
+    }
+    @media print {
+      .deck-launch, .viewer { display: none !important; }
+      .js-slides .deck-list { display: grid; }
+      .slide { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <main class="deck" data-review-slideshow aria-labelledby="deck-title">
+    <header class="deck-cover">
+      <p class="deck-kicker">Slideshow<span data-slide-count></span></p>
+      <!-- deck-header -->
+      <h1 id="deck-title">TBD candidate</h1>
+      <!-- Optional, visible when true: <p class="deck-alert" role="note">Partial — TBD what could not be captured.</p> -->
+      <!-- Optional, visible when a refresh failed: <p class="deck-alert" role="note">Outdated — TBD limitation; screenshots predate the current prototype.</p> -->
+      <!-- /deck-header -->
+      <div class="deck-launch" data-slide-launch hidden>
+        <button class="deck-poster" type="button" data-slide-open data-slide-poster aria-label="Open slideshow">
+          <img alt="">
+          <span class="deck-play" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 4.5v15l12.5-7.5z"/></svg></span>
+        </button>
+      </div>
+    </header>
+
+    <details class="deck-about">
+      <summary>About these screenshots</summary>
+      <!-- deck-about -->
+      <p data-slideshow-coverage>Captured <time datetime="TBD">TBD</time>. Shows: TBD roles, views, and states. Not shown: TBD omissions and limitations.</p>
+      <!-- Optional navigation that works only beside the full candidate folder: <p><a href="./index.html">Open the interactive prototype</a></p> -->
+      <!-- /deck-about -->
+      <p>Screenshots of the actual prototype, for reading and sharing. This deck does not select a direction, approve a flow, or show that interactions were tested.</p>
+    </details>
+
+    <section class="deck-list" aria-label="Screenshots">
+      <!-- deck-slides -->
+      <figure class="slide" data-slide id="slide-1" data-slide-viewport="desktop" data-slide-role="TBD role" data-slide-part="journey">
+        <img src="data:image/png;base64,TBD" alt="TBD: describe what the screenshot shows">
+        <figcaption><span>TBD role · view · state · viewport</span></figcaption>
+      </figure>
+      <!-- /deck-slides -->
+    </section>
+  </main>
+
+  <dialog class="viewer" data-slide-viewer aria-labelledby="viewer-title" tabindex="-1">
+    <div class="viewer-frame" data-slide-frame>
+      <div class="viewer-bar">
+        <p class="viewer-title" id="viewer-title" data-slide-viewer-title>Slideshow</p>
+        <p class="viewer-group" data-slide-group></p>
+        <p class="viewer-status" data-slide-status aria-live="polite"></p>
+        <div class="viewer-tools">
+          <button type="button" data-slide-zoom aria-pressed="false" aria-label="Full-size image" title="Full-size image">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="6.5"/><path d="M20 20l-4.4-4.4M11 8v6M8 11h6"/></svg>
+          </button>
+          <button type="button" data-slide-fullscreen aria-pressed="false" aria-label="Full screen" title="Full screen" hidden>
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+          </button>
+          <button type="button" data-slide-close aria-label="Close slideshow" title="Close (Esc)">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>
+          </button>
+        </div>
+      </div>
+      <div class="viewer-stage" data-slide-shot>
+        <img data-slide-stage alt="">
+      </div>
+      <div class="viewer-foot">
+        <button class="viewer-arrow viewer-prev" type="button" data-slide-previous aria-label="Previous slide" title="Previous (←)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15 18l-6-6 6-6"/></svg>
+        </button>
+        <p class="viewer-caption" data-slide-caption></p>
+        <button class="viewer-arrow viewer-next" type="button" data-slide-next aria-label="Next slide" title="Next (→)">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </dialog>
+
+  <script>
+    (() => {
+      const slides = [...document.querySelectorAll("[data-slide]")];
+      const viewer = document.querySelector("[data-slide-viewer]");
+      // Without scripting or dialog support, the plain screenshot list stays readable.
+      if (!slides.length || !viewer || typeof viewer.showModal !== "function") return;
+      const part = (selector) => viewer.querySelector(selector);
+      const stage = part("[data-slide-shot]");
+      const image = part("[data-slide-stage]");
+      const caption = part("[data-slide-caption]");
+      const status = part("[data-slide-status]");
+      const previous = part("[data-slide-previous]");
+      const next = part("[data-slide-next]");
+      const zoom = part("[data-slide-zoom]");
+      const fullscreen = part("[data-slide-fullscreen]");
+      const root = document.documentElement;
+      const shots = slides.map((slide) => slide.querySelector("img"));
+      const group = part("[data-slide-group]");
+      const viewports = { desktop: "Desktop", tablet: "Tablet", phone: "Phone" };
+      // Position within the current viewport, role, and part: "Desktop · Customer · Step 5 of 17".
+      const sectionOf = (slide) => [slide.dataset.slideViewport, slide.dataset.slidePart === "reviewer" ? "" : slide.dataset.slideRole, slide.dataset.slidePart].join("|");
+      const places = slides.map((slide, index) => {
+        let start = index;
+        let end = index;
+        while (start > 0 && sectionOf(slides[start - 1]) === sectionOf(slide)) start--;
+        while (end < slides.length - 1 && sectionOf(slides[end + 1]) === sectionOf(slide)) end++;
+        const { slideViewport, slideRole, slidePart } = slide.dataset;
+        const step = (index - start + 1) + " of " + (end - start + 1);
+        return [viewports[slideViewport], slidePart === "reviewer" ? "Demo and reviewer tools" : slideRole,
+          slidePart === "journey" ? "Step " + step : slidePart === "other" ? "Other screens " + step : ""].filter(Boolean).join(" · ");
+      });
+      let current = 0;
+      let fullSize = false;
+      let opener = null;
+      // A launcher's View slides link (slides.html#view) opens straight into the
+      // viewer; closing it then returns to the page that linked here.
+      const fromLauncher = location.hash === "#view" && history.length > 1;
+
+      // The viewer's frame goes full screen (browsers refuse dialogs), staying above the page.
+      const frame = part("[data-slide-frame]");
+      const fullscreenElement = () => document.fullscreenElement || document.webkitFullscreenElement;
+      const canFullscreen = Boolean(frame.requestFullscreen || frame.webkitRequestFullscreen);
+      function setFullscreen(on) {
+        if (!canFullscreen || on === Boolean(fullscreenElement())) return;
+        try {
+          const result = on ? (frame.requestFullscreen || frame.webkitRequestFullscreen).call(frame)
+            : (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+          result?.catch?.(() => {});
+        } catch { /* full screen is optional; the viewer already fills the window */ }
+      }
+
+      function setZoom(on) {
+        fullSize = on;
+        zoom.setAttribute("aria-pressed", String(on));
+        stage.classList.toggle("is-full", on);
+        // A focusable scroll region lets keyboard users pan an enlarged screenshot.
+        if (on) {
+          stage.tabIndex = 0;
+          stage.setAttribute("role", "region");
+          stage.setAttribute("aria-label", "Full-size screenshot; scroll to inspect");
+        } else {
+          // Keep focus inside the viewer when the enlarged region stops being focusable.
+          if (stage.contains(document.activeElement)) viewer.focus({ preventScroll: true });
+          stage.removeAttribute("tabindex");
+          stage.removeAttribute("role");
+          stage.removeAttribute("aria-label");
+          stage.scrollTo(0, 0);
+        }
+      }
+
+      function show(index) {
+        current = Math.max(0, Math.min(slides.length - 1, index));
+        image.src = shots[current].getAttribute("src");
+        image.alt = shots[current].alt;
+        caption.replaceChildren(...slides[current].querySelector("figcaption").cloneNode(true).childNodes);
+        group.textContent = places[current];
+        const visible = document.createElement("span");
+        const spoken = document.createElement("span");
+        visible.setAttribute("aria-hidden", "true");
+        visible.textContent = (current + 1) + " / " + slides.length;
+        spoken.className = "sr-only";
+        spoken.textContent = "Slide " + (current + 1) + " of " + slides.length;
+        status.replaceChildren(visible, spoken);
+        previous.setAttribute("aria-disabled", String(current === 0));
+        next.setAttribute("aria-disabled", String(current === slides.length - 1));
+        setZoom(false);
+        try { history.replaceState(null, "", "#" + slides[current].id); } catch { /* optional */ }
+      }
+
+      function open(index, { present = false } = {}) {
+        opener = document.activeElement;
+        if (!viewer.open) viewer.showModal();
+        if (present) setFullscreen(true);
+        show(index);
+        next.focus({ preventScroll: true });
+      }
+
+      // Leaving full screen can move focus, so return it to the control that opened the viewer.
+      const restoreFocus = () => { if (!viewer.open) opener?.focus?.({ preventScroll: true }); };
+      viewer.addEventListener("close", () => {
+        setZoom(false);
+        setFullscreen(false);
+        if (fromLauncher) { history.back(); return; }
+        restoreFocus();
+        try { history.replaceState(null, "", location.href.split("#")[0]); } catch { /* optional */ }
+      });
+      document.querySelectorAll("[data-slide-open]").forEach((button) => {
+        button.addEventListener("click", () => open(0, { present: true }));
+      });
+      previous.addEventListener("click", () => { if (current > 0) show(current - 1); });
+      next.addEventListener("click", () => { if (current < slides.length - 1) show(current + 1); });
+      zoom.addEventListener("click", () => setZoom(!fullSize));
+      part("[data-slide-close]").addEventListener("click", () => viewer.close());
+      if (canFullscreen) {
+        fullscreen.hidden = false;
+        fullscreen.addEventListener("click", () => setFullscreen(!fullscreenElement()));
+        const sync = () => { fullscreen.setAttribute("aria-pressed", String(Boolean(fullscreenElement()))); restoreFocus(); };
+        document.addEventListener("fullscreenchange", sync);
+        document.addEventListener("webkitfullscreenchange", sync);
+      }
+
+      // Swipe between slides on touch screens; click or tap the image to enlarge it.
+      let start = null;
+      let swiped = false;
+      stage.addEventListener("pointerdown", (event) => {
+        swiped = false;
+        start = event.pointerType === "mouse" || fullSize ? null : { x: event.clientX, y: event.clientY };
+      });
+      stage.addEventListener("pointerup", (event) => {
+        if (!start) return;
+        const dx = event.clientX - start.x;
+        const dy = event.clientY - start.y;
+        start = null;
+        if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+          swiped = true;
+          (dx < 0 ? next : previous).click();
+        }
+      });
+      image.addEventListener("click", () => {
+        if (swiped) { swiped = false; return; }
+        setZoom(!fullSize);
+      });
+
+      document.addEventListener("keydown", (event) => {
+        if (!viewer.open || event.defaultPrevented || event.altKey || event.ctrlKey || event.metaKey || event.shiftKey) return;
+        // Arrow keys pan an enlarged screenshot while it has focus.
+        if (fullSize && event.key.startsWith("Arrow") && event.target.closest?.("[data-slide-shot]")) return;
+        const target = { ArrowLeft: current - 1, PageUp: current - 1, ArrowRight: current + 1, PageDown: current + 1, Home: 0, End: slides.length - 1 }[event.key];
+        if (target === undefined) return;
+        event.preventDefault();
+        if (target !== current && target >= 0 && target < slides.length) show(target);
+      });
+
+      root.classList.add("js-slides");
+      document.querySelector("[data-slide-poster] img").src = shots[0].getAttribute("src");
+      document.querySelector("[data-slide-launch]").hidden = false;
+      document.querySelector("[data-slide-count]").textContent = " · " + slides.length + (slides.length === 1 ? " screenshot" : " screenshots");
+      part("[data-slide-viewer-title]").textContent = document.getElementById("deck-title").textContent;
+      const linked = location.hash === "#view" ? 0 : slides.findIndex((slide) => "#" + slide.id === location.hash);
+      if (linked >= 0) open(linked);
+    })();
+  </script>
+</body>
+</html>
