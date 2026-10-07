@@ -1,0 +1,7 @@
+lifecycle_version: 1
+name: "System lifecycle"
+initial_stage: "STAGE-001"
+stages: [{"id":"STAGE-001","name":"Initial stage","flow":"FLOW-001","next":[],"terminal_outcome":"OUTCOME-001"}]
+terminal_outcomes: [{"id":"OUTCOME-001","name":"Terminal outcome","meaning":"State the exact terminal meaning."}]
+invariants: ["INV-001"]
+

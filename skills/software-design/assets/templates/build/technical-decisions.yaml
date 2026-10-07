@@ -1,0 +1,17 @@
+technical_decision_file_version: 1
+
+decisions:
+  - id: "TD-001"
+    title: "Consequential technical choice"
+    state: "Open"
+    primary_domain: "domain-slug"
+    affected_responsibilities: ["SR-001"]
+    context: "Explain the technical situation and what is already happening in the system."
+    why_it_matters: "Explain the authority, safety, interoperability, correctness, or construction consequence that makes this one meaningful decision."
+    established: "State the relevant design facts that are already fixed and must not be reopened by the child tickets."
+    how_tickets_fit: "Explain why the child questions form one coherent choice and which compatibility boundary their answers must preserve."
+    current_shape: null
+    blocker: null
+    outcome: null
+    defer_reason: null
+    resume_when: null

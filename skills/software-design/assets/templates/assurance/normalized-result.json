@@ -1,0 +1,69 @@
+{
+  "assurance_result_version": 1,
+  "blueprint": {
+    "id": "example-system",
+    "name": "Example Software Design",
+    "snapshot_id": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+    "revision": "example-blueprint-revision-0001"
+  },
+  "run": {
+    "started_at": "2026-01-01T00:00:00.000Z",
+    "completed_at": "2026-01-01T00:01:00.000Z"
+  },
+  "generated_at": "2026-01-01T00:01:01.000Z",
+  "tools": [
+    { "name": "example-result-adapter", "version": "1.0.0" }
+  ],
+  "repositories": [
+    {
+      "id": "REPO-001",
+      "name": "Example Repository",
+      "revision": "example-repository-revision-0001",
+      "manifest_digest": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+      "build_units": [
+        {
+          "id": "BU-001",
+          "name": "Example Build Unit",
+          "records": [
+            {
+              "id": "INV-001",
+              "name": "Example Invariant",
+              "kind": "invariant",
+              "obligations": [
+                {
+                  "id": "INV-001.VO-001",
+                  "title": "Malformed input is rejected",
+                  "claim": "Malformed required fields never change authoritative state.",
+                  "required_observation": "Every declared malformed case is rejected and state remains unchanged.",
+                  "risk": "high",
+                  "status": "passed",
+                  "covers": [],
+                  "evidence": [
+                    {
+                      "binding_id": "EVID-001",
+                      "kind": "test",
+                      "method": "parameterized integration test",
+                      "locator": "tests/integration/validation.test.ts",
+                      "selector": "validation rejects malformed required fields",
+                      "status": "passed",
+                      "selector_count": 1,
+                      "discovered_cases": 4,
+                      "executed_cases": 4,
+                      "passing_cases": 4,
+                      "failing_cases": 0,
+                      "skipped_cases": 0,
+                      "case_ids": ["missing-id", "wrong-id-type", "missing-owner", "wrong-owner-type"],
+                      "fixtures": ["tests/fixtures/malformed-validation-cases.yaml"],
+                      "observation": "All four cases were rejected and authoritative state was unchanged."
+                    }
+                  ],
+                  "exception": null
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

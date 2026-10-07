@@ -1,0 +1,30 @@
+ticket_file_version: 3
+scope: "responsibility:SR-001"
+
+tickets:
+  - id: "TICKET-0001"
+    title: "Material implementation-detail question"
+    status: "todo"
+    kind: null
+    complexity: "medium"
+    concern: "protocol-transaction"
+    owner: "SR-001"
+    affects: ["SR-001"]
+    build_units: []
+    build_unit_disposition: "Realization mapping has not started."
+    repositories: []
+    repository_contract_area: null
+    parent_decision: null
+    cluster: "coherent-discussion-cluster"
+    question: "What concrete choice must be made, understandable without opening another record?"
+    context: "Explain the situation, established facts, unknowns, and why the choice matters in plain language. Use descriptive names and a concrete example when useful."
+    current_shape: null
+    candidate_proof: "An implementer cannot finish or verify <bounded behavior> without choosing <missing detail>, and the current package does not already choose it."
+    options: ["First concrete option and its practical consequences", "Second concrete option and its practical consequences"]
+    recommendation: "Name the proposed choice, reasons, and important assumptions; if evidence is insufficient, explain what is needed before recommending a choice."
+    resolution: null
+    result_refs: []
+    constraint_refs: []
+    depends_on: []
+    blocked_by: []
+    write_targets: ["system-model/domains/<domain-slug>/responsibilities/sr-001-responsibility.md"]
