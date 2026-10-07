@@ -1,0 +1,28 @@
+{
+  "assurance_coverage_version": 1,
+  "repository": "REPO-001",
+  "blueprints": [
+    {
+      "id": "example-system",
+      "source": "../design/software-design"
+    }
+  ],
+  "bindings": [
+    {
+      "id": "EVID-001",
+      "blueprint": "example-system",
+      "build_unit": "BU-001",
+      "obligations": ["INV-001.VO-001", "SEC-001.VO-001"],
+      "kind": "test",
+      "method": "parameterized integration test",
+      "locator": "tests/integration/validation.test.ts",
+      "selector": "validation rejects malformed required fields",
+      "command": "npm test -- tests/integration/validation.test.ts",
+      "expected_observation": "Every declared malformed case is rejected without changing authoritative state.",
+      "cases": ["missing-id", "wrong-id-type", "missing-owner", "wrong-owner-type"],
+      "fixtures": ["tests/fixtures/malformed-validation-cases.yaml"],
+      "result_adapter": "scripts/assurance/emit-results.mjs"
+    }
+  ],
+  "exceptions": []
+}
