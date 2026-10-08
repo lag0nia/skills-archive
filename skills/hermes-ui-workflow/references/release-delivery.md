@@ -10,7 +10,7 @@ Use the existing release channel to put the candidate in the final installed Mac
 
 Before delivery, verify backend availability and the installed version through the repository's documented read-only status mechanism. Check required package/version and contract compatibility without installing, updating, starting or restarting anything, and make no model or Jev call. If no such read-only mechanism exists, state that limitation and leave availability verification to the user; do not invent an endpoint or path.
 
-After the user accepts the visible behavior, obtain explicit approval for the specific pull request before merging it. Acceptance alone does not authorize merge, production publication, backend activation or restart. After merge, finalize release metadata and history. When the candidate's approved bits are identical, finalize that candidate without rebuilding identical artifacts. Never overwrite an immutable published version; code fixes require a higher app version. If a final release requires a new binary or backend activation, get the corresponding authorization first.
+After the user accepts the visible behavior, obtain explicit approval for the specific pull request before merging it. Acceptance alone does not authorize merge, production publication, backend activation or restart. After merge, finalize release metadata and history, which also publishes the approved version's downloadable release. When the candidate's approved bits are identical, finalize that candidate without rebuilding identical artifacts. Never overwrite an immutable published version; code fixes require a higher app version. If a final release requires a new binary or backend activation, get the corresponding authorization first.
 
 ## Release notes and history
 
@@ -21,7 +21,7 @@ Each published release needs current in-app notes and a browsable persistent his
 - known limitations;
 - exact backend requirements, or `No backend update required`.
 
-This is a required product target; do not imply the history mechanism already exists. Inspect the current app and backend contracts, then integrate the history with the real implementation where needed. Do not invent an endpoint, file path or storage API.
+In Hermes UI this exists: release records in `release-notes/releases/<version>.json` feed the in-app history, and approved versions are also published as GitHub releases with a Mac DMG, the Android APK and checksums (`scripts/github-release.sh`, run by `scripts/release.sh`). In another repository, inspect its real mechanism and integrate with it. Do not invent an endpoint, file path or storage API.
 
 ## Reproducible backend delivery
 
@@ -74,5 +74,7 @@ Adapt this compact record to the repository's existing release mechanism; do not
 - User acceptance:
 - Pull request and explicit merge approval:
 - Final release metadata/history location:
+- Downloadable release (DMG/APK) link:
+- Builder model used:
 - Final binary/backend authorization, if needed:
 ```
