@@ -63,6 +63,9 @@ Until the user restores test execution, preserve existing test files and do not 
   - `scripts/release.sh --channel stable <X.Y.Z> <code> "<notes>"` runs after the merge, from a clean checkout of the approved commit on the default branch; it refuses records that are not `approved`.
   - `scripts/release.sh --channel stable --history-only` republishes the stable history.
   - `docs/releasing.md` in the repository describes the publishing account, signing files and recovery.
+  - Publishing uses the restricted MSI account `hermes-publisher` (SSH alias `hermes-msi-publisher`, overridable with `HERMES_MSI_SSH`), one SSH key per developer. It accepts only the publish commands (`status`, `upload`, `publish`, `history`, `checksums`), never a shell, and records who published each version.
+  - Signing files live in `HERMES_UI_SIGNING_DIR` (default `~/.hermes-ui-signing`): directory 0700, files 0600, outside every repository; the owner hands them over privately. Never read, print or copy their contents.
+  - The server keeps versions immutable per channel, refuses a publish when the channel changed during the upload (run again, with a higher version if yours was taken) and keeps rollback copies. A version number is never reused, even after a failed publish.
   - Use one Android build cache per worktree (`HERMES_ANDROID_TARGET_DIR`).
 - **Downloads:** each stable publication also runs `scripts/github-release.sh`. It creates the GitHub release `v<version>` with a Mac DMG, the Android APK and checksums, all built from the exact published stable binaries, and marks it as Latest. Earlier releases stay downloadable; test builds are never published there.
 - **Plugins:** they live in `lag0nia/plugins`. Install them only from tags `<plugin>/v<version>`, following that repository's README and maintenance procedure. When a feature needs a plugin or a minimum version, add it to the app's plugin requirements list.
