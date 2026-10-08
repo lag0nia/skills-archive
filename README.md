@@ -14,7 +14,7 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. Each skill 
 | [`codebase-cleanup`](skills/codebase-cleanup/SKILL.md) | Remove obsolete code and unnecessary complexity while preserving supported behavior. [Installation and requirements](docs/skills/codebase-cleanup.md). |
 | [`codebase-restructure`](skills/codebase-restructure/SKILL.md) | Assess architecture and plan or implement behavior-preserving restructuring. [Installation and requirements](docs/skills/codebase-restructure.md). |
 | [`find-bugs`](skills/find-bugs/SKILL.md) | Discover and independently confirm defects without implementing fixes. [Installation and requirements](docs/skills/find-bugs.md). |
-| [`hermes-ui-workflow`](skills/hermes-ui-workflow/SKILL.md) | Architect-builder workflow for Hermes UI: explicit builder model, candidate build tested in the installed apps, approved PR merge, then final release with in-app history and DMG/APK downloads. |
+| [`hermes-ui-workflow`](skills/hermes-ui-workflow/SKILL.md) | Architect-builder workflow for Hermes UI: explicit builder model, local demo in Hermes Dev, approved PR merge, team testing in Hermes Canary from main, then a stable release with in-app history and DMG/APK downloads. |
 | [`task-brief`](skills/task-brief/SKILL.md) | Capture a durable task brief and plan in one Markdown file. [Installation and requirements](docs/skills/task-brief.md). |
 
 ## Install

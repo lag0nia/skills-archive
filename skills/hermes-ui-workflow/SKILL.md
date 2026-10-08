@@ -1,6 +1,6 @@
 ---
 name: hermes-ui-workflow
-description: Mandatory workflow for every change in a Hermes UI repository - an architect designs and splits the work, builders on an explicitly chosen model implement it, the candidate build is tested by the user in the installed apps, the approved pull request is merged and the release is finalized (in-app history plus a GitHub release with DMG and APK).
+description: Mandatory workflow for every change in a Hermes UI repository - an architect designs and splits the work, builders on an explicitly chosen model implement it, the architect launches a local demo (Hermes Dev in development mode on Mac and Android) for the user to try, the approved pull request is merged, Hermes Canary carries main for the team, and a stable release is cut when the team decides (in-app history plus a GitHub release with DMG and APK).
 license: MIT
 ---
 
@@ -27,42 +27,55 @@ Before work, read the repository's `AGENTS.md`, its role and delivery instructio
 
 Each feature, or each submodule of a large feature, goes through these steps in order:
 
-1. **Develop.** One branch, one worktree (under the workspace's `worktrees/` folder) and one writer per feature. The architect designs, builders implement and the architect reviews. Checks are compile, typecheck and relevant packaging only (see §5).
-2. **Open the pull request** when the feature is complete and reviewable. It includes:
+1. **Develop.** One branch, one worktree (under the workspace's `worktrees/` folder) and one writer per feature. The architect designs, builders implement and the architect reviews. Checks are compile and typecheck (see §5).
+2. **Local demo.** When there is something to try, the architect launches the app from the feature worktree in development mode, as **Hermes Dev** (see §6), and tells the user it is ready:
+   - **Mac:** `npm run tauri dev`. The app opens on the user's Mac with live reload.
+   - **Android:** `npm run tauri android dev`, with the user's phone connected by USB or wireless debugging (or an emulator). The app runs on the phone with live reload.
+   - The architect starts the processes and keeps them running, but does not judge the UI itself. Native UI automation is not a gate.
+   - It then writes in one message: "Demo ready", what to open on each platform, a Spanish walkthrough of at most ten minutes, and what the demo cannot show yet.
+   - If the feature needs a backend change, the plugin change must be installed on the user's server first, with that installation explicitly authorized. Otherwise the demo shows the feature as unavailable.
+   - The user tries it. Fixes go into the same branch; most of them appear without restarting the demo. Repeat until the user says it works.
+3. **Open or update the pull request.** It includes:
    - the implementation and its dependencies;
-   - the release record (in-app notes);
+   - the release notes for the feature;
    - the backend support guide, or the explicit statement `No backend update required`;
-   - a Spanish walkthrough of at most ten minutes;
+   - the walkthrough;
    - if a plugin changes, its pull request in the plugin repository with a new version and tag.
-3. **Build the candidate once there is something to test.** Ask the user, in a single message, for the authorizations still missing: publication and, if needed, plugin installation or activation. Then publish the candidate through the repository's release mechanism. The candidate reaches the final installed Mac/Android apps through their updater. There are no separate demos, test APKs or per-attempt installers.
-4. **The user tests that build** in the installed apps, following the walkthrough. Fix anything found in the same pull request. Fixed code needs a new, higher version for the next candidate: never overwrite a published version.
-5. **Merge** only after the user accepts the behavior **and** explicitly approves that specific pull request. Acceptance alone does not authorize the merge. Squash-merge through the pull request, following `repo-workflow`.
-6. **Publish the final release.** Mark the release record `approved` and publish the history without rebuilding identical binaries. Approved versions are then published as downloadable releases (see §6). Report the final state.
+4. **Merge** only after the user accepts the demo **and** explicitly approves that specific pull request. Acceptance alone does not authorize the merge. Squash-merge through the pull request, following `repo-workflow`.
+5. **Canary.** Merged work reaches **Hermes Canary**, the team's second installed app, which is built from `main` (see §6). Both developers see everyone's merged work together there. Publishing to Canary needs the user's authorization until it is automated. Canary is where integration problems show up, not where individual features are first tried.
+6. **Stable release.** When the team decides Canary is good, cut a stable version from that `main` commit. It reaches the normal **Hermes** app and the GitHub releases page with DMG and APK. Publishing a stable version needs the user's explicit authorization. Report the final state.
 
-While one submodule waits for publication, testing or approval, continue with the next one if it does not depend on it. Do not chain merges on your own, and do not start the next roadmap feature that the user has not asked for.
+While one submodule waits for its demo, review or approval, continue with the next one if it does not depend on it. Do not chain merges on your own, and do not start the next roadmap feature that the user has not asked for.
 
 ## 4. Parallel work and versions
 
 - Several architects may work at once. Each owns its own branches. Never commit to another architect's branch or merge their pull requests.
-- Before assigning a version, check the published channel (`latest.json`), the open pull requests of the app and plugin repositories, and the plugin tags. Take the next free version and write it in the pull request.
-- Only one candidate is in the channel at a time. If another candidate is still being tested, tell the user and let them choose the order.
+- Versions are assigned when publishing, not per feature: Canary builds number themselves from the base version (`X.Y.Z-canary.N`), and the stable version is set when a release is cut. Plugin versions: check the open pull requests and tags of the plugin repository and take the next free one.
+- Feature work is tried in local demos, not by publishing per-feature builds. Canary publishes `main` only, so one developer's work never replaces the other's.
 - Plugins are cumulative: a plugin release never drops features that are already active. If two lines change the same plugin, the second rebases onto the first and takes the next version.
 
 ## 5. Checks and testing
 
-Until the user restores test execution, preserve existing test files and do not add or run unit tests or test suites. Use relevant compile, typecheck and packaging checks; the release build compiles the web and native code. The user tests visible features by hand in the final installed apps. Native UI automation is not a gate. Do not require evidence hashes, leases, evidence manifests or docs-only pull requests for testing attempts. Keep the integrity and signature checks that the real release protocol requires.
+Until the user restores test execution, preserve existing test files and do not add or run unit tests or test suites. Use compile and typecheck checks; publication builds compile and package everything. The user tests visible features by hand: first in the local demo, then together with everyone's merged work in Canary. Native UI automation is not a gate. Do not send ad-hoc installers, test APKs or one-off builds to anyone: individual features are tried in the local demo, and team builds go through Canary. Do not require evidence hashes, leases, evidence manifests or docs-only pull requests for testing attempts. Keep the integrity and signature checks that the real release protocol requires.
 
-## 6. Releases in Hermes UI (`lag0nia/hermes-system-ui`)
+## 6. Apps, channels and releases in Hermes UI (`lag0nia/hermes-system-ui`)
 
-- **Release record:** `release-notes/releases/<version>.json`, with status `candidate`, then `approved` after the merge.
-- **Publication:**
-  - `scripts/release.sh <version> <versionCode> "<notes>"` builds, signs and publishes the candidate to the private update channel.
-  - `scripts/release.sh --history-only` publishes the history after an approval.
-  - Use one Android build cache per worktree (`HERMES_ANDROID_TARGET_DIR`).
-- **Downloads:** when a version is approved, the release script also runs `scripts/github-release.sh`. It creates the GitHub release `v<version>` with a Mac DMG, the Android APK and checksums, all built from the exact published binaries, and marks it as Latest. Earlier releases stay downloadable; candidates are not published there.
-- **Plugins:** they live in `lag0nia/plugins`. Install them only from tags `<plugin>/v<version>`, following that repository's README and maintenance procedure. When a feature needs a plugin or a minimum version, add it to the app's plugin requirements list.
+There are three app identities. They install side by side, each with its own local data and sessions:
 
-A developer with their own release channel or backend keeps this order and these rules, and adapts only the commands and locations to their documented setup.
+| App | Built from | Reaches | Purpose |
+|---|---|---|---|
+| **Hermes Dev** | the feature worktree, in development mode | only the developer's own Mac/phone; never published | local demos and fast iteration |
+| **Hermes Canary** | `main` | both developers, through the Canary update channel | team integration testing |
+| **Hermes** | a stable cut of `main` | everyone, through the stable channel and GitHub releases | daily use |
+
+- **Never run a development build under the Hermes or Hermes Canary identity:** on Android it would replace the installed app and its data. If the Hermes Dev identity is not available yet in the checkout, say so and do not start an Android demo.
+- **Publishing** goes through the restricted publisher of the private MSI channel, with a channel parameter (`stable` or `canary`). Every developer uses the same path with their own SSH key. `docs/releasing.md` in the app repository has the exact commands, requirements and failure handling; follow it rather than copying commands from here.
+- **Release records** live in `release-notes/releases/`. They feed the in-app history of each app.
+- **Downloads:** each stable version also becomes a GitHub release `v<version>` with a Mac DMG, the Android APK and checksums, built from the exact published binaries and marked Latest. Earlier releases stay downloadable; Canary builds never appear there.
+- Use one Android build cache per worktree (`HERMES_ANDROID_TARGET_DIR`).
+- **Plugins** live in `lag0nia/plugins`. Install them only from tags `<plugin>/v<version>`, following that repository's README and maintenance procedure. When a feature needs a plugin or a minimum version, add it to the app's plugin requirements list.
+
+A developer with their own backend keeps this order and these rules, and adapts only server names and locations to their documented setup.
 
 ## 7. Product rules
 
@@ -83,12 +96,12 @@ Report per feature:
 - the checks completed;
 - the app version and any plugin versions;
 - the backend source, version and support guide, or the no-update statement;
-- the Spanish walkthrough;
+- the Spanish walkthrough and how the local demo was launched;
 - any blocked release action;
 - the next action the user needs to take.
 
-Keep these states separate: implemented, published, tested by the user, merged, released.
+Keep these states separate: implemented, demo accepted by the user, merged, in Canary, released as stable.
 
-Read [references/release-delivery.md](references/release-delivery.md) when preparing release notes, a backend support guide, candidate testing or the final release. It defines the required release information and a reusable delivery template.
+Read [references/release-delivery.md](references/release-delivery.md) when preparing release notes, a backend support guide, a demo, or a Canary or stable release. It defines the required release information and a reusable delivery template.
 
 For process-only skill or documentation changes, do not create an artificial app version, binary or demo feature. Product documentation belongs with the product change it describes.
