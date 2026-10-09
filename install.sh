@@ -12,7 +12,7 @@
 #   --list        list the skills in the archive and exit
 #   --uninstall   remove the selected skills from the selected targets
 #
-# With no skill names, every skill under skills/ is used.
+# With no skill names, all skills/ and third-party/<author>/ skills are used.
 # Run from a clone, it links that clone. Run any other way (for example piped
 # from curl), it clones or updates ${SKILLS_ARCHIVE_DIR:-~/.skills-archive}.
 set -euo pipefail
@@ -50,31 +50,57 @@ else
   fi
 fi
 
-if (( ${#names[@]} == 0 )); then
-  for dir in "$repo"/skills/*/; do
-    [[ -f "$dir/SKILL.md" ]] && names+=("$(basename "$dir")")
+# Build one catalog for listing, validation, local links and remote installs.
+skill_names=()
+skill_paths=()
+for dir in "$repo"/skills/* "$repo"/third-party/*/*; do
+  [[ -f "$dir/SKILL.md" ]] || continue
+  name="$(basename "$dir")"
+  for existing in "${skill_names[@]-}"; do
+    if [[ "$existing" == "$name" ]]; then
+      echo "Duplicate skill name: $name; archive skill names must be unique" >&2
+      exit 1
+    fi
   done
+  skill_names+=("$name")
+  skill_paths+=("${dir#"$repo"/}")
+done
+
+resolve_skill() {
+  local requested="$1" i
+  for (( i=0; i<${#skill_names[@]}; i++ )); do
+    if [[ "${skill_names[$i]}" == "$requested" ]]; then
+      printf '%s\n' "${skill_paths[$i]}"
+      return 0
+    fi
+  done
+  echo "No such skill: $requested (try --list)" >&2
+  return 1
+}
+
+if (( ${#names[@]} == 0 )); then
+  names=("${skill_names[@]}")
 fi
+
+# Validate the whole selection before making any changes.
+for name in "${names[@]}"; do
+  resolve_skill "$name" >/dev/null
+done
 
 if (( list )); then
   for name in "${names[@]}"; do
-    desc="$(sed -n 's/^description: //p' "$repo/skills/$name/SKILL.md" | head -1)"
+    path="$(resolve_skill "$name")"
+    desc="$(sed -n 's/^description: //p' "$repo/$path/SKILL.md" | head -1)"
     printf '%-20s %s\n' "$name" "${desc:0:100}"
   done
   exit 0
 fi
 
-for name in "${names[@]}"; do
-  if [[ ! -f "$repo/skills/$name/SKILL.md" ]]; then
-    echo "No such skill: $name (try --list)" >&2; exit 1
-  fi
-done
-
 link_into() {  # <label> <skills dir>
   local label="$1" dir="$2" name src dest
   mkdir -p "$dir"
   for name in "${names[@]}"; do
-    src="$repo/skills/$name" dest="$dir/$name"
+    src="$repo/$(resolve_skill "$name")" dest="$dir/$name"
     if (( uninstall )); then
       if [[ -L "$dest" ]]; then rm "$dest"; echo "$label: removed $name"; fi
       continue
@@ -102,7 +128,7 @@ if (( hermes )); then
       "$hermes_bin" skills uninstall "$name"
     else
       # Hermes fetches from GitHub, so it installs what is pushed to main.
-      "$hermes_bin" skills install "$REPO_SLUG/skills/$name" --yes
+      "$hermes_bin" skills install "$REPO_SLUG/$(resolve_skill "$name")" --yes
     fi
   done
 fi

@@ -19,7 +19,7 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. The main co
 
 ## Third-party skills
 
-[Matt Pocock’s selected skills](third-party/mattpocock/README.md): `prototype`, `wait-what`, `code-review`, `diagnosing-bugs`, `retro`, and `writing-for-agents`. Their source revision, license, dependencies, and update notes are recorded with the collection. The root installer does not install these directories.
+[Matt Pocock’s selected skills](third-party/mattpocock/README.md): `prototype`, `wait-what`, `code-review`, `diagnosing-bugs`, `retro`, and `writing-for-agents`. Their source revision, license, dependencies, and update notes are recorded with the collection. The root installer includes these skills and accepts their names just like the main collection.
 
 ## Install
 
@@ -29,7 +29,7 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. The main co
 curl -fsSL https://raw.githubusercontent.com/lag0nia/skills-archive/main/install.sh | bash
 ```
 
-This clones the archive to `~/.skills-archive` and links every skill into `~/.claude/skills` (Claude Code) and `~/.agents/skills` (Codex). Run the same command again to update: the links point at the clone, so a `git pull` is all it takes.
+This clones the archive to `~/.skills-archive` and links every skill from `skills/` and `third-party/<author>/` into `~/.claude/skills` (Claude Code) and `~/.agents/skills` (Codex). Run the same command again to update: the links point at the clone, so a `git pull` is all it takes.
 
 Only some skills or targets:
 
@@ -62,6 +62,14 @@ npx skills add lag0nia/skills-archive
 ```
 
 That CLI copies the files instead of linking them, so pick one method per machine.
+
+To install only the six Matt Pocock skills:
+
+```bash
+./install.sh prototype wait-what code-review diagnosing-bugs retro writing-for-agents
+```
+
+Use `--claude`, `--codex`, or `--hermes` to select a target. Install `writing-for-agents` alongside `retro`, which invokes it. Skill names must be unique across both collections; the installer rejects duplicate names rather than choosing a source silently.
 
 ## Options
 

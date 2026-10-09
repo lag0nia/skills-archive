@@ -22,7 +22,13 @@ Selected third-party skills copied unchanged from [mattpocock/skills](https://gi
 
 Some skills expect project context: `wait-what` references a project glossary, and `code-review` expects issue-tracker information and parallel-agent capabilities. Archiving these files does not establish that every workflow is supported by every agent.
 
-The root `install.sh` currently discovers only `skills/`; these third-party directories are not included in that installer. To install manually, copy the complete desired skill directory into your agent's configured skills directory, retaining the license notices. Keep this README and LICENSE with redistributed collections.
+The root installer discovers these directories alongside `skills/`. From the archive checkout, install this collection with:
+
+```bash
+./install.sh prototype wait-what code-review diagnosing-bugs retro writing-for-agents
+```
+
+The default targets are Claude Code and Codex; select `--claude`, `--codex`, or `--hermes` as needed. With no skill names, all skills from both collections are installed. `--list` and `--uninstall` also recognize these names. Existing non-link installations are preserved and reported by the installer. Keep this README and LICENSE with redistributed collections.
 
 ## Updating
 
