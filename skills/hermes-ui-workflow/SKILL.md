@@ -42,7 +42,7 @@ Each feature, or each submodule of a large feature, goes through these steps in 
    - the walkthrough;
    - if a plugin changes, its pull request in the plugin repository with a new version and tag.
 4. **Merge** only after the user accepts the demo **and** explicitly approves that specific pull request. Acceptance alone does not authorize the merge. Squash-merge through the pull request, following `repo-workflow`.
-5. **Canary.** Merged work reaches **Hermes Canary**, the team's second installed app, which is built from `main` (see §6). Both developers see everyone's merged work together there. Canary is published by hand from `origin/main` after a merge the owner approved, by the owner or the second developer (see §6); an agent publishes only with the owner's explicit authorization for that publication. Canary is where integration problems show up, not where individual features are first tried.
+5. **Canary.** Merged work reaches **Hermes Canary**, the team's second installed app, which is built from `main` (see §6). Both developers see everyone's merged work together there. Canary is published by hand from `origin/main` after the merge, by either developer (see §6); an agent publishes only with the explicit authorization of the developer it works for. Canary is where integration problems show up, not where individual features are first tried.
 6. **Stable release.** Either developer may decide and publish a stable version. When one of them decides Canary is good, they cut a stable version from that `main` commit. It reaches the normal **Hermes** app and the GitHub releases page with DMG and APK. An agent never publishes stable without the user's explicit order. Report the final state.
 
 While one submodule waits for its demo, review or approval, continue with the next one if it does not depend on it. Do not chain merges on your own, and do not start the next roadmap feature that the user has not asked for.
@@ -70,10 +70,11 @@ There are three app identities. They install side by side, each with its own loc
 
 - **Never run a development build under the Hermes or Hermes Canary identity:** on Android it would replace the installed app and its data. If the Hermes Dev identity is not available yet in the checkout, say so and do not start an Android demo.
 - **Publishing** goes through the restricted publisher of the private MSI channel, with a channel parameter (`stable` or `canary`). Every developer uses the same path with their own SSH key. `docs/releasing.md` in the app repository has the exact commands, requirements and failure handling; follow it rather than copying commands from here.
-- **Who approves and publishes** (owner decision, 2026-10-09; `docs/releasing.md` §0 has the step-by-step flow):
-  - Every merge needs the owner's explicit approval of that pull request, whoever wrote it.
-  - **Canary:** the owner and the second developer (Alan, GitHub `Alangr6`) publish, each with their own publisher key, **only from `origin/main` after an owner-approved merge**; never from a feature branch. Canary is published by hand; there are no automatic builds yet.
-  - **Stable:** either developer (the owner or Alan) decides when and publishes it, from a clean, up-to-date `origin/main`; whoever publishes it opens the version-bump pull request for the next cycle.
+- **Who merges and publishes** (owner decision, 2026-10-09; `docs/releasing.md` §0 has the step-by-step flow):
+  - The two developers, Jorge (owner, GitHub `lag0nia`) and Alan (GitHub `Alangr6`), have the same rights. Each merges their own pull requests and publishes, following the same standards; neither needs the other's approval.
+  - "The user" is the developer the agent works for. An agent merges or publishes only with that developer's explicit approval for that action.
+  - **Canary:** either developer publishes it with their own publisher key, **only from `origin/main` after the merge**; never from a feature branch. Canary is published by hand; there are no automatic builds yet.
+  - **Stable:** either developer decides when and publishes it, from a clean, up-to-date `origin/main`; whoever publishes it opens the version-bump pull request for the next cycle.
 - **Release records** live in `release-notes/releases/`. They feed the in-app history of each app.
 - **Downloads:** each stable version also becomes a GitHub release `v<version>` with a Mac DMG, the Android APK and checksums, built from the exact published binaries and marked Latest. Earlier releases stay downloadable; Canary builds never appear there.
 - Use one Android build cache per worktree (`HERMES_ANDROID_TARGET_DIR`).
