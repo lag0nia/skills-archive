@@ -1,6 +1,6 @@
 # skills-archive
 
-Agent skills that work in **Claude Code**, **Codex** and **Hermes**. Each skill is a folder under `skills/` with a `SKILL.md` in the open [Agent Skills](https://agentskills.io) format.
+Agent skills that work in **Claude Code**, **Codex** and **Hermes**. The main collection lives under `skills/`, with each skill containing a `SKILL.md` in the open [Agent Skills](https://agentskills.io) format. Selected skills from other authors are archived separately under `third-party/`.
 
 | Skill | What it does |
 |---|---|
@@ -16,6 +16,10 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. Each skill 
 | [`find-bugs`](skills/find-bugs/SKILL.md) | Discover and independently confirm defects without implementing fixes. [Installation and requirements](docs/skills/find-bugs.md). |
 | [`hermes-ui-workflow`](skills/hermes-ui-workflow/SKILL.md) | Architect-builder workflow for Hermes UI: explicit builder model, local demo in Hermes Dev, approved PR merge, team testing in Hermes Canary from main, then a stable release with in-app history and DMG/APK downloads. |
 | [`task-brief`](skills/task-brief/SKILL.md) | Capture a durable task brief and plan in one Markdown file. [Installation and requirements](docs/skills/task-brief.md). |
+
+## Third-party skills
+
+[Matt Pocock’s selected skills](third-party/mattpocock/README.md): `prototype`, `wait-what`, `code-review`, `diagnosing-bugs`, `retro`, and `writing-for-agents`. Their source revision, license, dependencies, and update notes are recorded with the collection. The root installer does not install these directories.
 
 ## Install
 
