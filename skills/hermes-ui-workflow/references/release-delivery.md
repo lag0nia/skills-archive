@@ -1,16 +1,16 @@
 # Hermes UI release delivery
 
-Use this reference for product features that need a candidate release or backend delivery. Read the current repository instructions and implementation first. Treat every authorization as specific to the action it covers; authorization to implement or accept behavior does not authorize publishing, activating, restarting or merging.
+Use this reference for product features that need a release or backend delivery. Read the current repository instructions and implementation first. Treat every authorization as specific to the action it covers; authorization to implement or accept behavior does not authorize publishing, activating, restarting or merging.
 
-## Candidate and user review
+## Demo, merge and release
 
 Prepare one feature branch and pull request with the implementation, required dependencies, in-app release notes and a detailed backend support guide, or an explicit `No backend update required` statement. Release notes link to the guide and summarize the required backend work. Prepare the guide and Spanish user walkthrough before asking for missing publication or activation authorization. Do not publish or activate until that authorization exists.
 
-Use the existing release channel to put the candidate in the final installed Mac/Android apps. The user performs the functional walkthrough in those apps; keep the steps short and under ten minutes. Do not create standalone demos, test APKs or per-attempt installers. If there is no usable delivery mechanism or authorization, leave the candidate reviewable and report the blocker clearly.
+The user first tries the feature in a local demo: the architect runs Hermes Dev in development mode on the user's Mac and phone (see the skill, §3 and §6). Keep the walkthrough short, under ten minutes. Merged work then reaches Hermes Canary from `main`, and only the owner cuts a stable version, when they decide. Do not send ad-hoc installers, test APKs or one-off builds. If a demo or a publication is blocked by a missing tool, device or authorization, leave the work reviewable and report the blocker clearly.
 
 Before delivery, verify backend availability and the installed version through the repository's documented read-only status mechanism. Check required package/version and contract compatibility without installing, updating, starting or restarting anything, and make no model or Jev call. If no such read-only mechanism exists, state that limitation and leave availability verification to the user; do not invent an endpoint or path.
 
-After the user accepts the visible behavior, obtain explicit approval for the specific pull request before merging it. Acceptance alone does not authorize merge, production publication, backend activation or restart. After merge, finalize release metadata and history, which also publishes the approved version's downloadable release. When the candidate's approved bits are identical, finalize that candidate without rebuilding identical artifacts. Never overwrite an immutable published version; code fixes require a higher app version. If a final release requires a new binary or backend activation, get the corresponding authorization first.
+After the user accepts the demo, obtain explicit approval for the specific pull request before merging it. Acceptance alone does not authorize merge, publication, backend activation or restart. Merged work is published to Hermes Canary from `main` (by the owner or the second developer, only after an owner-approved merge, and by an agent only with explicit authorization). When the owner decides, the owner cuts a stable version from `main`: its release record becomes `approved`, the history is published and its downloadable GitHub release is created. Never overwrite an immutable published version; fixes need a higher version. Get the corresponding authorization before each publication or backend activation.
 
 ## Release notes and history
 
@@ -46,10 +46,8 @@ A script or single-command installer is optional and appropriate only when it is
 Adapt this compact record to the repository's existing release mechanism; do not invent a new API, endpoint or path to fill a field.
 
 ```markdown
-## Candidate
-- App version:
-- Status: candidate
-- Date:
+## Feature
+- Local demo: how it was launched (Mac / Android), walkthrough (Spanish, <= 10 minutes), user acceptance:
 - Visible changes and how to use:
 - Known limitations:
 - Backend work: no update required / summary of required work
@@ -66,15 +64,17 @@ Adapt this compact record to the repository's existing release mechanism; do not
 - Verified environments:
 - Optional script/single command and environments where it is reliable:
 - Restart required:
-- Candidate publication/activation authorization:
-- Installed-app walkthrough (Spanish, <= 10 minutes):
-
-## Final release
-- Status: approved
-- User acceptance:
 - Pull request and explicit merge approval:
+- Canary build that carries it:
+
+## Stable release
+- App version and date:
+- Status: approved
+- Canary build it was cut from:
+- Pull requests included:
+- Stable publication authorization:
 - Final release metadata/history location:
 - Downloadable release (DMG/APK) link:
 - Builder model used:
-- Final binary/backend authorization, if needed:
+- Backend authorization, if needed:
 ```
