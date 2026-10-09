@@ -1,6 +1,6 @@
 ---
 name: hermes-ui-workflow
-description: Mandatory workflow for every change in a Hermes UI repository - an architect designs and splits the work, builders on an explicitly chosen model implement it, the architect launches a local demo (Hermes Dev in development mode on Mac and Android) for the user to try, the approved pull request is merged, Hermes Canary carries main for the team, and the owner cuts a stable release when they decide (in-app history plus a GitHub release with DMG and APK).
+description: Mandatory workflow for every change in a Hermes UI repository - an architect designs and splits the work, builders on an explicitly chosen model implement it, the architect launches a local demo (Hermes Dev in development mode on Mac and Android) for the user to try, the approved pull request is merged, Hermes Canary carries main for the team, and either developer cuts a stable release when they decide (in-app history plus a GitHub release with DMG and APK).
 license: MIT
 ---
 
@@ -43,7 +43,7 @@ Each feature, or each submodule of a large feature, goes through these steps in 
    - if a plugin changes, its pull request in the plugin repository with a new version and tag.
 4. **Merge** only after the user accepts the demo **and** explicitly approves that specific pull request. Acceptance alone does not authorize the merge. Squash-merge through the pull request, following `repo-workflow`.
 5. **Canary.** Merged work reaches **Hermes Canary**, the team's second installed app, which is built from `main` (see §6). Both developers see everyone's merged work together there. Canary is published by hand from `origin/main` after a merge the owner approved, by the owner or the second developer (see §6); an agent publishes only with the owner's explicit authorization for that publication. Canary is where integration problems show up, not where individual features are first tried.
-6. **Stable release.** Only the owner decides and publishes stable versions. When the owner decides Canary is good, they cut a stable version from that `main` commit. It reaches the normal **Hermes** app and the GitHub releases page with DMG and APK. An agent never publishes stable without the owner's explicit order. Report the final state.
+6. **Stable release.** Either developer may decide and publish a stable version. When one of them decides Canary is good, they cut a stable version from that `main` commit. It reaches the normal **Hermes** app and the GitHub releases page with DMG and APK. An agent never publishes stable without the user's explicit order. Report the final state.
 
 While one submodule waits for its demo, review or approval, continue with the next one if it does not depend on it. Do not chain merges on your own, and do not start the next roadmap feature that the user has not asked for.
 
@@ -73,7 +73,7 @@ There are three app identities. They install side by side, each with its own loc
 - **Who approves and publishes** (owner decision, 2026-10-09; `docs/releasing.md` §0 has the step-by-step flow):
   - Every merge needs the owner's explicit approval of that pull request, whoever wrote it.
   - **Canary:** the owner and the second developer (Alan, GitHub `Alangr6`) publish, each with their own publisher key, **only from `origin/main` after an owner-approved merge**; never from a feature branch. Canary is published by hand; there are no automatic builds yet.
-  - **Stable:** only the owner decides when and publishes it, and then opens the version-bump pull request for the next cycle.
+  - **Stable:** either developer (the owner or Alan) decides when and publishes it, from a clean, up-to-date `origin/main`; whoever publishes it opens the version-bump pull request for the next cycle.
 - **Release records** live in `release-notes/releases/`. They feed the in-app history of each app.
 - **Downloads:** each stable version also becomes a GitHub release `v<version>` with a Mac DMG, the Android APK and checksums, built from the exact published binaries and marked Latest. Earlier releases stay downloadable; Canary builds never appear there.
 - Use one Android build cache per worktree (`HERMES_ANDROID_TARGET_DIR`).
