@@ -70,6 +70,12 @@ There are three app identities. They install side by side, each with its own loc
 
 - **Never run a development build under the Hermes or Hermes Canary identity:** on Android it would replace the installed app and its data. If the Hermes Dev identity is not available yet in the checkout, say so and do not start an Android demo.
 - **Publishing** goes through the restricted publisher of the private MSI channel, with a channel parameter (`stable` or `canary`). Every developer uses the same path with their own SSH key. `docs/releasing.md` in the app repository has the exact commands, requirements and failure handling; follow it rather than copying commands from here.
+- **Team release rules** (agreed by both developers on 2026-10-09; `docs/releasing.md` §0 has the step-by-step flow):
+  - Canary is published **by hand**, from a clean, up-to-date `main`, whenever someone wants to test merged work. There are no automatic builds yet.
+  - A stable version is cut **when both developers agree** that Canary is good. There is no fixed cadence yet.
+  - **Both developers may publish to both channels**, each with their own publisher key; the server records who published each version.
+  - **Whoever publishes a stable version opens the version-bump pull request** for the next cycle (`tauri.conf.json`, `scripts/package-b1.py` and the next release record).
+  - An agent publishes to either channel only with the user's explicit authorization for that publication.
 - **Release records** live in `release-notes/releases/`. They feed the in-app history of each app.
 - **Downloads:** each stable version also becomes a GitHub release `v<version>` with a Mac DMG, the Android APK and checksums, built from the exact published binaries and marked Latest. Earlier releases stay downloadable; Canary builds never appear there.
 - Use one Android build cache per worktree (`HERMES_ANDROID_TARGET_DIR`).
