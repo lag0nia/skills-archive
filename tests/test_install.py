@@ -7,7 +7,7 @@ import tempfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
-SELECTED = ['prototype', 'wait-what', 'code-review', 'diagnosing-bugs', 'retro', 'writing-for-agents']
+SELECTED = ['prototype', 'wait-what', 'code-review', 'diagnosing-bugs', 'retro', 'writing-for-agents', 'to-questionnaire', 'qa']
 
 class InstallerTests(unittest.TestCase):
     def setUp(self):
