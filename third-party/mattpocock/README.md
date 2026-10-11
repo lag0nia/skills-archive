@@ -2,9 +2,8 @@
 
 Selected third-party skills copied unchanged from [mattpocock/skills](https://github.com/mattpocock/skills).
 
-- Default upstream revision (all except `qa`): [`b0618bc436ad893b3c5e84e55fba86586d34a404`](https://github.com/mattpocock/skills/tree/b0618bc436ad893b3c5e84e55fba86586d34a404)
-- Original collection archived: 2026-10-09; `to-questionnaire` and `qa` added: 2026-10-11
-- `qa` revision: [`f958fa17c1b62c3f7be38fc09512669acf6b64fc`](https://github.com/mattpocock/skills/tree/f958fa17c1b62c3f7be38fc09512669acf6b64fc), immediately before its upstream removal. It was already in the deprecated collection; this archive preserves that historical version.
+- Upstream revision: [`b0618bc436ad893b3c5e84e55fba86586d34a404`](https://github.com/mattpocock/skills/tree/b0618bc436ad893b3c5e84e55fba86586d34a404)
+- Original collection archived: 2026-10-09; `to-questionnaire` added: 2026-10-11
 - License: [MIT](LICENSE), copyright Matt Pocock. Preserve bundled attribution notices as well.
 - Local modifications: none. The original skill directories, supporting files, and frontmatter are preserved.
 
@@ -16,22 +15,20 @@ Selected third-party skills copied unchanged from [mattpocock/skills](https://gi
 | [diagnosing-bugs](diagnosing-bugs/SKILL.md) | Reproduce, diagnose, fix, and verify reported bugs or performance regressions. | `skills/engineering/diagnosing-bugs` |
 | [retro](retro/SKILL.md) | Investigate an agent session and recommend improvements to its working environment. | `skills/engineering/retro` |
 | [writing-for-agents](writing-for-agents/SKILL.md) | Guide the writing and organization of instructions consumed by agents. | `skills/productivity/writing-for-agents` |
-
 | [to-questionnaire](to-questionnaire/SKILL.md) | Prepare a questionnaire for someone whose knowledge informs a decision. | `skills/productivity/to-questionnaire` |
-| [qa](qa/SKILL.md) | Capture user-reported problems as GitHub issues during an interactive QA session. | `skills/deprecated/qa` (historical) |
 
 ## Dependencies and use
 
-`retro` explicitly invokes `writing-for-agents`; install both when using the upstream retrospective workflow. The other six selected skills do not explicitly invoke another skill. Supporting files inside each directory must travel with its `SKILL.md`.
+`retro` explicitly invokes `writing-for-agents`; install both when using the upstream retrospective workflow. The other five selected skills do not explicitly invoke another skill. Supporting files inside each directory must travel with its `SKILL.md`.
 
-`to-questionnaire` produces Markdown and is marked for explicit invocation upstream. `qa` expects GitHub CLI access and an exploration agent, uses a project glossary when available, and files issues directly during the requested QA session. It does not run autonomous application tests.
+`to-questionnaire` produces Markdown and is marked for explicit invocation upstream.
 
 Some skills expect project context: `wait-what` references a project glossary, and `code-review` expects issue-tracker information and parallel-agent capabilities. Archiving these files does not establish that every workflow is supported by every agent.
 
 The root installer discovers these directories alongside `skills/`. From the archive checkout, install this collection with:
 
 ```bash
-./install.sh prototype wait-what code-review diagnosing-bugs retro writing-for-agents to-questionnaire qa
+./install.sh prototype wait-what code-review diagnosing-bugs retro writing-for-agents to-questionnaire
 ```
 
 The default targets are Claude Code and Codex; select `--claude`, `--codex`, or `--hermes` as needed. With no skill names, all skills from both collections are installed. `--list` and `--uninstall` also recognize these names. Existing non-link installations are preserved and reported by the installer. Keep this README and LICENSE with redistributed collections.

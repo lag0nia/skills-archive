@@ -19,7 +19,7 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. The main co
 
 ## Third-party skills
 
-[Matt Pocock’s selected skills](third-party/mattpocock/README.md): `prototype`, `wait-what`, `code-review`, `diagnosing-bugs`, `retro`, `writing-for-agents`, `to-questionnaire`, and `qa` (historical upstream version). Their source revision, license, dependencies, and update notes are recorded with the collection. The root installer includes these skills and accepts their names just like the main collection.
+[Matt Pocock’s selected skills](third-party/mattpocock/README.md): `prototype`, `wait-what`, `code-review`, `diagnosing-bugs`, `retro`, `writing-for-agents`, and `to-questionnaire`. Their source revision, license, dependencies, and update notes are recorded with the collection. The root installer includes these skills and accepts their names just like the main collection.
 
 ## Install
 
@@ -63,10 +63,10 @@ npx skills add lag0nia/skills-archive
 
 That CLI copies the files instead of linking them, so pick one method per machine.
 
-To install only the eight Matt Pocock skills:
+To install only the seven Matt Pocock skills:
 
 ```bash
-./install.sh prototype wait-what code-review diagnosing-bugs retro writing-for-agents to-questionnaire qa
+./install.sh prototype wait-what code-review diagnosing-bugs retro writing-for-agents to-questionnaire
 ```
 
 Use `--claude`, `--codex`, or `--hermes` to select a target. Install `writing-for-agents` alongside `retro`, which invokes it. Skill names must be unique across both collections; the installer rejects duplicate names rather than choosing a source silently.
