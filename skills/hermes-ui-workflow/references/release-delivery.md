@@ -4,7 +4,7 @@ Use this reference for product features that need a release or backend delivery.
 
 ## Demo, merge and release
 
-Prepare one feature branch and pull request with the implementation, required dependencies, in-app release notes and a detailed backend support guide, or an explicit `No backend update required` statement. Release notes link to the guide and summarize the required backend work. Prepare the guide and Spanish user walkthrough before asking for missing publication or activation authorization. Do not publish or activate until that authorization exists.
+Prepare one feature branch and pull request with the implementation, required dependencies, in-app release notes and the Hermes image release it needs with a short machine setup guide, or an explicit `No backend update required` statement. Release notes link to the guide. Prepare the guide and Spanish user walkthrough before asking for missing publication or activation authorization. Do not publish or activate until that authorization exists.
 
 The user first tries the feature in a local demo: the architect runs Hermes Dev in development mode on the user's Mac and phone (see the skill, §3 and §6). Keep the walkthrough short, under ten minutes. Merged work then reaches Hermes Canary from `main`, and either developer cuts a stable version, when they decide. Do not send ad-hoc installers, test APKs or one-off builds. If a demo or a publication is blocked by a missing tool, device or authorization, leave the work reviewable and report the blocker clearly.
 
@@ -19,27 +19,21 @@ Each published release needs current in-app notes and a browsable persistent his
 - app version, date and status (`candidate` or `approved`);
 - visible changes and how to use them;
 - known limitations;
-- exact backend requirements, or `No backend update required`.
+- the Hermes image release it needs and the machine setup, or `No backend update required`.
 
 In Hermes UI this exists: release records in `release-notes/releases/<version>.json` feed the in-app history, and approved versions are also published as GitHub releases with a Mac DMG, the Android APK and checksums (`scripts/github-release.sh`, run by `scripts/release.sh`). In another repository, inspect its real mechanism and integrate with it. Do not invent an endpoint, file path or storage API.
 
-## Reproducible backend delivery
+## Machine setup
 
-When a feature needs backend changes, provide a detailed, reproducible support guide tied to the app release. The implementation must be obtainable and its version fixed. Link the exact source and version (tag, commit or equivalent), relevant modules and dependencies; a downloadable source/module/dependency set or explicit config-only changes are acceptable. A new package or artificial artifact is not required. Start in the same source repository; use a separate repository only for a component maintained independently.
+A feature that needs something on the developer's machine is implemented and released first as a Hermes image release in `Alangr6/hermes-system`, under its `docs/hermes-image-rules.md`. The app release names that image release and, only when something has to be done on the machine, links a short setup guide:
 
-The guide must give technologies and components, the architecture and approach used to support the UI, and the UI/backend contract connection, including minimum compatible contracts. An architecture explanation supplements concrete reproduction steps; it never authorizes AI to invent a different backend adaptation for an environment.
+1. the Hermes image release to update to;
+2. modules to enable, keys to configure (where, never their values) and models to download (with the image release's script);
+3. data migration and restart, if any; the agent executes a restart only with explicit authorization;
+4. how to check, read-only, that the machine has what the feature needs;
+5. how to go back.
 
-Document, in order:
-
-1. prerequisites, dependencies (for example, the satisfaction package, Jev or Hindsight service), and the supported starting environment;
-2. exact source/version links and the implementation components to obtain;
-3. concrete install, update and configuration commands plus any manual steps, with user-specific inputs identified and no secrets included;
-4. how to preserve existing configuration and data, back up state, and roll back, including persistent-data migration limits;
-5. a safe, read-only way to verify backend availability and installed version, without model/Jev calls, writes, installation or restart;
-6. the restart required, if any; the guide describes it, but the agent executes it only with explicit authorization;
-7. the target portability and environments actually verified, stated separately, plus actionable behavior for unsupported environments.
-
-A script or single-command installer is optional and appropriate only when it is reliable for the documented supported environments. It is not a universal installer or a required next project. Do not install unspecified `main` branches, create AI-generated environment adaptations, or patch native Hermes.
+Setup guides are operational, not implementation tutorials. Do not ask an AI to recreate a backend adaptation, and do not install from a moving branch. The app repository's `docs/app-releases-and-hermes-image.md` defines how to fill the release record.
 
 ## Reusable feature delivery template
 
@@ -50,20 +44,9 @@ Adapt this compact record to the repository's existing release mechanism; do not
 - Local demo: how it was launched (Mac / Android), walkthrough (Spanish, <= 10 minutes), user acceptance:
 - Visible changes and how to use:
 - Known limitations:
-- Backend work: no update required / summary of required work
-- Backend support guide linked from release notes:
-- Exact implementation components, source and fixed version links (or config-only change):
-- Architecture/approach and UI/backend contract connection:
-- Prerequisites, dependencies and supported starting environment:
-- Read-only backend availability/installation verification (method and result):
-- Ordered install/update/configuration commands and manual steps:
-- User-specific inputs (no secrets):
-- Configuration/data preservation, backup and rollback:
-- Minimum compatible UI/backend contracts:
-- Target portability and supported environments:
-- Verified environments:
-- Optional script/single command and environments where it is reliable:
-- Restart required:
+- Machine side: `No backend update required` / Hermes image >= X.Y.Z (link to the image release)
+- Machine setup guide linked from release notes (modules, keys by location, models, migration, restart, check, go back):
+- Core notices checked before asking to merge (if the machine side touches the Hermes core):
 - Pull request and explicit merge approval:
 - Canary build that carries it:
 
