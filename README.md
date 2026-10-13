@@ -20,6 +20,8 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. The main co
 
 [Matt Pocock’s selected skills](third-party/mattpocock/README.md): `prototype`, `wait-what`, `code-review`, `diagnosing-bugs`, `retro`, `writing-for-agents`, and `to-questionnaire`. Their source revision, license, dependencies, and update notes are recorded with the collection. The root installer includes these skills and accepts their names just like the main collection.
 
+[Emil Kowalski’s UI stress-testing skill](third-party/emilkowalski/README.md): `break-ui`, checking interfaces against worst-case content, empty states, and extreme values. The upstream source and MIT license are preserved; the root installer accepts its name.
+
 ## Install
 
 ### Claude Code + Codex (one command)
