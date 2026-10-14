@@ -22,6 +22,8 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. The main co
 
 [Emil Kowalski’s UI stress-testing skill](third-party/emilkowalski/README.md): `break-ui`, checking interfaces against worst-case content, empty states, and extreme values. The upstream source and MIT license are preserved; the root installer accepts its name.
 
+[Morluto’s REA skill](third-party/morluto/README.md): `reverse-engineer-anything`, investigating shipped artifacts and runtime behavior with REA. The upstream skill, six reference files, and MIT license are preserved; the root installer accepts its name. Using it requires REA tools to be configured separately.
+
 ## Install
 
 ### Claude Code + Codex (one command)
