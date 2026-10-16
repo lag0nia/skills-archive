@@ -30,3 +30,16 @@ export function markdownAnchorExists(filePath, fragment) {
   }
   return false;
 }
+
+// Inline links as package records write them: a destination, optionally in
+// angle brackets, then an optional "double" or 'single' quoted title. Attribution
+// validation and overview rewriting both read links through these helpers.
+const INLINE_LINK = /\[([^\]]*)\]\((?:<([^>\n]*)>|([^\s)]+))(\s+(?:"[^"]*"|'[^']*'))?\s*\)/g;
+
+export function markdownInlineLinks(text) {
+  return [...String(text).matchAll(INLINE_LINK)].map(([, label, angled, bare, title = ""]) => ({ label, destination: angled ?? bare, title }));
+}
+
+export function replaceMarkdownInlineLinks(text, replace) {
+  return String(text).replace(INLINE_LINK, (whole, label, angled, bare, title = "") => replace({ label, destination: angled ?? bare, title }) ?? whole);
+}

@@ -1,0 +1,69 @@
+--- replace after «…»
+  - Domain Overview
+  + Base USDC Settlement And Funding
+--- replace after «…the payer. Settlement And Lender Interaction»
+  - **Base
+  + **[Base
+--- replace after «…Interaction **Base loan state and USDC»
+  - settlement ([SR-003])**
+  + settlement]**
+--- insert after «…registers the funding vault; successful borrower»
+  - 
+  + acceptance (the
+--- insert after «…the funding vault; successful borrower `acceptX`»
+  - 
+  + call)
+--- replace after «…control over amount, recipient, or meaning.»
+  - [IFACE-009], [IFACE-010],
+  + The [Base transition interface, events,
+--- replace after «…recipient, or meaning. [IFACE-009], [IFACE-010], and»
+  - [IFACE-011]
+  + errors], the [funding vault contract], and the [repayment vault contract]
+--- replace after «…[IFACE-011] retain the full public contracts.»
+  - **Lender-controlled
+  + **[Lender-controlled
+--- replace after «…the full public contracts. **Lender-controlled funding-vault»
+  - interaction ([SR-005])**
+  + interaction]**
+--- replace after «…Bitcoin has its own recovery path.»
+  - [FLOW-001], [FLOW-002], [FLOW-003],
+  + The [origination flow], the [activation flow], the [preactivation unwind flow],
+--- replace after «…recovery path. [FLOW-001], [FLOW-002], [FLOW-003], and»
+  - [STATE-011]
+  + the [main Base loan states]
+--- replace after «…at `C` the current recipient freezes.»
+  - [STATE-012], [STATE-013],
+  + The [repayment vault states], the [refund recipient
+--- replace after «…current recipient freezes. [STATE-012], [STATE-013], and»
+  - [FLOW-004]
+  + claim cutoff states], and the [normal repayment flow]
+--- replace after «…D + 259,200 seconds` remains independent.»
+  - [INV-006], [INV-007],
+  + The [valid repayment], [claim
+--- replace after «…seconds` remains independent. [INV-006], [INV-007], and»
+  - [INV-008]
+  + refund exclusivity], and [default timing and Base separation] invariants
+--- delete after «…retains its explicit Transparent Proxy administration,»
+  - 2-of-3 Safe, seven-day timelock,
+  + 
+--- insert after «…timelock, compatibility checks, and opener-replacement boundary.»
+  - 
+  + Who holds that administration is an unresolved source conflict: the [Base upgrade boundary] states that V1 retains it under a 2-of-3 Safe through a seven-day timelock, while the [upgrade governance selection] states a dedicated single upgrade key for local/test use and the intentionally short public mainnet beta, followed by transfer of that sole ownership to a 2-of-3 multisig-controlled timelock. Neither is chosen until the conflict is answered. Whether V1 has an on-chain pause is also open: this domain's settlement responsibility and the upgrade governance selection say
+--- insert after «…opener-replacement boundary. V1 has no on-chain»
+  - 
+  + pause, while the [deployment, upgrade, and opener states] include pause roles and a narrow operational
+--- replace after «…boundary. V1 has no on-chain pause;»
+  - direct
+  + whether that pause is the frontend/API operational stop or an on-chain role is undecided. Direct
+--- replace after «…shutdown. These choices remain governed by»
+  - [STATE-019], [INV-019],
+  + the deployment, upgrade,
+--- replace after «…remain governed by [STATE-019], [INV-019], and»
+  - [INV-020].
+  + opener states, the [funding opener and pause boundaries], and the Base upgrade boundary.
+--- replace after «…provide a complete Base accounting capability»
+  - ([SCOPE-005]);
+  + ([cooperative settlement operations and Base accounting]);
+--- insert after «…lender-capital allocation remain outside this domain.»
+  - 
+  + The [architecture guide] shows where this domain fits in the system, and the [domain record] lists exactly what the domain owns and excludes.

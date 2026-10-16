@@ -20,7 +20,7 @@ function uiFixture({ reviewed = true } = {}) {
   const uiRoot = path.join(root, "ui-ux");
   fs.mkdirSync(uiRoot, { recursive: true });
   fs.copyFileSync(path.join(skillRoot, "references", "ui-ux", "templates", "specification.md"), path.join(uiRoot, "specification.md"));
-  fs.copyFileSync(path.join(skillRoot, "references", "ui-ux", "templates", "prototype.html"), path.join(uiRoot, "prototype.html"));
+  fs.copyFileSync(path.join(skillRoot, "references", "ui-ux", "templates", "index.html"), path.join(uiRoot, "index.html"));
   const candidate = path.join(uiRoot, "alternatives", "main", "index.html");
   fs.mkdirSync(path.dirname(candidate), { recursive: true });
   fs.copyFileSync(path.join(skillRoot, "references/ui-ux/templates/candidate.html"), candidate);
@@ -139,6 +139,22 @@ test("instruction contract: ordinary selected-prototype updates skip the choice 
   assert.doesNotMatch(workflow, /\bStage\s+\d|\btickets?\b|\bBuild Unit\b/i);
 });
 
+test("instruction contract: selected prototype completeness is scoped and synchronized manually", () => {
+  const ui = read("references/ui-ux-design.md");
+  const workflow = read("references/ui-ux/design-workflow.md");
+  const specification = read("references/ui-ux/templates/specification.md");
+  const handoff = read("assets/templates/build/delivery-planning-handoff.md");
+  const execution = fs.readFileSync(path.resolve(skillRoot, "../../delivery/delivery-workpack-execution/SKILL.md"), "utf8");
+  assert.match(workflow, /required prototype coverage complete.*names its selected scope/);
+  assert.match(ui, /full approved interface in that scope/);
+  assert.match(specification, /Complete — <named selected scope>/);
+  assert.match(handoff, /name the selected delivery scope/);
+  assert.match(ui, /pending entries as leads.*empty pending list does not prove freshness/s);
+  assert.match(workflow, /without automatically editing or rendering/);
+  assert.match(ui, /Equivalent data combinations may share one established pattern/);
+  assert.match(execution, /missing materially different route, screen, state, or interaction makes the selected delivery scope incomplete/);
+});
+
 // Guidance and starter checks only: opening the launcher from disk in a browser is the portability proof.
 test("instruction contract: prototypes are portable static files checked by opening the launcher from disk", () => {
   const workflow = read("references/ui-ux/design-workflow.md");
@@ -157,7 +173,7 @@ test("instruction contract: prototypes are portable static files checked by open
   assert.match(workflow, /this is the same review, not an additional cycle\./);
   assert.match(workflow, /Relative paths alone do not prove that interactive behavior works/);
   assert.match(workflow, /a static snapshot or a copy rendered under another URL scheme is not a direct-file check/);
-  assert.match(integration, /Open `ui-ux\/prototype\.html` directly from disk for this inspection instead of a localhost preview/);
+  assert.match(integration, /Open `ui-ux\/index\.html` directly from disk for this inspection instead of a localhost preview/);
   assert.match(integration, /including role switching when applicable\. This replaces the local-server check; it is not an additional review cycle/);
   assert.match(integration, /The one exception is a server justified by a concrete requirement; record that requirement and how to run the prototype under Product And Demo Boundary/);
   assert.match(integration, /Resolving local paths does not prove that a prototype works when opened from disk/);
@@ -166,7 +182,7 @@ test("instruction contract: prototypes are portable static files checked by open
 });
 
 test("the launcher and candidate starters use only relative paths and classic in-page behavior", () => {
-  for (const file of ["references/ui-ux/templates/prototype.html", "references/ui-ux/templates/candidate.html"]) {
+  for (const file of ["references/ui-ux/templates/index.html", "references/ui-ux/templates/candidate.html"]) {
     const html = read(file);
     assert.doesNotMatch(html, /type=["']module["']|\bimport\s*\(|\bfetch\s*\(|localStorage|sessionStorage|https?:\/\//, file);
     for (const [, target] of html.matchAll(/\b(?:href|src)=["']([^"']+)["']/g)) assert.match(target, /^\.\//, `${file}: ${target}`);
@@ -174,7 +190,7 @@ test("the launcher and candidate starters use only relative paths and classic in
 });
 
 test("the launcher starter is one static card per candidate with a View slides button only once slides exist", () => {
-  const launcher = read("references/ui-ux/templates/prototype.html");
+  const launcher = read("references/ui-ux/templates/index.html");
   const active = launcher.replace(/<!--[\s\S]*?-->/g, "");
   assert.doesNotMatch(launcher, /<script/);
   assert.match(launcher, /Keep this\s+design unchanged so every package's launcher looks and works the same/);
@@ -215,7 +231,7 @@ test("candidate folders support explicit selection and multiple linked pages wit
     const uiRoot = path.join(root, "ui-ux");
     const specPath = path.join(uiRoot, "specification.md");
     const candidate = path.join(uiRoot, "alternatives", "main", "index.html");
-    const launcher = fs.readFileSync(path.join(uiRoot, "prototype.html"), "utf8");
+    const launcher = fs.readFileSync(path.join(uiRoot, "index.html"), "utf8");
     assert.doesNotMatch(launcher, /data-product-action|<script/);
     assert.deepEqual(validateUiUxDesign(root).errors, []);
     const specification = fs.readFileSync(specPath, "utf8").replace("`Unresolved` — select a linked candidate entrypoint after review.", "`./alternatives/main/index.html`.");
@@ -224,11 +240,11 @@ test("candidate folders support explicit selection and multiple linked pages wit
     fs.writeFileSync(candidate, baseline.replace("</main>", '<a href="./result.html">Result</a></main>'));
     fs.writeFileSync(path.join(path.dirname(candidate), "result.html"), '<!doctype html><html lang="en"><head><meta name="viewport" content="width=device-width"></head><body><main>Persistent result</main></body></html>');
     assert.deepEqual(validateUiUxDesign(root).errors, []);
-    assert.equal(fs.readFileSync(path.join(uiRoot, "prototype.html"), "utf8"), launcher);
+    assert.equal(fs.readFileSync(path.join(uiRoot, "index.html"), "utf8"), launcher);
     fs.rmSync(path.join(path.dirname(candidate), "result.html"));
     assert.match(validateUiUxDesign(root).errors.join("\n"), /local resource does not resolve/);
     fs.writeFileSync(candidate, baseline);
-    fs.writeFileSync(specPath, specification.replace("`./alternatives/main/index.html`", "`./prototype.html`"));
+    fs.writeFileSync(specPath, specification.replace("`./alternatives/main/index.html`", "`./index.html`"));
     assert.match(validateUiUxDesign(root).errors.join("\n"), /selected candidate entrypoint/);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
@@ -485,7 +501,7 @@ const mainCoverage = "[Main](../../../ui-ux/specification.md#journey-main)";
 
 function linkDeck(root, { specification = true, launcher = true } = {}) {
   const specPath = path.join(root, "ui-ux/specification.md");
-  const launcherPath = path.join(root, "ui-ux/prototype.html");
+  const launcherPath = path.join(root, "ui-ux/index.html");
   if (specification) fs.writeFileSync(specPath, fs.readFileSync(specPath, "utf8").replace("[Main candidate](./alternatives/main/index.html) |", "[Main candidate](./alternatives/main/index.html) · [Slides](./alternatives/main/slides.html) |"));
   if (launcher) fs.writeFileSync(launcherPath, fs.readFileSync(launcherPath, "utf8").replace(">Open prototype</a>", '>Open prototype</a> <a class="button button-slides" href="./alternatives/main/slides.html#view">View slides</a>'));
 }
@@ -525,7 +541,7 @@ test("instruction contract: review slideshows are optional, preference-reusing, 
   assert.match(slides, /never claim a complete deck after a partial or failed capture/);
   assert.match(slides, /keep the existing screenshots but mark them visibly as outdated/);
   assert.match(slides, /add a View slides button to that candidate's card in the launcher, linking `slides\.html#view` so it opens straight into the viewer; closing the viewer returns to the launcher/);
-  assert.match(workflow, /Build `ui-ux\/prototype\.html` from the \[launcher starter\]\(templates\/prototype\.html\) and keep its static design so every launcher looks and works the same/);
+  assert.match(workflow, /Build `ui-ux\/index\.html` from the \[launcher starter\]\(templates\/index\.html\) and keep its static design so every launcher looks and works the same/);
   assert.match(slides, /retained candidates that are not being changed need no automatic deck maintenance/);
   assert.match(slides, /never selects a candidate, approves covered flows, reconciles exploratory behavior/);
   assert.match(slides, /Rendering, interaction, and presentation review remain required independently of slides/);
@@ -551,7 +567,7 @@ test("the slideshow starter is self-contained and cannot pass as a completed dec
   for (const marker of ["data-slide-open", "data-slide-poster", "<dialog", "showModal", "requestFullscreen", "pointerdown", "data-slide-close", "<details class=\"deck-about\"", "Keep this design and script unchanged", "data-slide-group", 'data-slide-viewport="desktop" data-slide-role="TBD role" data-slide-part="journey"', '"Step "', '"Other screens "']) assert.ok(html.includes(marker), marker);
   assert.doesNotMatch(html, /class="deck-open"/);
   assert.match(html, /\.js-slides \.deck-list \{ display: none; \}/);
-  const launcher = read("references/ui-ux/templates/prototype.html");
+  const launcher = read("references/ui-ux/templates/index.html");
   assert.doesNotMatch(launcher.replace(/<!--[\s\S]*?-->/g, ""), /slides\.html/);
   assert.match(launcher, /only after a candidate's review slideshow exists/);
 
@@ -635,7 +651,7 @@ test("declared decks must exist and embed plausible screenshots and every render
   const deckPath = path.join(candidateRoot, "slides.html");
   linkDeck(root);
   assert.match(errorsOf(root), /linked review slideshow does not exist: \.\/alternatives\/main\/slides\.html/);
-  assert.match(errorsOf(root), /prototype\.html: local resource does not resolve inside ui-ux\/: \.\/alternatives\/main\/slides\.html/);
+  assert.match(errorsOf(root), /index\.html: local resource does not resolve inside ui-ux\/: \.\/alternatives\/main\/slides\.html/);
   assert.match(errorsOf(root, { selectedOnly: true }), /linked review slideshow does not exist/);
   writeDeck(candidateRoot);
   assert.deepEqual(validateUiUxDesign(root).errors, []);
@@ -680,7 +696,7 @@ test("declared decks must exist and embed plausible screenshots and every render
   assert.match(fs.readFileSync(deckPath, "utf8"), /data-slide-role="Operator"/);
   assert.doesNotMatch(errorsOf(root), /out of order/);
   fs.writeFileSync(deckPath, deck);
-  const launcherPath = path.join(root, "ui-ux/prototype.html");
+  const launcherPath = path.join(root, "ui-ux/index.html");
   const launcher = fs.readFileSync(launcherPath, "utf8");
   fs.writeFileSync(launcherPath, launcher.replace("slides.html#view", "slides.html"));
   assert.match(errorsOf(root), /launcher must give main a View slides button linking \.\/alternatives\/main\/slides\.html#view/);

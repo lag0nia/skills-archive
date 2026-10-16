@@ -2,7 +2,7 @@
 
 This specification owns presentation and interaction requirements for the in-scope human-facing surfaces. Link canonical product and system owners instead of duplicating their behavior or rationale.
 
-**Prototype launcher:** [Open candidates](./prototype.html)
+**Prototype launcher:** [Open candidates](./index.html)
 
 Link each candidate entrypoint below. A candidate folder may contain one or multiple pages and local resources; selection never requires copying it to the launcher.
 
@@ -40,7 +40,7 @@ Record one explicit selected candidate entrypoint or `Unresolved`; selection doe
 - **Selected implementation target:** `Unresolved` — select a linked candidate entrypoint after review.
 - **Direction selection:** `Selected — <direction>` / `Unresolved`.
 - **Covered-flow approval:** `Approved — <flow and states>` / `Not reviewed` / `Blocked — <finding>`.
-- **Required prototype coverage:** `Complete — <scope>` / `Incomplete — <remaining scope>` / `Not started`.
+- **Required prototype coverage:** `Complete — <named selected scope>` / `Incomplete — <affected and remaining scope>` / `Not started`. Complete means the candidate illustrates that scope's full approved interface: required journeys and routes, consequential interactions, and materially distinct visible states, including applicable waiting, success, failure, cancellation, and recovery. Equivalent data combinations may share an established pattern. Unanswered material UI decisions or unsynchronized approved changes make the affected scope incomplete.
 - **Review slideshows (optional):** `Not asked` / `Declined` / `Requested — <default or expanded coverage>` / `Skipped — <missing capture capability>`. After a candidate's `slides.html` exists, link it after that candidate's entrypoint in the table below, labelled Slides, and add `partial — <omission>` or `outdated — <limitation>` when applicable. A deck is a derived screenshot aid; it never selects a candidate, approves a flow, or evidences tested interactions.
 
 | Alternative | Bounded comparable coverage | Material presentation or interaction difference | Selection / review status |
@@ -53,7 +53,7 @@ State which interactions are product behavior and which are demo conveniences, s
 
 ## Journey And Route Coverage
 
-Start with one direction-setting flow that shows arrival, task discovery, a meaningful action, and its persistent result, plus representative cancellation and failure/recovery. Fix its comprehension and presentation before expanding this table. Reuse approved visual or interaction references when provided.
+Start with one direction-setting flow that shows arrival, task discovery, a meaningful action, and its persistent result, plus representative cancellation and failure/recovery. Fix its comprehension and presentation before expanding this table to the full approved interface of any selected scope claimed complete. Reuse approved visual or interaction references when provided.
 
 | Journey or destination | Distinct user purpose and entry | Primary action, consequence, and next step | Consequential dialog or cross-surface transition | Canonical sources |
 | --- | --- | --- | --- | --- |

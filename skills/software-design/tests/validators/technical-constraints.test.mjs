@@ -11,7 +11,9 @@ const validator = path.resolve(path.dirname(new URL(import.meta.url).pathname), 
 const syncer = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..", "scripts", "sync-technical-constraint-sources.mjs");
 
 function fixture() {
-  return fs.mkdtempSync(path.join(os.tmpdir(), "technical-constraints-"));
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), "technical-constraints-"));
+  write(path.join(root, "system-model", "architecture.md"), "---\ntype: system-architecture\ndesign_format: 2\n---\n\n# System Architecture\n");
+  return root;
 }
 
 function write(filePath, content) {
@@ -80,7 +82,7 @@ test("a ticket-created technical constraint requires reciprocal routing", (conte
   context.after(() => fs.rmSync(root, { recursive: true, force: true }));
   responsibility(root);
   write(path.join(root, "build", "records", "constraints", "cons-001-no-secret-custody.md"), constraint({ sourceTickets: "TICKET-0001" }));
-  write(path.join(root, "build", "workflow", "tickets", "example", "sr-001", "sr-001-tickets.yaml"), `ticket_file_version: 3
+  write(path.join(root, "build", "workflow", "tickets", "example", "sr-001", "sr-001-tickets.yaml"), `ticket_file_version: 4
 scope: "responsibility:SR-001"
 
 tickets:
@@ -98,7 +100,7 @@ test("an unanswered ticket cannot create a Technical Constraint", (context) => {
   context.after(() => fs.rmSync(root, { recursive: true, force: true }));
   responsibility(root);
   write(path.join(root, "build", "records", "constraints", "cons-001-no-secret-custody.md"), constraint({ sourceTickets: "TICKET-0001" }));
-  write(path.join(root, "build", "workflow", "tickets", "example", "sr-001", "sr-001-tickets.yaml"), `ticket_file_version: 3
+  write(path.join(root, "build", "workflow", "tickets", "example", "sr-001", "sr-001-tickets.yaml"), `ticket_file_version: 4
 scope: "responsibility:SR-001"
 
 tickets:

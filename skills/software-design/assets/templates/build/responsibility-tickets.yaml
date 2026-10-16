@@ -1,4 +1,4 @@
-ticket_file_version: 3
+ticket_file_version: 4
 scope: "responsibility:SR-001"
 
 tickets:
@@ -14,10 +14,9 @@ tickets:
     build_unit_disposition: "Realization mapping has not started."
     repositories: []
     repository_contract_area: null
-    parent_decision: null
     cluster: "coherent-discussion-cluster"
     question: "What concrete choice must be made, understandable without opening another record?"
-    context: "Explain the situation, established facts, unknowns, and why the choice matters in plain language. Use descriptive names and a concrete example when useful."
+    context: "Explain the immediate participants and their relationship, established facts, remaining uncertainty, and affected outcome. Introduce unfamiliar concepts before relying on them in the choice or options; use descriptive names and a concrete scenario only when useful."
     current_shape: null
     candidate_proof: "An implementer cannot finish or verify <bounded behavior> without choosing <missing detail>, and the current package does not already choose it."
     options: ["First concrete option and its practical consequences", "Second concrete option and its practical consequences"]

@@ -4,13 +4,23 @@ import path from "node:path";
 import { buildLayout } from "./lib/model/build-layout.mjs";
 import { isEntryPoint } from "./lib/entry-point.mjs";
 import { findFiles } from "./lib/model/files.mjs";
+import { assertCurrentFormat } from "./lib/model/package-format.mjs";
 import { parseTicketFile } from "./lib/model/ticket-format.mjs";
 import { analyzeTicketDependencies } from "./lib/model/ticket-dependencies.mjs";
+import { originLabel } from "./lib/model/decision-attribution.mjs";
+
+// A settled prerequisite is context for the consultation; its recorded origin
+// keeps an agent choice from being presented to the recipient as the user's approval.
+function settledOrigins(record) {
+  const entries = Array.isArray(record?.attribution) ? record.attribution : [];
+  return entries.length ? [...new Set(entries.map((entry) => originLabel(entry.origin) || "Unknown origin"))] : ["Unknown origin"];
+}
 
 export function buildTicketAnswerabilityReport(rootPath, { tickets = [], all = false } = {}) {
   if ((!all && !tickets.length) || (all && tickets.length)) throw new Error("Select repeated --ticket IDs or --all, exclusively.");
   const root = path.resolve(rootPath);
   if (!fs.statSync(root).isDirectory()) throw new Error("Package root must be a directory.");
+  assertCurrentFormat(root, "Ticket answerability");
   const inventory = buildLayout(root).ticketsRoot;
   if (!fs.existsSync(inventory)) throw new Error("Ticket inventory directory is missing: " + inventory);
   if (!fs.statSync(inventory).isDirectory()) throw new Error("Ticket inventory path must be a directory: " + inventory);
@@ -21,7 +31,17 @@ export function buildTicketAnswerabilityReport(rootPath, { tickets = [], all = f
     return [...document.tickets, ...document.archivedRecords].map((record) => ({ ...record, filePath: path.relative(root, file).split(path.sep).join("/") }));
   });
   if (tickets.some((id) => !/^TICKET-\d{4}$/.test(id))) throw new Error("Invalid selected ticket ID.");
-  return { root, ...analyzeTicketDependencies(records, all ? records.filter((r) => r.record_state !== "archived").map((r) => r.id) : tickets) };
+  const analysis = analyzeTicketDependencies(records, all ? records.filter((r) => r.record_state !== "archived").map((r) => r.id) : tickets);
+  const recordsById = new Map(records.map((record) => [record.id, record]));
+  for (const node of analysis.nodes) {
+    if (node.settled) node.origins = settledOrigins(recordsById.get(node.id));
+    // Parts the user already settled inside an open question are reported so
+    // they are not asked again; the question itself stays unanswered.
+    else if (Array.isArray(recordsById.get(node.id)?.attribution) && recordsById.get(node.id).attribution.length) {
+      node.recordedParts = recordsById.get(node.id).attribution.map((entry) => ({ origin: originLabel(entry.origin) || "Unknown origin", decision: entry.decision, conditions: entry.conditions || [] }));
+    }
+  }
+  return { root, ...analysis };
 }
 
 export function formatTicketAnswerabilityReport(report) {
@@ -29,8 +49,14 @@ export function formatTicketAnswerabilityReport(report) {
   const lines = ["Ticket answering availability", "Root: " + report.root, "Prerequisite sequence (waiting remains conditional): " + (report.prerequisiteOrder.map(name).join("; ") || "none")];
   for (const q of report.questions) {
     lines.push("", name(q.id) + ": " + q.disposition);
+    for (const part of report.nodes.find((n) => n.id === q.id)?.recordedParts || []) {
+      lines.push("  Already decided (" + part.origin + "): " + part.decision + part.conditions.map((condition) => " [" + condition + "]").join(""));
+    }
     if (q.internalPrerequisites.length) lines.push("  Answer after: " + q.internalPrerequisites.map(name).join("; "));
-    for (const id of q.approvedContext) lines.push("  Approved context: " + name(id) + ": " + report.nodes.find((n) => n.id === id).resolution);
+    for (const id of q.approvedContext) {
+      const node = report.nodes.find((n) => n.id === id);
+      lines.push("  Settled context (" + node.origins.join(", ") + "): " + name(id) + ": " + node.resolution);
+    }
     const resumeWhen = report.nodes.find((n) => n.id === q.id)?.resumeWhen;
     if (resumeWhen && ["deferred", "out-of-scope"].includes(q.status)) lines.push("  Resume when: " + resumeWhen);
     for (const c of q.causes) lines.push("  " + c.kind + ": " + c.detail + " [" + c.path.map(name).join(" -> ") + "]");

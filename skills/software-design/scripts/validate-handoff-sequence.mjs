@@ -1,14 +1,17 @@
 #!/usr/bin/env node
 
 import path from "node:path";
+import { validationMode } from "./lib/validation/validation-mode.mjs";
 import { validateHandoffSequence, validatePlannableHandoff } from "./lib/validation/handoff-sequence.mjs";
 
 function argumentsFrom(argv) {
-  const args = { root: null, handoff: null, assertPlannable: false };
+  const args = { root: null, handoff: null, assertPlannable: false, validationMode: "execution" };
+  let modeSeen = false;
   for (let index = 2; index < argv.length; index += 1) {
     const value = argv[index];
     if (value === "--root") args.root = argv[++index];
     else if (value === "--handoff") args.handoff = argv[++index];
+    else if (value === "--validation-mode") { if (modeSeen) throw new Error("Duplicate --validation-mode."); modeSeen = true; args.validationMode = validationMode(argv[++index] || ""); }
     else if (value === "--assert-plannable") args.assertPlannable = true;
     else throw new Error("Unknown argument: " + value);
   }
@@ -16,6 +19,7 @@ function argumentsFrom(argv) {
   if (args.assertPlannable && !args.handoff) throw new Error("--assert-plannable requires --handoff <Stage-9-handoff>.");
   if (args.handoff && !args.assertPlannable) throw new Error("--handoff is valid only with --assert-plannable.");
   return {
+    validationMode: args.validationMode,
     root: path.resolve(args.root),
     handoff: args.handoff ? path.resolve(args.root, args.handoff) : null,
     assertPlannable: args.assertPlannable,
@@ -25,7 +29,7 @@ function argumentsFrom(argv) {
 try {
   const args = argumentsFrom(process.argv);
   const result = args.assertPlannable
-    ? validatePlannableHandoff(args.root, args.handoff)
+    ? validatePlannableHandoff(args.root, args.handoff, { validationMode: args.validationMode })
     : validateHandoffSequence(args.root);
   if (result.errors.length) {
     console.error("Handoff Sequence validation failed:");
@@ -33,7 +37,7 @@ try {
     process.exitCode = 1;
   } else {
     console.log(args.assertPlannable
-      ? "Verified that the selected Stage 9 handoff is a current executable slice or a retained implemented slice eligible for bounded lineage planning."
+      ? "Selected Stage 9 sequence check passed in " + args.validationMode + " mode; this is structural navigation validation."
       : "Verified the strict single-table Stage 9 execution order, blocker-aware scheduling, current group, states, direct requirements, and handoff receipt index.");
   }
 } catch (error) {

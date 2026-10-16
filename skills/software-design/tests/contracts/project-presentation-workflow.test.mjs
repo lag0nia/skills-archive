@@ -21,9 +21,9 @@ function section(text, start, end) {
 }
 
 test("the presentation table renders PROJECT_VIEW_CONTRACT instead of maintaining a second contract", () => {
-  const rows = section(reference, "| View | Layout | Filter | Slice | Grouping | Sorting | Visible fields |", "\n\n")
+  const rows = section(reference, "## Project Presentation Contract", "### Setup And Explicit View Repair")
     .split("\n")
-    .filter((line) => line.startsWith("| ") && !line.startsWith("| View |"));
+    .filter((line) => line.startsWith("| ") && line.slice(2, -2).split(" | ").length === 7 && !line.startsWith("| View |") && !/^\| [:-]+ /.test(line));
   const table = rows.map((line) => {
     const [name, layout, filter, slice, , , visibleFields] = line.slice(2, -2).split(" | ");
     return {
@@ -76,4 +76,14 @@ test("skill routing sends view configuration to the repair procedure, never to r
   assert.match(skill, /configure or repair GitHub Project views[^\n]*\[references\/ticket-projection\.md\]/);
   assert.match(skill, /`sync --views-only` for the settings GitHub's API can update, then saved changes in the signed-in GitHub interface for the rest, then a re-audit/);
   assert.match(skill, /A layout-only request uses `project-view-audit` for inspection or that view-repair procedure for configuration, without projecting every ticket; routine `sync` never starts view repair/);
+});
+
+test("projection instructions follow the current ticket format and route retired formats to their rejection", () => {
+  const consumer = /## Consumer update for complexity\n\n([\s\S]*?)\n## /.exec(reference)[1];
+  assert.doesNotMatch(reference, /Keep ticket file version 3/);
+  assert.match(consumer, /`ticket_file_version: 4` with `design_format: 2`, and version 3 files are \[retired\]\(package-layout\.md#retired-formats\)/);
+  assert.doesNotMatch(reference, /package-migration\.md|stays readable/);
+  const retired = /## Retired Formats\n\n([\s\S]*?)(?:\n## |$)/.exec(read("references/package-layout.md"))[1];
+  for (const retiredInput of ["`design_format`", "`ticket_file_version: 3`", "`build/workflow/technical-decisions.yaml`", "`parent_decision`", "scope `decision`", "`diagrams/`"]) assert.ok(retired.includes(retiredInput), retiredInput);
+  assert.match(retired, /neither reads nor converts them/);
 });

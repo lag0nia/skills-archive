@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import path from "node:path";
+import { assertCurrentFormat } from "./lib/model/package-format.mjs";
 import {
   computeDeliverySnapshot,
   deliverySnapshotErrors,
@@ -27,6 +28,7 @@ try {
   const args = parseArgs(process.argv);
   const root = path.resolve(args.root);
   const handoffPath = path.isAbsolute(args.handoff) ? args.handoff : path.resolve(root, args.handoff);
+  assertCurrentFormat(root, "Delivery snapshot");
   const snapshot = args.write
     ? writeDeliverySnapshot({ root, handoffPath })
     : computeDeliverySnapshot({ root, handoffPath });

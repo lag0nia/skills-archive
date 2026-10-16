@@ -1,4 +1,4 @@
-# Agent-First System Model
+# Hybrid System Model
 
 Read this reference before creating or changing `system-model/` records. Read [package-layout.md](package-layout.md) first for hierarchy and terminology.
 
@@ -26,30 +26,36 @@ Every canonical record must:
 - link exact canonical owners instead of repeating their detail;
 - use predictable required sections and `None.` only when the absence is meaningful;
 - keep rationale short and place durable rules in their exact contract owner; and
-- avoid broad reader-orientation prose that belongs in the root package index.
+- leave the reader-facing narrative to the [System Guide](system-guide.md) and route exhaustive rules to their exact owners.
 
-Do not convert the system model into YAML-only data. Concise Markdown remains necessary for mechanism meaning, rationale, failure semantics, and `must not imply` distinctions. Do not return to unconstrained technical essays.
+Within the existing `Purpose` or other explanatory section, make the record's subject understandable before its detailed rules: explain its immediate participants and relationship where needed, and introduce any unfamiliar concept necessary to interpret the contract. Keep this local to the record's concern; do not add an architecture overview, glossary, or new section to every record. A concise explanation may link the canonical owner of a shared concept without copying that owner's specification. Preserve exact frontmatter relationships, contracts, and cross-references; explanatory prose does not replace them.
+
+Do not convert the system model into YAML-only data. Concise Markdown remains necessary for mechanism meaning, rationale, failure semantics, and `must not imply` distinctions. The narrative explanation of the system and of each domain lives in the System Guide, which restates these records and owns none of their facts.
 
 ## Architecture Record
 
-Create `system-model/architecture.md` from [the architecture template](../assets/templates/system-model/architecture.md). It owns only:
+Create `system-model/architecture.md` from [the architecture template](../assets/templates/system-model/architecture.md). It owns:
 
 - system purpose and canonical identity/binding model;
 - authority and source-of-truth boundaries;
-- the complete System Domain index;
+- the major domains, their roles and relationships, plus the complete Domain index;
 - cross-domain boundaries.
+
+When the package has adopted the System Guide, declare `system_guide: adopted` in this record's frontmatter and open the record with one descriptive link to `../guide/architecture.md`; the architecture guide carries the narrative explanation and cooperation scenarios. See [Adoption And Compatibility](system-guide.md#adoption-and-compatibility).
 
 The root README owns navigation to the invariant, security, and scope collections. Their frontmatter relationships remain in Architecture, but their category links do not need a second Architecture section.
 
 Use frontmatter `assurance_id` as the stable lowercase blueprint key whenever structured Verification Obligations exist. Repository manifests, normalized results, and assurance commands derive this key from Architecture; do not ask a later adapter or reviewer to choose it independently. A package without structured VOs may use `None.` until the assurance contract activates.
 
-It does not own lifecycle sequence, responsibility-local behavior, Build Units, repository topology, decision workflow, a project-specific parameter registry, a security-change procedure, or ticket/readiness evidence. Keep its frontmatter `domains` list synchronized with canonical domain folders.
+It does not own exact lifecycle sequence, responsibility-local behavior, Build Units, repository topology, decision workflow, a project-specific parameter registry, a security-change procedure, or ticket/readiness evidence. Keep its frontmatter `domains` list synchronized with canonical domain folders.
 
 ## Domain Records
 
 Create one `system-model/domains/<domain-slug>/domain.md` from [the domain template](../assets/templates/system-model/domain.md).
 
-A System Domain groups a coherent logical concern. It owns the concern's purpose, positive boundary, exclusions, responsibility composition, and material cross-domain contracts. It does not own the complete details of its responsibilities or flows.
+A System Domain groups a coherent logical concern. It owns the concern's purpose, positive boundary, exclusions, responsibility composition, domain-level choices with their recorded rationale, and material cross-domain contracts. Keep facts, recorded rationale, recommendations, and inference distinguishable; missing rationale remains unknown. Preserve hierarchy, IDs, and file counts unless a demonstrated need justifies a change.
+
+The domain's reader-facing explanation lives in `guide/domains/<domain-slug>.md` ([Domain Guides](system-guide.md#domain-guides)), created in the same pass as the record. The record opens with one descriptive link to that guide, then its exact sections. A package that has not adopted the System Guide keeps a `Domain Overview` in each domain record, including domains added later, written by [guide-writing.md](guide-writing.md), until the user requests a [migration](system-guide.md#migrating-an-existing-package).
 
 Use frontmatter:
 
@@ -87,7 +93,7 @@ realized_by: "None."
 
 Before Stage 8, `realized_by` is `None.`. After Build Design exists, it lists every `BU-xxx` that realizes part of this responsibility; Build Units reciprocally list `source_responsibilities`.
 
-Required sections are `Purpose`, `Owns`, `Must Not Own`, `Inputs And Outputs`, `State And Artifacts`, `Failure And Recovery`, and `Invariants`. Keep each section bounded. Use a small table only for repeated input/output mappings. For each material input or output, state the consumer interaction need: how the consumer first obtains it, observes or refreshes it, distinguishes absence or rejection, and recovers after interruption. Link the exact `IFACE-xxx.ACT-NNN` when the interface contract exists. This exposes missing read/observation/recovery behavior without creating a second capability hierarchy.
+A proportional `Responsibility Overview` introduces the job in ordinary language, its collaborators, what it receives, what it produces or changes, and an important success/exception path before `Agent-First Canonical Reference`. It should add understandable precision after the domain guide. Copying or lightly paraphrasing the technical Purpose under another heading is insufficient: explain how and why the responsibility participates. Write it by the [guide writing standard](guide-writing.md). Preserve all precise sections. Required sections are `Purpose`, `Owns`, `Must Not Own`, `Inputs And Outputs`, `State And Artifacts`, `Failure And Recovery`, and `Invariants`. Keep each section bounded. Use a small table only for repeated input/output mappings. For each material input or output, state the consumer interaction need: how the consumer first obtains it, observes or refreshes it, distinguishes absence or rejection, and recovers after interruption. Link the exact `IFACE-xxx.ACT-NNN` when the interface contract exists. This exposes missing read/observation/recovery behavior without creating a second capability hierarchy.
 
 ## Flow Records
 
@@ -160,6 +166,8 @@ This logical contract is technology-neutral. Routes, method names, generated cli
 
 Use [the state template](../assets/templates/system-model/contracts/state.md). Own one persisted or authority-relevant state model: authority, states, transitions, terminal states, observation/finality distinction, and invalid transitions.
 
+In a state record, a table whose first column header contains `state` (`State`, or for example `Intent state or disposition` when one record keeps separate state tables) is a state table; a transition table starts with `From` and has `To` in its fourth column. Every state table needs exactly one `Terminal` column, and each of its cells is exactly `Yes` or `No` in every language: validation and the System Explorer read `Terminal` as a machine value, so a translation such as `Sí`, a different case such as `yes`, a qualified value such as `Yes, unless reopened`, a blank cell or any other text fails validation. A state that is final only in part or can be reopened keeps its recorded answer as `Yes` or `No` and states the condition, its scope and the reopening transition in `Meaning`, the transition rows or Observation And Finality. When an open ticket still decides whether a recorded terminal state stays final, keep `Yes` and declare that doubt in the explorer with `terminalUnresolved` instead of qualifying the cell.
+
 ### Invariant — `INV-xxx`
 
 Use [the invariant template](../assets/templates/system-model/contracts/invariant.md). Own one system-level claim that spans responsibilities or flows. State the rule, scope, and violation meaning. Read [Assurance Traceability](assurance-traceability.md) and define stable `INV-xxx.VO-NNN` entries under the existing file's `Verification Obligations`; do not create one file per VO.
@@ -170,7 +178,7 @@ Use [the security template](../assets/templates/system-model/contracts/security.
 
 ### Scope — `SCOPE-xxx`
 
-Use [the scope template](../assets/templates/system-model/contracts/scope.md). Own one explicit deferred or excluded technical capability, why it is outside the target, what must not be inferred, and its revisit condition. A defined deferred Technical Decision remains in `build/workflow/technical-decisions.yaml`; link it instead of copying its ticket questions.
+Use [the scope template](../assets/templates/system-model/contracts/scope.md). Own one explicit deferred or excluded technical capability, why it is outside the target, what must not be inferred, and its revisit condition. Keep approved exclusion rationale and exact revisit conditions here; link existing tickets for their questions and approval history.
 
 New contract IDs use exactly three digits. Filenames start with the lowercase ID. Contract frontmatter lists affected `SR-xxx`, `FLOW-xxx`, and related contracts with `None.` for an intentionally empty relationship.
 
@@ -178,12 +186,12 @@ Do not split one concern merely to create more files. Split when a contract has 
 
 ## Package Navigation
 
-Keep the root README as the package index with generic Blueprint Terms only. Link the canonical architecture, lifecycle, flows, existing invariant/security/scope collections, build entry point, and justified diagrams directly when they exist. Do not generate a parallel summary file.
+Keep the root README as the package index with generic Blueprint Terms only. Link the System Guide first when adopted, then the canonical architecture, lifecycle, flows, existing invariant/security/scope collections, build entry point, and justified diagrams directly when they exist. Do not generate a parallel summary file.
 
 Route project-specific meaning to the record that owns it: a behavior, artifact, or state term to its System Responsibility, interface, state, or invariant; a security term or consequence taxonomy to a justified `SEC-xxx`; and an excluded capability or non-inference boundary to `SCOPE-xxx` or `INV-xxx`. Do not retain a second copy in navigation or Architecture.
 
-Keep Technical Decisions in `build/workflow/technical-decisions.yaml` and expose their readable form through the GitHub projection. Keep Delivery Readiness in the current delivery-slice handoffs.
+Keep settled choices and rationale at their canonical owners and project existing ticket history through GitHub. Keep Delivery Readiness in the current delivery-slice handoffs.
 
 ## Validation
 
-Run `validate-software-design-structure.mjs` after any architecture, domain, responsibility, flow, lifecycle, contract, or navigation change. It validates identities, paths, reciprocal domain membership, relationship targets, lifecycle graph closure, canonical layout, local links, and structured VO identity and security threat/control closure when a record adopts `Verification Obligations`. Repeat the source-coverage review until no approved fact lacks a canonical owner.
+Run `validate-software-design-structure.mjs` after any architecture, domain, responsibility, flow, lifecycle, contract, or navigation change. It validates identities, paths, reciprocal domain membership, relationship targets, lifecycle graph closure, canonical layout, local links, structured VO identity and security threat/control closure when a record adopts `Verification Obligations`, and the [System Guide checks](system-guide.md#validation) when the package has adopted it. Repeat the source-coverage review until no approved fact lacks a canonical owner.

@@ -14,10 +14,11 @@ Source brief: TBD. Do not duplicate the source brief here; use it as upstream co
 - [Build Units](./build/units/): independently buildable and testable artifacts with unit-owned module architecture. Omit until Stage 8 exists.
 - [Repositories](./build/repositories/): repository/workspace construction contracts and their nested agent guidance. Omit until repository mapping exists.
 - [Build Records](./build/records/): grouped Technical Constraints, Implementation Selections, and Verification Capabilities. Omit until the first reusable build record exists.
-- [Build Workflow](./build/workflow/): compact Technical Decision records, implementation-detail tickets, and Delivery Planning handoffs. Omit until workflow artifacts exist. Human-readable decisions and tickets are projected to GitHub.
+- [Build Workflow](./build/workflow/): implementation-detail tickets and Delivery Planning handoffs. Omit until workflow artifacts exist. Human-readable tickets are projected to GitHub; settled rules and rationale remain at their canonical owners.
 
 ### Understand The System
 
+- [System Guide](./guide/architecture.md): how the system and each domain work, written for readers; also exported as PDFs. Start here.
 - [Canonical System Model](./system-model/architecture.md): logical architecture, Domain map, authority boundaries, and routes to exact design truth.
 - [Lifecycle Data](./system-model/behavior/lifecycle.yaml): canonical structured lifecycle stages and terminal outcomes. Omit until Stage 4 exists.
 - [System Flows](./system-model/behavior/flows/): exact ordered behavior, failure routes, outcomes, and invariants. Omit until Stage 4 exists.
@@ -31,16 +32,17 @@ Source brief: TBD. Do not duplicate the source brief here; use it as upstream co
 ### Supporting Navigation
 
 - [UI/UX Design](./ui-ux/specification.md): presentation and interaction requirements plus Stage 7 prototype discovery and reconciliation for human-facing surfaces; Stage 8 consumes the reviewed design. Omit until the conditional UI/UX lane exists.
-- [Runtime Architecture](./diagrams/runtime-architecture.html): interactive view of what runs, its boundaries, central coordinator, and direct relationships. Omit this bullet until Runtime Diagram Readiness passes.
-- [Build Unit Dependency Map](./diagrams/build-unit-dependency-map.canvas): Stage 8 build prerequisites and potential parallelism. Omit this bullet until at least two canonical build units exist.
+- [Decision Overview](./build/workflow/decision-overview.md): generated list of current design decisions grouped by who chose them, with conditions and links to their owners. Omit this bullet until the overview is first generated.
+- [System Explorer](./visuals/index.html): the system overview (components and how they connect) and states and transitions (how each object changes, who acts and under which conditions). Omit this bullet until overview readiness passes.
+- [Build Unit Dependency Map](./visuals/maps/build-unit-dependencies.html): Stage 8 build prerequisites and potential parallelism. Omit this bullet until at least two canonical build units exist.
 
 ## Blueprint Terms
 
 - A **System Domain** is a coherent logical concern grouping System Responsibilities. It is not automatically a repository, deployment, team, or DDD bounded context.
 - A **System Responsibility** is a stable logical behavior, authority, state, or artifact boundary with one owning Domain and one `SR-xxx` record. It is not assumed to be independently buildable.
-- A **technical decision** is one consequential technical subject whose related tickets must form a compatible combined choice. Its compact canonical record lives in build workflow; GitHub provides the human-readable issue.
+- A **consequential technical choice** is recorded in its existing owner: domain context and rationale, the responsibility or contract that owns the exact behavior, a cross-domain flow or Architecture, ticket answers and approval history, or a scope record for exclusions and revisit conditions. Related questions remain ordinary tickets; there is no parent Technical Decision workflow or replacement registry.
 - A **technical constraint (CONS)** is one decided durable technical must/must-not rule. Its linked Software Design sources explain the mechanism; Build Design maps it to the artifacts and repositories that must preserve it.
-- An **implementation-detail ticket** tracks one independently answerable implementation choice and the Build Units it affects once Stage 8 Build Design exists. Every ticket explicitly links one parent TD or `null`.
+- An **implementation-detail ticket** tracks one independently answerable implementation choice and the Build Units it affects once Stage 8 Build Design exists. Tickets carry no parent decision field; related tickets link only through genuine `depends_on` prerequisites.
 - An **implementation selection (SEL)** is a reusable approved or inherited implementation direction that applies to named build units while preserving named Software Design contracts. It does not define system behavior.
 - A **Build Unit** is an independently buildable and testable software artifact. System Responsibilities and Build Units map many-to-many.
 - A **Repository Build Design** is the Stage 8 construction contract for one source-control repository and any workspace it contains. It maps member build units, applicable CONS records, and repository-only constraints.

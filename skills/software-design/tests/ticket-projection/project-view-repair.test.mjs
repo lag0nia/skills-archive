@@ -9,7 +9,7 @@ import { createGitHubAdapter } from "../../scripts/lib/ticket-projection/github/
 import { dispatchProjection, parseViewRenameArguments, PROJECT_VIEW_CONTRACT } from "../../scripts/lib/ticket-projection/core.mjs";
 import { contractViewState as contractState, fieldId, savedView } from "../support/project-view-state.mjs";
 
-const config = { provider: "github", syncBranch: "main", ticketRoot: "design/software-design", repository: "owner/repository", project: "owner/7" };
+const config = { includedViews: ["Repositories"], provider: "github", syncBranch: "main", ticketRoot: "design/software-design", repository: "owner/repository", project: "owner/7" };
 const READ_ONLY_GIT = new Set(["check-ref-format", "symbolic-ref", "rev-parse", "status", "remote", "fetch", "rev-list"]);
 
 function json(value) {
@@ -77,7 +77,7 @@ test("views-only repair writes only drifted supported settings with exact ordere
   const state = contractState();
   savedView(state, "Tickets").filter = "";
   savedView(state, "All Tickets").configuration.visibleFields.nodes.reverse();
-  savedView(state, "Decision Areas").layout = "BOARD_LAYOUT";
+  savedView(state, "Out-of-Scope").layout = "BOARD_LAYOUT";
   savedView(state, "Out-of-Scope").configuration.visibleFields.nodes.push({ id: "F_SPRINT", name: "Sprint" });
   const calls = [];
   const adapter = createGitHubAdapter({ run: githubViews(state, calls) });
@@ -87,14 +87,13 @@ test("views-only repair writes only drifted supported settings with exact ordere
   assert.deepEqual(updateInputs(calls), [
     { viewId: "PVTV_1", filter: PROJECT_VIEW_CONTRACT[0].filter },
     { viewId: "PVTV_4", configuration: { visibleFieldIds: PROJECT_VIEW_CONTRACT.find((view) => view.name === "All Tickets").visibleFields.map(fieldId) } },
-    { viewId: "PVTV_5", layout: "TABLE_LAYOUT" },
-    { viewId: "PVTV_6", configuration: { visibleFieldIds: PROJECT_VIEW_CONTRACT.find((view) => view.name === "Out-of-Scope").visibleFields.map(fieldId) } },
+    { viewId: "PVTV_5", layout: "TABLE_LAYOUT", configuration: { visibleFieldIds: PROJECT_VIEW_CONTRACT.find((view) => view.name === "Out-of-Scope").visibleFields.map(fieldId) } },
   ]);
   assert.equal(result.outcome, "audit-passed-ui-checks-required");
   assert.deepEqual(result.verified.map((entry) => `${entry.view}:${entry.property}`), [
     "Tickets:filter",
     "All Tickets:visibleFields",
-    "Decision Areas:layout",
+    "Out-of-Scope:layout",
     "Out-of-Scope:visibleFields",
   ]);
   assert.deepEqual([result.failed, result.unverified, result.notAttempted, result.remainingGitHubUi], [[], [], [], []]);
@@ -138,12 +137,12 @@ test("unsupported drift stays visible across repeat runs without any mutation or
 
 test("missing, duplicate, and ambiguous targets refuse with actionable errors before any view mutation", async () => {
   const cases = [
-    ["missing view", (state) => { savedView(state, "Decision Areas").name = "Decisions"; }, [/Missing view "Decision Areas"/, /--rename-view <view-number>=Decision Areas/, /#5 "Decisions"/]],
+    ["missing view", (state) => { savedView(state, "Out-of-Scope").name = "Decisions"; }, [/Missing view "Out-of-Scope"/, /--rename-view <view-number>=Out-of-Scope/, /#5 "Decisions"/]],
     ["duplicate view", (state) => { state.views.nodes.push({ ...structuredClone(savedView(state, "Tickets")), id: "PVTV_9", number: 9, filter: "" }); }, [/View "Tickets" is ambiguous: #1 "Tickets", #9 "Tickets"/, /never guesses which view is canonical/]],
     ["missing field", (state) => { state.fields.nodes = state.fields.nodes.filter((field) => field.name !== "Repository Build Units"); }, [/Project field "Repository Build Units" is missing \(visible in Repositories\)/]],
     ["ambiguous field", (state) => { state.fields.nodes.push({ id: "F_CATEGORY_COPY", name: "Category", dataType: "TEXT" }); }, [/Project field "Category" is ambiguous: 2 fields share that name/]],
     ["unknown rename target", () => {}, [/--rename-view 42=Tickets: no saved view has number 42/], [{ number: 42, name: "Tickets" }]],
-    ["rename that would leave another view missing", () => {}, [/Missing view "Tickets"/, /View "Decision Areas" is ambiguous/], [{ number: 1, name: "Decision Areas" }]],
+    ["rename that would leave another view missing", () => {}, [/Missing view "Tickets"/, /View "Out-of-Scope" is ambiguous/], [{ number: 1, name: "Out-of-Scope" }]],
   ];
   for (const [scenario, mutate, expected, renames = []] of cases) {
     const state = contractState();
@@ -162,32 +161,32 @@ test("missing, duplicate, and ambiguous targets refuse with actionable errors be
 
 test("an explicitly numbered rename updates only that view and reports the verified name", async () => {
   const state = contractState();
-  const decisions = savedView(state, "Decision Areas");
+  const decisions = savedView(state, "Out-of-Scope");
   decisions.name = "Decisions";
   decisions.filter = "label:decision";
   const calls = [];
   const result = await createGitHubAdapter({ run: githubViews(state, calls) }).syncViews({
     config,
     repositories: [],
-    renames: parseViewRenameArguments(["5=Decision Areas"]),
+    renames: parseViewRenameArguments(["5=Out-of-Scope"]),
   });
-  assert.deepEqual(updateInputs(calls), [{ viewId: "PVTV_5", name: "Decision Areas", filter: "label:\"Technical Decision\"" }]);
+  assert.deepEqual(updateInputs(calls), [{ viewId: "PVTV_5", name: "Out-of-Scope", filter: "status:out-of-scope -label:\"Technical Decision\"" }]);
   assert.equal(result.outcome, "audit-passed-ui-checks-required");
   assert.deepEqual(result.verified.map((entry) => [entry.number, entry.property, entry.value]), [
-    [5, "name", "Decision Areas"],
-    [5, "filter", "label:\"Technical Decision\""],
+    [5, "name", "Out-of-Scope"],
+    [5, "filter", "status:out-of-scope -label:\"Technical Decision\""],
   ]);
 
   const failedRename = contractState();
-  savedView(failedRename, "Decision Areas").name = "Decisions";
+  savedView(failedRename, "Out-of-Scope").name = "Decisions";
   const failedResult = await createGitHubAdapter({ run: githubViews(failedRename, [], { failUpdateFor: "PVTV_5" }) }).syncViews({
     config,
     repositories: [],
-    renames: parseViewRenameArguments(["5=Decision Areas"]),
+    renames: parseViewRenameArguments(["5=Out-of-Scope"]),
   });
   assert.equal(failedResult.outcome, "api-failure");
   assert.deepEqual(failedResult.failed.map((entry) => [entry.number, entry.properties]), [[5, ["name"]]]);
-  assert.deepEqual(failedResult.audit.drifts.map((drift) => `${drift.name ?? ""}:${drift.property}`), ["Decision Areas:count"]);
+  assert.deepEqual(failedResult.audit.drifts.map((drift) => `${drift.name ?? ""}:${drift.property}`), ["Out-of-Scope:count"]);
   assert.deepEqual(failedResult.remainingGitHubUi, [], "an unlanded rename is never routed to browser view creation or tab reordering");
 
   assert.throws(() => parseViewRenameArguments(["4=Decisions"]), /contract view name/);
@@ -204,7 +203,7 @@ test("a failed update stops later writes, re-reads once, and reports verified, f
   assert.deepEqual(result.verified.map((entry) => `${entry.view}:${entry.property}`), ["Tickets:filter"]);
   assert.deepEqual(result.failed.map((entry) => [entry.view, entry.properties]), [["All Tickets", ["filter"]]]);
   assert.match(result.failed[0].error, /Resource not accessible/);
-  assert.deepEqual(result.notAttempted, [{ view: "Repositories", number: 7, properties: ["filter"] }]);
+  assert.deepEqual(result.notAttempted, [{ view: "Repositories", number: 6, properties: ["filter"] }]);
   assert.deepEqual(result.unverified, []);
   assert.deepEqual(result.remainingGitHubUi, []);
   assert.deepEqual(result.audit.drifts.map((drift) => `${drift.name}:${drift.property}`), ["All Tickets:filter", "Repositories:filter"]);
@@ -242,7 +241,8 @@ test("accepted updates that do not persist or cannot be re-read are never report
 test("dispatch routes only sync --views-only to view repair and keeps ordinary sync separate", async (t) => {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "project-view-dispatch-"));
   t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));
-  fs.mkdirSync(path.join(cwd, "design"));
+  fs.mkdirSync(path.join(cwd, "design/system-model"), {recursive: true});
+  fs.writeFileSync(path.join(cwd, "design/system-model/architecture.md"), "---\ntype: system-architecture\ndesign_format: 2\n---\n");
   const calls = [];
   const adapter = {
     createViews: async (input) => { calls.push(["createViews", input]); return { created: [] }; },
@@ -252,7 +252,7 @@ test("dispatch routes only sync --views-only to view repair and keeps ordinary s
   };
   const lock = { path: "lock", verify() {} };
   const dispatchConfig = { ...config, ticketRoot: "design" };
-  const renames = [{ number: 4, name: "Decision Areas" }];
+  const renames = [{ number: 4, name: "Out-of-Scope" }];
   await dispatchProjection({ operation: "sync", config: dispatchConfig, cwd, adapter, options: { viewsOnly: true, renames, publishingLock: lock } });
   await dispatchProjection({ operation: "sync", config: dispatchConfig, cwd, adapter, options: { publishingLock: lock } });
   assert.deepEqual(calls.map(([name]) => name), ["syncViews", "sync"]);

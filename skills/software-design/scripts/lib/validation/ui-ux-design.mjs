@@ -398,12 +398,12 @@ export function validateUiUxDesign(rootPath, { selectedOnly = false } = {}) {
   const errors = [];
   if (!fs.existsSync(uiRoot)) return { applicable: false, errors };
   if (!fs.statSync(uiRoot).isDirectory()) return { applicable: true, errors: [uiRoot + ": must be a directory."] };
-  const allowed = new Set(["specification.md", "prototype.html", "alternatives", "assets"]);
+  const allowed = new Set(["specification.md", "index.html", "alternatives", "assets"]);
   for (const entry of fs.readdirSync(uiRoot, { withFileTypes: true })) if (!entry.name.startsWith(".") && !allowed.has(entry.name)) errors.push(uiRoot + ": unsupported entry " + entry.name + ".");
   const spec = readUiUxSpecification(root);
   errors.push(...spec.errors);
   const slideshows = new Set();
-  const prototypePath = path.join(uiRoot, "prototype.html");
+  const prototypePath = path.join(uiRoot, "index.html");
   let launcherLinks = null;
   if (!insideFile(prototypePath, uiRoot)) errors.push(prototypePath + ": simple launcher is required.");
   else {

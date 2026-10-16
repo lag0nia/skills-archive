@@ -2,6 +2,7 @@
 
 import fs from "node:fs";
 import path from "node:path";
+import { assertCurrentFormat } from "./lib/model/package-format.mjs";
 import { readSystemModel } from "./lib/model/system-model-records.mjs";
 import { constraintsRoot, findTechnicalConstraintRecords } from "./lib/model/technical-constraint-records.mjs";
 
@@ -64,6 +65,7 @@ function insertMissingLinks(content, missingLinks, constraintPath) {
 }
 
 export function syncTechnicalConstraintSources(root) {
+  assertCurrentFormat(root, "Technical Constraint source sync");
   const recordsRoot = constraintsRoot(root);
   if (!fs.existsSync(recordsRoot)) return { skipped: true, changed: [] };
 

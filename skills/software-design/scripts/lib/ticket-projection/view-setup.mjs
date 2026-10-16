@@ -3,8 +3,8 @@ import { projectViewContract } from "./core.mjs";
 const nodes = (connection) => connection?.nodes || connection || [];
 const normalizedName = (name) => String(name || "").trim().toLowerCase();
 
-export function validateViewSelection(selectedViews, config = {}) {
-  const contract = projectViewContract(config);
+export function validateViewSelection(selectedViews, config = {}, repositories = []) {
+  const contract = projectViewContract(config, repositories);
   if (!Array.isArray(selectedViews) || !selectedViews.length || new Set(selectedViews).size !== selectedViews.length
     || selectedViews.some((name) => !contract.some((view) => view.name === name))) {
     throw new Error(`Select unique enabled default views with --view. Enabled: ${contract.map((view) => view.name).join(", ")}.`);
@@ -14,11 +14,11 @@ export function validateViewSelection(selectedViews, config = {}) {
 
 // An explicit selection authorizes creation only when no matching view exists.
 // Near-matching names require explicit identity mapping, never another view.
-export function inspectSetupViews(snapshot, selectedViews, config = {}) {
-  const selected = validateViewSelection(selectedViews, config);
+export function inspectSetupViews(snapshot, selectedViews, config = {}, repositories = []) {
+  const selected = validateViewSelection(selectedViews, config, repositories);
   const saved = nodes(snapshot?.views);
   const existing = [], missing = [];
-  for (const expected of projectViewContract(config)) {
+  for (const expected of projectViewContract(config, repositories)) {
     const matches = saved.filter((view) => normalizedName(view.name) === normalizedName(expected.name));
     if (matches.length > 1 || (matches.length === 1 && matches[0].name !== expected.name)) {
       throw new Error(`Ambiguous existing view for ${expected.name}: ${matches.map((view) => `#${view.number} ${view.name}`).join(", ")}. Identify/rename the existing view explicitly before setup; no view was created.`);
@@ -30,8 +30,8 @@ export function inspectSetupViews(snapshot, selectedViews, config = {}) {
   return { existing, missing };
 }
 
-export function planProjectViewCreation(snapshot, selectedViews, config = {}) {
-  const { existing, missing } = inspectSetupViews(snapshot, selectedViews, config);
+export function planProjectViewCreation(snapshot, selectedViews, config = {}, repositories = []) {
+  const { existing, missing } = inspectSetupViews(snapshot, selectedViews, config, repositories);
   const fields = nodes(snapshot?.fields);
   const plans = missing.map((view) => {
     const refs = new Map();

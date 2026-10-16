@@ -86,7 +86,7 @@ test('explicit real-browser capture verifies JavaScript rendering and rejects no
   fs.writeFileSync(path.join(root, 'specification.md'), template('specification.md')
     .replace('`Unresolved` — select a linked candidate entrypoint after review.', '`./alternatives/example/index.html`.')
     .replace('| Not reviewed | TBD |', '| Reviewed | Browser walkthrough and current canonical requirements reconciled. |'));
-  fs.writeFileSync(path.join(root, 'prototype.html'), template('prototype.html'));
+  fs.writeFileSync(path.join(root, 'index.html'), template('index.html'));
   assert.match(validateUiUxDesign(path.dirname(root)).errors.join('\n'), /meaningful product action/);
   const evidence = await capturePrototypeRuntime(options);
   assert.deepEqual(runtimeEvidenceErrors(evidence, prototypeIdentity(root, candidate)), []);

@@ -4,6 +4,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { findFiles } from "./lib/model/files.mjs";
 import { buildLayout } from "./lib/model/build-layout.mjs";
+import { currentFormatError } from "./lib/model/package-format.mjs";
 import { readSystemModel } from "./lib/model/system-model-records.mjs";
 import { parseTicketFile } from "./lib/model/ticket-format.mjs";
 import { constraintsRoot, findTechnicalConstraintRecords } from "./lib/model/technical-constraint-records.mjs";
@@ -72,6 +73,8 @@ function localLinkTargets(text, baseDir) {
 }
 
 function validate(root) {
+  const formatError = currentFormatError(root);
+  if (formatError) return { skipped: false, errors: [formatError] };
   const recordsRoot = constraintsRoot(root);
   if (!fs.existsSync(recordsRoot)) return { skipped: true, errors: [] };
 

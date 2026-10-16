@@ -29,6 +29,7 @@ function setup(root, {
   repositoriesLine = null,
   repositories = [],
 } = {}) {
+  write(path.join(root, "system-model", "architecture.md"), "---\ntype: system-architecture\ndesign_format: 2\n---\n");
   const domainRoot = path.join(root, "system-model", "domains", "example");
   const responsibilityPath = path.join(domainRoot, "responsibilities", "sr-001-example.md");
   write(path.join(domainRoot, "domain.md"), `---
@@ -81,7 +82,7 @@ technical_constraints: "None."
   const repositoryContractAreaField = repositoryContractAreaLine === null ? "" : `    repository_contract_area: ${repositoryContractAreaLine}\n`;
   const repositoriesField = repositoriesLine === null ? "" : `    repositories: ${repositoriesLine}\n`;
   const ticketsRoot = path.join(root, "build", "workflow", "tickets");
-  write(path.join(ticketsRoot, "example", "sr-001", "sr-001-tickets.yaml"), `ticket_file_version: 3
+  write(path.join(ticketsRoot, "example", "sr-001", "sr-001-tickets.yaml"), `ticket_file_version: 4
 scope: "responsibility:SR-001"
 
 tickets:
@@ -94,7 +95,6 @@ tickets:
     owner: "SR-001"
     affects: ["SR-001"]
 ${buildUnitFields}    cluster: "public-api"
-    parent_decision: null
     question: "Which public API will the implementation expose?"
     context: "The logical responsibility is fixed and the public code interface has been selected."
     options: []
@@ -269,7 +269,7 @@ test("duplicate and obsolete retirement preserves identity and forbids active ar
   setup(root, { buildUnitsLine: '["BU-001", "BU-002"]' });
   const file = path.join(root, "build/workflow/tickets/example/sr-001/sr-001-tickets.yaml");
   const active = fs.readFileSync(file, "utf8");
-  const archived = '\narchived_records:\n  - id: "TICKET-0002"\n    title: "Repeated API question"\n    record_state: "archived"\n    status_at_close: "todo"\n    closed_reason: "duplicate"\n    replaced_by: ["TICKET-0001"]\n    parent_decision: null\n';
+  const archived = '\narchived_records:\n  - id: "TICKET-0002"\n    title: "Repeated API question"\n    record_state: "archived"\n    status_at_close: "todo"\n    closed_reason: "duplicate"\n    replaced_by: ["TICKET-0001"]\n';
   write(file, active + archived);
   assert.equal(run(root).status, 0);
   write(file, active.replace('depends_on: []', 'depends_on: ["TICKET-0002"]') + archived);
@@ -280,8 +280,24 @@ test("duplicate and obsolete retirement preserves identity and forbids active ar
   assert.match(run(root).stderr, /replacement must be an active ticket/);
   write(file, active + archived.replace('"duplicate"', '"obsolete"').replace('["TICKET-0001"]', '[]'));
   assert.equal(run(root).status, 0);
-  write(file, 'ticket_file_version: 3\nscope: "responsibility:SR-001"\n' + archived.replace('"duplicate"', '"obsolete"').replace('["TICKET-0001"]', '[]'));
+  write(file, 'ticket_file_version: 4\nscope: "responsibility:SR-001"\n' + archived.replace('"duplicate"', '"obsolete"').replace('["TICKET-0001"]', '[]'));
   assert.equal(run(root).status, 0, run(root).stderr);
+});
+
+test("archived promotions to historical Technical Decisions stay valid history without a registry", (context) => {
+  const root = fixture();
+  context.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  setup(root, { buildUnitsLine: '["BU-001", "BU-002"]' });
+  const file = path.join(root, "build/workflow/tickets/example/sr-001/sr-001-tickets.yaml");
+  const active = fs.readFileSync(file, "utf8");
+  const promoted = '\narchived_records:\n  - id: "TICKET-0002"\n    title: "Broad source"\n    record_state: "archived"\n    status_at_close: "todo"\n    closed_reason: "promoted-to-td"\n    promoted_to: "TD-001"\n    replaced_by: ["TICKET-0001"]\n';
+  write(file, active + promoted);
+  const valid = run(root);
+  assert.equal(valid.status, 0, valid.stderr);
+  write(file, active + promoted.replace('"TD-001"', '"TD-1"'));
+  assert.match(run(root).stderr, /TICKET-0002: invalid promoted_to TD\./);
+  write(file, active + promoted.replace('["TICKET-0001"]', '[]'));
+  assert.match(run(root).stderr, /TICKET-0002: archived promotion or duplicate needs replaced_by ticket ids/);
 });
 
 test("finished ticket may retain recorded pending prototype work but canonical write targets remain required", async (context) => {
@@ -297,7 +313,7 @@ test("finished ticket may retain recorded pending prototype work but canonical w
     .replace('| Not reviewed | TBD |', '| Reviewed | Rendered walkthrough before approved timeout change. |')
     .replace('\nNone.\n', `\n| Journey | Pending change | Canonical / ticket references |\n| --- | --- | --- |\n| [Main](#journey-main) | Apply approved timeout to waiting and recovery | [Owner](../${owner}); [TICKET-0001](../${ticketFile}) |\n`);
   write(path.join(root, 'ui-ux/specification.md'), specification);
-  write(path.join(root, 'ui-ux/prototype.html'), fs.readFileSync(path.join(templates, 'prototype.html'), 'utf8'));
+  write(path.join(root, 'ui-ux/index.html'), fs.readFileSync(path.join(templates, 'index.html'), 'utf8'));
   write(path.join(root, 'ui-ux/alternatives/main/index.html'), fs.readFileSync(path.join(templates, 'candidate.html'), 'utf8'));
   const ticketPath = path.join(root, ticketFile);
   const ticket = fs.readFileSync(ticketPath, 'utf8').replace(`write_targets: ["${owner}"]`, `write_targets: ["${owner}", "ui-ux/specification.md"]`);

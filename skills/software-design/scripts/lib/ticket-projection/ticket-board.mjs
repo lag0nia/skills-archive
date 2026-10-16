@@ -64,5 +64,5 @@ export function deriveTicketBoard(records) {
 
 export function decidedNotice(records) {
   const decidedTickets = records.filter((record) => record.status === "decided").map((record) => record.id);
-  return decidedTickets.length ? { decidedTickets, completionNotice: "Approved decisions still await canonical completion; see All Tickets." } : {};
+  return decidedTickets.length ? { decidedTickets, completionNotice: "Recorded decisions still await canonical completion; see All Tickets." } : {};
 }

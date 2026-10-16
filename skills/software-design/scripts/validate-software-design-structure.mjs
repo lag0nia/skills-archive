@@ -1,11 +1,18 @@
 #!/usr/bin/env node
 
+import { currentFormatError } from "./lib/model/package-format.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import { markdownAnchorExists } from "./lib/model/markdown.mjs";
-import { noncanonicalLayoutEntries } from "./lib/model/package-layout.mjs";
+import { noncanonicalLayoutEntries, RETIRED_LAYOUT_ENTRIES } from "./lib/model/package-layout.mjs";
+import { buildLayout } from "./lib/model/build-layout.mjs";
+import { findFiles } from "./lib/model/files.mjs";
+import { findRecordAttributions } from "./lib/model/decision-attribution.mjs";
+import { validateSystemGuide } from "./lib/model/system-guide.mjs";
+import { parseTicketFile } from "./lib/model/ticket-format.mjs";
 import { collectStructuredVerificationObligations } from "./lib/model/assurance-traceability.mjs";
 import { validateUiUxDesign } from "./lib/validation/ui-ux-design.mjs";
+import { stateTableErrors } from "./lib/visual-graphs.mjs";
 import {
   CONTRACT_FAMILIES,
   parseIdList,
@@ -46,25 +53,28 @@ function markdownLinks(text) {
   return [...text.matchAll(/\[[^\]]*\]\(([^)]+)\)/g)].map((match) => markdownLinkDestination(match[1]));
 }
 
-function validateDiagramNavigation(root, errors) {
-  const diagramsRoot = path.join(root, "diagrams");
-  if (!fs.existsSync(diagramsRoot)) return;
-  const readmePath = path.join(root, "README.md");
-  const required = [
-    [path.join(diagramsRoot, "runtime-architecture.html"), "diagrams/runtime-architecture.html", "Runtime Architecture"],
-  ].filter(([filePath]) => fs.existsSync(filePath));
-  if (!required.length) return;
-  if (!fs.existsSync(readmePath)) {
-    for (const [, relativePath] of required) errors.push(readmePath + ": required when " + relativePath + " exists.");
-    return;
-  }
-  const links = markdownLinks(fs.readFileSync(readmePath, "utf8"));
-  for (const [filePath, relativePath, label] of required) {
-    const linked = links.some((href) => {
-      const target = href.split("#")[0];
-      return target && path.resolve(path.dirname(readmePath), target) === filePath;
-    });
-    if (!linked) errors.push(readmePath + ": must link directly to " + relativePath + " as " + label + ".");
+function validateVisualNavigation(root, errors) {
+  const index = path.join(root, "visuals/index.html");
+  if (fs.existsSync(path.join(root, "visuals")) && !fs.existsSync(index)) errors.push("visuals/index.html is required when visual views exist.");
+  if (fs.existsSync(index) && !fs.readFileSync(path.join(root, "README.md"), "utf8").includes("visuals/index.html")) errors.push("README must link to visuals/index.html.");
+}
+
+function validateDecisionAttribution(root, errors) {
+  // Ticket shape is the ticket validator's job; here unreadable files only mean fewer known IDs.
+  const ticketIds = new Set(findFiles(buildLayout(root).ticketsRoot, (name) => name.endsWith("-tickets.yaml")).flatMap((filePath) => {
+    try {
+      const document = parseTicketFile(filePath);
+      return [...document.tickets, ...document.archivedRecords].map((ticket) => ticket.id);
+    } catch {
+      return [];
+    }
+  }));
+  errors.push(...findRecordAttributions(root, { ticketIds }).errors);
+  const overview = path.join(root, "build/workflow/decision-overview.md");
+  const readme = path.join(root, "README.md");
+  const linked = fs.existsSync(readme) && markdownLinks(fs.readFileSync(readme, "utf8")).some((href) => path.resolve(root, href.split("#")[0]) === overview);
+  if (fs.existsSync(overview) && !linked) {
+    errors.push("README must link to build/workflow/decision-overview.md as Decision Overview.");
   }
 }
 
@@ -305,10 +315,10 @@ function validateSystemModel(root, errors) {
       if (meta.related_contracts !== undefined) {
         for (const id of parseIdList(meta.related_contracts)) if (!contractIds.has(id)) errors.push(record.filePath + ": related_contracts references missing " + id + ".");
       }
-      if (family === "scope" && meta.decision !== undefined) {
-        for (const id of parseIdList(meta.decision)) if (!/^TD-\d{3}$/.test(id)) errors.push(record.filePath + ": decision contains invalid " + id + ".");
-      }
+      if (family === "scope" && meta.decision !== undefined) errors.push(record.filePath + ": scope decision pointers are retired with the Technical Decision registry; keep the exclusion, its reason and its revisit condition in the scope record and remove the decision field.");
       if (family === "interfaces") validateMaterialInteractions(record, errors);
+      // every state row is checked here, so an invalid Terminal value fails even when no lifecycle draws it
+      if (family === "states") errors.push(...stateTableErrors(record.filePath, record.text));
     }
   }
   const obligations = collectStructuredVerificationObligations(model, errors);
@@ -323,7 +333,9 @@ function validateSystemModel(root, errors) {
 }
 
 function validateLocalLinks(root, errors) {
-  for (const filePath of files(root, ".md")) {
+  // guide/ links are checked by validateSystemGuide, which also resolves guide heading anchors.
+  const guideRoot = path.join(root, "guide") + path.sep;
+  for (const filePath of files(root, ".md").filter((file) => !file.startsWith(guideRoot))) {
     const text = fs.readFileSync(filePath, "utf8");
     for (const href of markdownLinks(text)) {
       if (/^(?:https?:|mailto:|#)/.test(href)) continue;
@@ -338,16 +350,22 @@ function validateLocalLinks(root, errors) {
 
 export function validateSoftwareDesignStructure(rootPath) {
   const root = path.resolve(rootPath);
+  const formatError = currentFormatError(root);
+  if (formatError) return { errors: [formatError], responsibilityCount: 0, domainCount: 0 };
   const errors = [];
   const noncanonical = noncanonicalLayoutEntries(root);
-  if (noncanonical.length) errors.push("Software Design contains entries outside the canonical package layout: " + noncanonical.join(", ") + ".");
+  for (const entry of noncanonical) if (RETIRED_LAYOUT_ENTRIES.has(entry)) errors.push(RETIRED_LAYOUT_ENTRIES.get(entry));
+  const unexpected = noncanonical.filter((entry) => !RETIRED_LAYOUT_ENTRIES.has(entry));
+  if (unexpected.length) errors.push("Software Design contains entries outside the canonical package layout: " + unexpected.join(", ") + ".");
   if (errors.length) return { errors, responsibilityCount: 0, domainCount: 0 };
 
   const result = validateSystemModel(root, errors);
+  errors.push(...validateSystemGuide(root, result.model));
   errors.push(...validateUiUxDesign(root).errors);
   validateLocalLinks(root, errors);
-  validateDiagramNavigation(root, errors);
+  validateVisualNavigation(root, errors);
   validateUiUxNavigation(root, errors);
+  validateDecisionAttribution(root, errors);
   return { errors, responsibilityCount: result.responsibilityCount, domainCount: result.domainCount };
 }
 

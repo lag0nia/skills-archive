@@ -1,0 +1,119 @@
+{
+  "generator": "Software Design System Guide export",
+  "renderer": "416614144a918a3b7bee697bbbe11372ea2a237ed2efbd8092a5b89a06624a77",
+  "package": {
+    "root": "/private/tmp/guide-editorial-work/bitrise21/loan-system/design/technical-design",
+    "system": "Bitcoin-backed USDC one-loan system"
+  },
+  "regenerate": "node /Users/alanguerrero/Documents/ai-prompts/skills/blueprint-development/technical/software-design/scripts/export-system-guide.mjs --root /private/tmp/guide-editorial-work/bitrise21/loan-system/design/technical-design --out /Users/alanguerrero/Documents/ai-prompts/skills/blueprint-development/technical/software-design/tests/behavioral/system-guide/outputs/editorial-final/pdf <--architecture | --domain <slug> | --all | --combined>",
+  "outputs": {
+    "bitcoin-backed-usdc-one-loan-system-architecture.pdf": {
+      "edition": "architecture",
+      "documents": [
+        "architecture"
+      ],
+      "title": "How the Bitcoin-backed USDC one-loan system works",
+      "fingerprint": "01b3d37e409c1b21db02eed32d1e502e9d7fbca443a187ae28f67058bade314b",
+      "sha256": "c901905b481ec5ceebb3caf590234a1cfe7d443f64d88b917642a41b5855e21a",
+      "pages": 7,
+      "generated": "2026-10-15",
+      "browser": "HeadlessChrome/151.0.7922.34",
+      "sources": [
+        {
+          "path": "guide/architecture.md",
+          "sha256": "85bcb3a5cf490007ae219d649cefd1f1b55613ea8ab2803ac30f486de424a71b"
+        }
+      ]
+    },
+    "bitcoin-backed-usdc-one-loan-system-domain-loan-terms-and-commitments.pdf": {
+      "edition": "domain",
+      "documents": [
+        "domain:loan-terms-and-commitments"
+      ],
+      "title": "Loan Terms And Commitments",
+      "fingerprint": "ebb836558049f41c0d6c1c6db46c2a15ae121cf28a60b02878683eeb4b014d2a",
+      "sha256": "3570169150d037e3d3e8e2d9948317ab6fc35bb7caddaf4b6d21552530b0f90b",
+      "pages": 3,
+      "generated": "2026-10-15",
+      "browser": "HeadlessChrome/151.0.7922.34",
+      "sources": [
+        {
+          "path": "guide/domains/loan-terms-and-commitments.md",
+          "sha256": "57e4864e5c81f89c924511cdacb115df0656a5cdd33a8b5bc5084b5d3ca25833"
+        }
+      ]
+    },
+    "bitcoin-backed-usdc-one-loan-system-domain-bitcoin-authorization-and-recovery.pdf": {
+      "edition": "domain",
+      "documents": [
+        "domain:bitcoin-authorization-and-recovery"
+      ],
+      "title": "Bitcoin Authorization And Recovery",
+      "fingerprint": "395a3c8979d0bc05bafaa05a4907660b402e888ae5ad0f560b0660e223be6af6",
+      "sha256": "008c4555844457cfb1c25f3def51d505345e7e99cf2c999ba6881f2c5162b764",
+      "pages": 3,
+      "generated": "2026-10-15",
+      "browser": "HeadlessChrome/151.0.7922.34",
+      "sources": [
+        {
+          "path": "guide/domains/bitcoin-authorization-and-recovery.md",
+          "sha256": "12e526b87cdabd45486694edd137c3cc531ccdfb8c585b55343494758057bfb6"
+        }
+      ]
+    },
+    "bitcoin-backed-usdc-one-loan-system-domain-base-usdc-settlement-and-funding.pdf": {
+      "edition": "domain",
+      "documents": [
+        "domain:base-usdc-settlement-and-funding"
+      ],
+      "title": "Base USDC Settlement And Funding",
+      "fingerprint": "96a44ba4031948331c957d1d59c7cd1341c7b83393d08dd83e5c64380ebb8259",
+      "sha256": "d2dc41530883ec438dea9064408f7d21bc9678fb2e726d7ba3ccce10ca7ba646",
+      "pages": 3,
+      "generated": "2026-10-15",
+      "browser": "HeadlessChrome/151.0.7922.34",
+      "sources": [
+        {
+          "path": "guide/domains/base-usdc-settlement-and-funding.md",
+          "sha256": "b254ef794c53e1426901cd9407367044809396b4a541cd82fd4b59be73ffadb6"
+        }
+      ]
+    },
+    "bitcoin-backed-usdc-one-loan-system-domain-base-observation-and-fallback-review.pdf": {
+      "edition": "domain",
+      "documents": [
+        "domain:base-observation-and-fallback-review"
+      ],
+      "title": "Base Observation And Fallback Review",
+      "fingerprint": "a10cf4dbe7b31781ec2e26ff5ae1dd8b6e099476bbf8eac97418934348149a4f",
+      "sha256": "4e183f246fa13f086af5a0adbfd6787933ab1828f51cc3ebf5a62f7449ac098e",
+      "pages": 3,
+      "generated": "2026-10-15",
+      "browser": "HeadlessChrome/151.0.7922.34",
+      "sources": [
+        {
+          "path": "guide/domains/base-observation-and-fallback-review.md",
+          "sha256": "0c09da47dec22a1e26d3e8af2502ffeeb4602233634bb2ffd15dfcddd8456327"
+        }
+      ]
+    },
+    "bitcoin-backed-usdc-one-loan-system-domain-participant-access-and-loan-operations.pdf": {
+      "edition": "domain",
+      "documents": [
+        "domain:participant-access-and-loan-operations"
+      ],
+      "title": "Participant Access And Loan Operations",
+      "fingerprint": "07efbb01f412c7a572f5ecd104168e63529d292df4ea9245b859bc647a22c3f7",
+      "sha256": "d9521f7fec230ce93a0e2edb086cf6fd5f4abb3e27a47b0b84c1ce40e6d00100",
+      "pages": 4,
+      "generated": "2026-10-15",
+      "browser": "HeadlessChrome/151.0.7922.34",
+      "sources": [
+        {
+          "path": "guide/domains/participant-access-and-loan-operations.md",
+          "sha256": "124ce7a2064a05035a1dd41f160b68d9a956ac2d9081125d7f14deaaa853eef4"
+        }
+      ]
+    }
+  }
+}

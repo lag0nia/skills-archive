@@ -1,6 +1,6 @@
 # Software Design Package Layout
 
-Read this reference before creating, repairing, or structurally validating a Software Design package. It owns the canonical hierarchy and the boundary between root navigation, the agent-first system model, build construction, decisions, and workflow state.
+Read this reference before creating, repairing, or structurally validating a Software Design package. It owns the canonical hierarchy and the boundary between root navigation, the hybrid system model, build construction, decisions, and workflow state.
 
 ## Contents
 
@@ -8,13 +8,18 @@ Read this reference before creating, repairing, or structurally validating a Sof
 - Ownership And Audience
 - Canonical Terms
 - Conditional Creation
+- Retired Formats
 
 ## Canonical Layout
 
 ```text
 software-design/
   README.md
-  system-model/                       # canonical agent-first logical model
+  guide/                              # System Guide: reader-facing explanation, exported as PDFs
+    architecture.md
+    domains/
+      <domain-slug>.md                # one per canonical domain
+  system-model/                       # canonical logical model
     architecture.md
     domains/
       <domain-slug>/
@@ -52,38 +57,42 @@ software-design/
       verification/                  # Stage 8 only
         va-xxx-capability.md
     workflow/                         # mutable/derived workflow, not build architecture
-      technical-decisions.yaml        # compact canonical TD parent records
       tickets/
         <domain-slug>/
           sr-xxx/
             sr-xxx-tickets.yaml
         cross-domain-tickets.yaml
+      decision-overview.md            # generated; decisions grouped by origin
       handoffs/                       # Stage 9 only
         README.md                     # concise single-table sequential delivery-slice order groups
         <delivery-slice>.md
   ui-ux/                              # Stage 7 UI work; earlier bounded sketches allowed
     specification.md                  # presentation and interaction requirements
-    prototype.html                    # simple local candidate launcher
+    index.html                    # simple local candidate launcher
     alternatives/<candidate>/         # candidate entrypoint, pages, and local resources
       index.html                      # linked candidate entrypoint; other pages as needed
       slides.html                     # optional self-contained screenshot review slideshow
     assets/                           # optional local supporting assets only when needed
-  diagrams/
-    runtime-architecture.html          # only after Runtime Diagram Readiness
-    build-unit-dependency-map.canvas    # only for Stage 8 designs with 2+ Build Units
-    <subject>-state-machine.canvas      # only when one persisted object's transitions need a visual
+  visuals/                            # only when visuals exist
+    index.html                        # System Explorer index: two destinations
+    pages/
+      system.html                     # System overview: components and connections
+      states.html                     # States and transitions: one lifecycle at a time
+    maps/build-unit-dependencies.html # Stage 8 construction dependencies
+    figures/                          # optional embedded mechanism figures (Hairline)
+    assets/                           # explorer.json, graphs.json, manifest, local generator
 ```
 
 ## Ownership And Audience
 
-- Keep the package root limited to actual destinations: README, `system-model/`, `build/`, and `diagrams/`.
+- Keep the package root limited to actual destinations: README, `guide/` when adopted, `system-model/`, `build/`, conditional `ui-ux/`, and `visuals/`.
 - Treat the root README as the package index with generic Blueprint Terms only. Link canonical destinations directly, including existing invariant, security, and scope collections, without duplicating their truth into summary files. Route project-specific vocabulary, parameter ownership, security terminology, and scope claims to their exact canonical owners; never use the root README as a project glossary, parameter-owner index, security taxonomy, or scope specification.
-- Treat `system-model/` as canonical logical truth optimized for atomic retrieval, explicit relationships, and deterministic validation. Do not optimize its records as a long-form technical book.
-- Do not create a parallel generated summary surface. The canonical architecture, Domain, System Responsibility, flow, contract, and lifecycle records already own that information.
+- Treat the [System Guide](system-guide.md) as the single home of the reader-facing explanation: `guide/architecture.md` explains the system and each `guide/domains/<domain-slug>.md` explains one domain well enough to be read alone. The guide restates and links technical owners; architecture, domain, responsibility, flow and contract records keep every rule, condition, rationale and attribution, and link their guide instead of keeping a second explanation. Packages without `system_guide: adopted` keep their existing record overviews.
+- Do not create a parallel generated summary surface. The canonical architecture, Domain, System Responsibility, flow, contract, and lifecycle records already own that information. The one derived exception is `build/workflow/decision-overview.md`, generated from attribution recorded in tickets and canonical records under [Decision Attribution](decision-attribution.md#decision-overview); it owns no decision and is never edited.
 - Treat `build/` as the concrete construction entry point. Before Stage 8, its README is a compact lane index. Once Stage 8 exists, the same README becomes the detailed human construction guide: it explains every Repository and Build Unit directly enough to supply a usable construction mental model, while Build Units and Repository Build Designs retain exact construction truth. Derive cross-unit realization coverage from reciprocal System Responsibility and Build Unit fields; do not create a second topology record.
 - Treat `build/records/` as one supporting-record family while preserving the distinct semantics of Technical Constraints (`CONS`), Implementation Selections (`SEL`), and Verification Capabilities (`VA`).
-- Treat `build/workflow/` as operational state around the design. `technical-decisions.yaml` owns compact TD parent context and history, tickets own independently answerable questions and workflow, and handoffs are derived transitions to Delivery Planning. None is canonical build architecture or a substitute for durable system truth.
-- Treat conditional `ui-ux/` as the owner of presentation and interaction requirements. `specification.md` owns requirements, explicit candidate selection, reviewed journey coverage, pending prototype changes, and material limitations. `prototype.html` is a simple launcher; each `alternatives/<candidate>/` holds a single-page or multi-page candidate and its local resources. Select the actual entrypoint without copying. An optional `alternatives/<candidate>/slides.html` is a derived, self-contained screenshot slideshow of that candidate; it is never an entrypoint, selection, or review evidence, and its temporary captures are not package artifacts. Existing product and system-model owners retain behavior, state, and correctness authority.
+- Treat `build/workflow/` as operational state around the design. Tickets own independently answerable questions, answers, approvals, and workflow; handoffs are derived transitions to Delivery Planning. None is canonical build architecture or a substitute for durable system truth.
+- Treat conditional `ui-ux/` as the owner of presentation and interaction requirements. `specification.md` owns requirements, explicit candidate selection, reviewed journey coverage, pending prototype changes, and material limitations. `index.html` is a simple launcher; each `alternatives/<candidate>/` holds a single-page or multi-page candidate and its local resources. Select the actual entrypoint without copying. An optional `alternatives/<candidate>/slides.html` is a derived, self-contained screenshot slideshow of that candidate; it is never an entrypoint, selection, or review evidence, and its temporary captures are not package artifacts. Existing product and system-model owners retain behavior, state, and correctness authority.
 - Represent each first-party repository as one folder. Its `README.md` owns repository construction truth. Its optional `agent-guidance.md` is a concise derived projection for the future repository-root `AGENTS.md`.
 - Structured VOs remain inside their canonical `INV-xxx` or `SEC-xxx` records; do not create a blueprint assurance folder or one file per VO. Repository evidence mappings live later in one tracked implementation-repository `assurance/coverage.yaml`. Generated normalized results and the one HTML report live outside this canonical package at `<software-design-package-parent>/.software-design-assurance/`; the repository hosting the design workspace must ignore and verify that exact generated path.
 
@@ -99,13 +108,19 @@ Use exactly three digits for new `SR`, `FLOW`, `IFACE`, `STATE`, `INV`, `SEC`, a
 
 ## Conditional Creation
 
-- Create `system-model/architecture.md`, domain records, and System Responsibility records during Stages 1–3.
+- Create `system-model/architecture.md`, domain records, and System Responsibility records during Stages 1–3. Create `guide/architecture.md` with the architecture record and each `guide/domains/<domain-slug>.md` with its domain record.
 - Create canonical flows and `system-model/behavior/lifecycle.yaml` during Stage 4.
 - Create only justified contract records during Stage 5. Do not create empty contract-category folders.
 - Create `build/README.md` when the first workflow artifact, Technical Constraint, or Stage 8 construction artifact is created. It remains the single build entry point even when only one lane exists. When the first Build Unit is created, add and thereafter synchronize its detailed Repository-and-Build-Unit construction guide; do not create another summary file or GitHub Project README.
-- Create `build/workflow/technical-decisions.yaml` only when the first genuine TD is established, and create `build/workflow/tickets/` when ticket tracking begins. Either workflow surface may exist without activating Stage 8 construction.
+- Create `build/workflow/tickets/` when ticket tracking begins; this does not activate Stage 8 construction.
 - Create `build/records/constraints/` whenever the first decided `CONS-xxx` is justified, including before Stage 8. Create `build/units/`, `build/repositories/`, and justified `build/records/selections/` and `build/records/verification/` during Stage 8. During the same pass, make every System Responsibility's `realized_by` field exactly reciprocal with Build Unit `source_responsibilities`; use an external/no-code Build Unit with an explicit repository disposition when no first-party artifact exists.
 - Create `build/workflow/handoffs/` only during Stage 9. Create its concise `README.md` sequence index before the first slice handoff, then keep one current Markdown file per delivery slice; multiple current slice handoffs may coexist, while superseded revisions of the same slice remain in version control. The index is mutable workflow navigation, not a handoff receipt or snapshot owner.
 - Stage 7 includes required UI prerequisites, exploration, reconciliation, and completion when human-facing surfaces are in scope; earlier bounded sketches are allowed. Create one specification, a simple launcher, and linked folder-based candidates. Stage 8 consumes the selected candidate and reviewed coverage. Non-UI scopes require no prototype. Use one current format without legacy compatibility branches; do not modify consumer blueprints merely because this skill changed.
 
 Do not infer permission to rewrite an established package merely because this skill or its templates changed. Repairs remain bounded by the user's requested package and approved checkpoint scope.
+
+New packages declare `design_format: 2` in Architecture.
+
+## Retired Formats
+
+Structure, ticket, constraint, Build Design, dependency-map, handoff and delivery-readiness validation, the ticket reports, both generators and every projection command reject a package whose `design_format` is missing or not 2 (format 1 was implicit) with a specific message before reading anything else. Inside a format-2 package, every command that reads ticket files rejects `ticket_file_version: 3` files and ticket `parent_decision` fields, and structure validation reports a leftover `build/workflow/technical-decisions.yaml` Technical Decision registry, scope `decision` pointers and a `diagrams/` Canvas lane; ticket validation also reports the registry. This skill neither reads nor converts them. Migrate such a package with an earlier Software Design release, one that still includes `references/package-migration.md`, before using this one. Run evidence scripts that read retired files through this skill's modules, such as a migration proof that parses a format-1 baseline, against a pinned earlier release as well. Historical GitHub Technical Decision issues and their markers remain recognized for identity safety under [ticket-projection.md](ticket-projection.md#stable-decision-identity).

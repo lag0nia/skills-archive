@@ -1,4 +1,5 @@
 import { readText } from "./files.mjs";
+import { RETIRED_FORMAT_HINT } from "./package-format.mjs";
 
 function parseScalar(raw, filePath, fieldName) {
   const value = raw.trim();
@@ -41,15 +42,17 @@ export function parseTicketFile(filePath) {
   const text = readText(filePath);
   const version = /^ticket_file_version:\s*(\d+)\s*$/m.exec(text)?.[1];
   const scopeRaw = /^scope:\s*(.+?)\s*$/m.exec(text)?.[1];
-  if (version !== "3" || !scopeRaw) {
-    throw new Error(filePath + ": ticket_file_version must be 3 and scope must be present.");
-  }
+  if (version === "3") throw new Error(`${filePath}: ticket_file_version 3 is retired; current ticket files use ticket_file_version: 4. ${RETIRED_FORMAT_HINT}`);
+  if (version !== "4" || !scopeRaw) throw new Error(filePath + ": ticket_file_version must be 4 and scope must be present.");
   const scope = parseScalar(scopeRaw, filePath, "scope");
   const tickets = parseRecords(text, "tickets", filePath);
   const archivedRecords = parseRecords(text, "archived_records", filePath);
   if (!tickets.length && !archivedRecords.length) throw new Error(filePath + ": tickets or archived_records must contain at least one record.");
   if (tickets.some((ticket) => ticket.record_state === "archived") || archivedRecords.some((ticket) => ticket.record_state !== "archived")) {
     throw new Error(filePath + ": archived records belong only in archived_records and require record_state archived.");
+  }
+  for (const ticket of [...tickets, ...archivedRecords]) {
+    if (Object.hasOwn(ticket, "parent_decision")) throw new Error(`${filePath}: ${ticket.id}: parent_decision is retired with the Technical Decision registry; move its information to canonical owners and remove the field.`);
   }
   return { filePath, version: Number(version), scope, tickets, archivedRecords };
 }

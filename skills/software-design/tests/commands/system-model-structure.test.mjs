@@ -23,6 +23,7 @@ function packageFixture() {
   write(brief, "# Software Brief\n");
   write(path.join(root, "system-model", "architecture.md"), `---
 type: system-architecture
+design_format: 2
 name: Example lifecycle system
 assurance_id: "example-system"
 domains: "core"
@@ -263,6 +264,120 @@ test("structure validation accepts the canonical system model", (context) => {
   assert.equal(validated.status, 0, validated.stderr);
 });
 
+test("structure validation names each retired-format leftover instead of accepting it", (context) => {
+  const fixture = packageFixture();
+  context.after(() => fs.rmSync(fixture.workspace, { recursive: true, force: true }));
+  write(path.join(fixture.root, "diagrams", "build-unit-dependency-map.canvas"), "{\"nodes\":[],\"edges\":[]}\n");
+  write(path.join(fixture.root, "build", "workflow", "technical-decisions.yaml"), "technical_decision_file_version: 1\ndecisions: []\n");
+  const layout = spawnSync(process.execPath, [validator, "--root", fixture.root], { encoding: "utf8" });
+  assert.equal(layout.status, 1);
+  assert.match(layout.stderr, /^diagrams\/ is the retired Canvas lane; current views are generated HTML under visuals\//m);
+  assert.match(layout.stderr, /^build\/workflow\/technical-decisions\.yaml is a retired Technical Decision registry/m);
+  assert.doesNotMatch(layout.stderr, /outside the canonical package layout/);
+  assert.doesNotMatch(layout.stderr, /^\s+at /m);
+
+  fs.rmSync(path.join(fixture.root, "diagrams"), { recursive: true });
+  fs.rmSync(path.join(fixture.root, "build"), { recursive: true });
+  write(path.join(fixture.root, "system-model", "contracts", "scope", "scope-001-later.md"), `---
+type: system-scope-boundary
+id: SCOPE-001
+name: Later capability
+status: deferred
+responsibilities: "SR-001"
+decision: "TD-001"
+---
+
+# SCOPE-001 — Later Capability
+`);
+  const scope = spawnSync(process.execPath, [validator, "--root", fixture.root], { encoding: "utf8" });
+  assert.equal(scope.status, 1);
+  assert.match(scope.stderr, /scope-001-later\.md: scope decision pointers are retired with the Technical Decision registry/);
+  assert.doesNotMatch(scope.stderr, /^\s+at /m);
+});
+
+function stateRecord(id, slug, body) {
+  return `---
+type: system-state
+id: ${id}
+name: ${slug}
+authority: "SR-001"
+flows: "FLOW-001"
+---
+
+# ${id} — ${slug}
+
+${body}`;
+}
+
+test("structure validation reads every canonical state table's Terminal value, drawn or not", (context) => {
+  const fixture = packageFixture();
+  context.after(() => fs.rmSync(fixture.workspace, { recursive: true, force: true }));
+  const states = path.join(fixture.root, "system-model", "contracts", "states");
+  write(path.join(states, "state-001-account.md"), stateRecord("STATE-001", "Account", `## Account States
+
+| State | Meaning | Terminal |
+| --- | --- | --- |
+| Open | Usable. | No |
+| Closed | Kept for audit; reopened only by an explicit recovery transition. | Yes |
+
+## Per-Intent States
+
+| Intent state or disposition | Meaning | Account effect | Terminal |
+| --- | --- | --- | --- |
+| Recorded | Stored before signing. | None. | No |
+| Reconciliation blocked | No safe disposition. | Account stays blocked until explicit recovery or decision. | Yes |
+
+## Transitions
+
+| From | Event or fact | Authority | To | Rejection or guard |
+| --- | --- | --- | --- | --- |
+| Open | Owner closes | \`SR-001\` | Closed | Yes |
+
+## Closure Catalogue
+
+| Closure reason | Owner | Reversible | Noted |
+| --- | --- | --- | --- |
+| Owner request | \`SR-001\` | Sí | Yesterday |
+`));
+  const valid = spawnSync(process.execPath, [validator, "--root", fixture.root], { encoding: "utf8" });
+  assert.equal(valid.status, 0, valid.stderr);
+
+  write(path.join(states, "state-002-obra.md"), stateRecord("STATE-002", "Obra", `## States
+
+| State | Meaning | Terminal |
+| --- | --- | --- |
+| Abierta | Admite todo | No |
+| Certificada | Incluida en una certificación emitida | Sí, salvo cantidad devuelta por rectificativa |
+| Cerrada | Cerrada con pendientes | No; se reabre con motivo |
+| Validada | Inmutable | Sí |
+| Ayer | Prueba | Yesterday |
+| Vacía | Sin valor |  |
+
+## Sub-states
+
+| State | Meaning |
+| --- | --- |
+| Retenida | Registrada sin imputar |
+
+## Transitions
+
+| From | Event or fact | Authority | To | Rejection or guard |
+| --- | --- | --- | --- | --- |
+| Abierta | Cierre | \`SR-001\` | Cerrada | Garbage |
+`));
+  const invalid = spawnSync(process.execPath, [validator, "--root", fixture.root], { encoding: "utf8" });
+  assert.equal(invalid.status, 1);
+  const lines = invalid.stderr.trim().split("\n");
+  const place = (row) => `state-002-obra.md: state table under "States", row ${row}`;
+  for (const [row, state, value] of [[2, "Certificada", '"Sí, salvo cantidad devuelta por rectificativa"'], [3, "Cerrada", '"No; se reabre con motivo"'], [4, "Validada", '"Sí"'], [5, "Ayer", '"Yesterday"'], [6, "Vacía", "a blank cell"]]) {
+    assert.ok(lines.some((line) => line.endsWith(`${place(row)} (${state}): Terminal must be exactly Yes or No, found ${value}. Write conditions, qualifications and reopening rules in Meaning, the transitions or Observation And Finality.`)), invalid.stderr);
+  }
+  assert.ok(lines.some((line) => line.endsWith('state-002-obra.md: state table under "Sub-states" has no Terminal column; a state table needs exactly one Terminal column whose cells are Yes or No.')), invalid.stderr);
+  assert.equal(lines.filter((line) => /Terminal/.test(line)).length, 6, "transition rows, unrelated tables and valid rows are not reported");
+  assert.doesNotMatch(invalid.stderr, /state-001-account\.md/);
+  assert.doesNotMatch(invalid.stderr, /^\s+at /m);
+});
+
 test("structure validation accepts and routes the conditional UI/UX Design lane", (context) => {
   const fixture = packageFixture();
   context.after(() => fs.rmSync(fixture.workspace, { recursive: true, force: true }));
@@ -270,7 +385,7 @@ test("structure validation accepts and routes the conditional UI/UX Design lane"
   const uiRoot = path.join(fixture.root, "ui-ux");
   fs.mkdirSync(uiRoot, { recursive: true });
   fs.copyFileSync(path.join(skillRoot, "references", "ui-ux", "templates", "specification.md"), path.join(uiRoot, "specification.md"));
-  fs.copyFileSync(path.join(skillRoot, "references", "ui-ux", "templates", "prototype.html"), path.join(uiRoot, "prototype.html"));
+  fs.copyFileSync(path.join(skillRoot, "references", "ui-ux", "templates", "index.html"), path.join(uiRoot, "index.html"));
   fs.mkdirSync(path.join(uiRoot, "alternatives", "main"), { recursive: true });
   fs.copyFileSync(path.join(skillRoot, "references/ui-ux/templates/candidate.html"), path.join(uiRoot, "alternatives/main/index.html"));
   write(path.join(fixture.root, "README.md"), "# Software Design\n\n- [UI/UX Design](./ui-ux/specification.md)\n");
@@ -285,7 +400,7 @@ test("structure validation rejects an unlinked UI/UX Design lane", (context) => 
   const uiRoot = path.join(fixture.root, "ui-ux");
   fs.mkdirSync(uiRoot, { recursive: true });
   fs.copyFileSync(path.join(skillRoot, "references", "ui-ux", "templates", "specification.md"), path.join(uiRoot, "specification.md"));
-  fs.copyFileSync(path.join(skillRoot, "references", "ui-ux", "templates", "prototype.html"), path.join(uiRoot, "prototype.html"));
+  fs.copyFileSync(path.join(skillRoot, "references", "ui-ux", "templates", "index.html"), path.join(uiRoot, "index.html"));
   fs.mkdirSync(path.join(uiRoot, "alternatives", "main"), { recursive: true });
   fs.copyFileSync(path.join(skillRoot, "references/ui-ux/templates/candidate.html"), path.join(uiRoot, "alternatives/main/index.html"));
   const validated = spawnSync(process.execPath, [validator, "--root", fixture.root], { encoding: "utf8" });

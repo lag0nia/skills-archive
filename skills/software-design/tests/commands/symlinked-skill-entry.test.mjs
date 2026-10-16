@@ -29,6 +29,7 @@ function run(scriptPath, args, cwd) {
 }
 
 function writeTicketPackage(root, status) {
+  writeText(path.join(root, "system-model", "architecture.md"), "---\ntype: system-architecture\ndesign_format: 2\n---\n");
   writeText(path.join(root, "system-model", "domains", "example", "domain.md"), `---
 type: system-domain
 id: DOMAIN-example
@@ -47,7 +48,7 @@ domain: example
 
 # SR-001 — Example Responsibility
 `);
-  writeText(path.join(root, "build", "workflow", "tickets", "example", "sr-001", "sr-001-tickets.yaml"), `ticket_file_version: 3
+  writeText(path.join(root, "build", "workflow", "tickets", "example", "sr-001", "sr-001-tickets.yaml"), `ticket_file_version: 4
 scope: "responsibility:SR-001"
 
 tickets:
@@ -60,7 +61,6 @@ tickets:
     owner: "SR-001"
     affects: ["SR-001"]
     cluster: "public-api"
-    parent_decision: null
     question: "Which public API will the implementation expose?"
     context: "The logical responsibility is fixed and the public code interface has been selected."
     options: []

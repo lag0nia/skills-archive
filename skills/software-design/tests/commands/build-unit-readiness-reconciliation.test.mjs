@@ -46,7 +46,7 @@ function ticket({ status = "todo", buildUnits = ["BU-001"], buildUnitDisposition
   const repositoryFields = repositories === null
     ? ""
     : `    repositories: ${JSON.stringify(repositories)}\n    repository_contract_area: ${JSON.stringify(repositoryContractArea)}\n`;
-  return `ticket_file_version: 3
+  return `ticket_file_version: 4
 scope: "responsibility:SR-001"
 
 tickets:
@@ -59,7 +59,6 @@ tickets:
     owner: "SR-001"
     affects: ["SR-001"]
     cluster: "library-toolchain"
-    parent_decision: null
     question: "Which reproducible command builds and verifies the library?"
     context: "The library requires one selected build command before it can be reproduced."
     candidate_proof: "An implementer cannot finish or verify the reproducible library build without choosing the exact command contract, and the current package does not already choose it."
@@ -87,7 +86,6 @@ function additionalTicket({ id = "TICKET-0002", status = "finished", buildUnits 
     owner: "SR-001"
     affects: ["SR-001"]
     cluster: "library-toolchain"
-    parent_decision: null
     question: "Which secondary command preserves the reproducible library workflow?"
     context: "The library command set requires one explicit secondary command."
     candidate_proof: "An implementer cannot finish or verify the secondary command without selecting its exact contract."
@@ -108,6 +106,7 @@ function fixture({ status = "todo", buildUnits = ["BU-001"], buildUnitDispositio
   const root = createWorkspace("software-design-build-unit-reconciliation-");
   const buildUnitsRoot = path.join(root, "build", "units");
   const ticketsRoot = path.join(root, "build", "workflow", "tickets");
+  writeText(path.join(root, "system-model", "architecture.md"), "---\ntype: system-architecture\ndesign_format: 2\n---\n\n# System Architecture\n");
   writeText(path.join(root, "system-model", "domains", "sample", "domain.md"), `---
 type: system-domain
 id: DOMAIN-sample

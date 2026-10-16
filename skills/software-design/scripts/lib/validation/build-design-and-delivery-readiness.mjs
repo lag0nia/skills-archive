@@ -1,8 +1,11 @@
 import fs from "node:fs";
+import { validationMode } from "./validation-mode.mjs";
+import { validateUpstreamDependency, validateCapabilityFeasibility } from "./planned-dependencies.mjs";
 import { validateBoundedDeltaScope } from "./bounded-delta-scope.mjs";
 import path from "node:path";
 import { validateUiUxDesign, readUiUxSpecification, validateUiUxJourneyReadiness } from "./ui-ux-design.mjs";
 import { buildLayout, capabilityFiles, selectionFiles } from "../model/build-layout.mjs";
+import { currentFormatError } from "../model/package-format.mjs";
 import {
   collectStructuredVerificationObligations,
   verificationAssignmentNone,
@@ -18,7 +21,7 @@ import { parseTicketFile } from "../model/ticket-format.mjs";
 import { findTechnicalConstraintRecords } from "../model/technical-constraint-records.mjs";
 import { deliverySnapshotErrors } from "../delivery-snapshot.mjs";
 import { validateRepositoryTicketMappings } from "../../validate-implementation-detail-tickets.mjs";
-import { validateHandoffSequence } from "./handoff-sequence.mjs";
+import { validateHandoffSequence, validatePlannableHandoff } from "./handoff-sequence.mjs";
 
 const READINESS = new Set(["READY", "PARTIAL", "BLOCKED"]);
 const OUTCOMES = new Set([
@@ -149,8 +152,8 @@ const DIAGNOSTIC_SWEEP_FIELDS = [
 const CONSUMER_COVERAGE_SECTION = "Known Consumer Compatibility Coverage";
 const DIAGNOSTIC_SWEEP_SECTION = "Bounded Diagnostic Sweep";
 const PHYSICAL_REALIZABILITY_SECTION = "Physical Realizability Closure";
-const PHYSICAL_RESULTS = new Set(["COMPATIBLE", "DELTA_OWNED", "BLOCKED", "EXCLUDED"]);
-const PHYSICAL_OBSERVATION_STATES = new Set(["OBSERVED", "SELECTED_SLICE_OUTPUT", "NOT_APPLICABLE"]);
+const PHYSICAL_RESULTS = new Set(["COMPATIBLE", "DELTA_OWNED", "AWAITING_UPSTREAM", "BLOCKED", "EXCLUDED"]);
+const PHYSICAL_OBSERVATION_STATES = new Set(["OBSERVED", "SELECTED_SLICE_OUTPUT", "PLANNED_UPSTREAM_OUTPUT", "NOT_APPLICABLE"]);
 const PHYSICAL_IMPLEMENTATION_SITUATIONS = new Set(["new-output", "existing-unchanged", "implemented-evolution"]);
 const PHYSICAL_BOUNDARY_CLASSES = new Set(["protected-machine-interface", "required-effectful-command", "change-impact", "ordinary"]);
 const PHYSICAL_CANDIDATE_STATES = new Set(["PASS", "PLANNED", "NOT_APPLICABLE"]);
@@ -177,7 +180,7 @@ const LATER_LIFECYCLE_STAGES = new Set(["Release", "Deployment", "Activation", "
 const INPUT_CONSUMPTION_STAGES = new Set(["Implementation", "Build", "Verification", ...LATER_LIFECYCLE_STAGES]);
 const INPUT_PRODUCER_STAGES = new Set([...INPUT_CONSUMPTION_STAGES, "Existing", "External"]);
 const INPUT_KINDS = new Set(["Source", "Immutable artifact", "Credential", "Configuration", "External fact", "Fixture"]);
-const INPUT_AVAILABILITIES = new Set(["selected-slice output", "verified existing input", "later-lifecycle output", "missing"]);
+const INPUT_AVAILABILITIES = new Set(["selected-slice output", "verified existing input", "later-lifecycle output", "planned upstream output", "missing"]);
 const INPUT_MATURITIES = new Set(["source-only", "built", "published", "accessible", "verified", "not-applicable"]);
 const EARLY_INPUT_STAGES = new Set(["Implementation", "Build", "Verification"]);
 const INPUT_LIFECYCLE_ORDER = ["Implementation", "Build", "Verification", "Release", "Deployment", "Activation", "Operation"];
@@ -214,7 +217,7 @@ const MACHINE_INTERACTION_KINDS = new Set([
   "artifact-transfer",
   "external-system",
 ]);
-const INTERACTION_AVAILABILITIES = new Set(["selected-slice output", "verified existing interaction", "later-lifecycle output", "missing"]);
+const INTERACTION_AVAILABILITIES = new Set(["selected-slice output", "selected-slice consumer", "verified existing interaction", "later-lifecycle output", "planned upstream output", "missing"]);
 const INTERACTION_EVIDENCE_CLASSES = new Set([
   "existence",
   "identity-freshness",
@@ -513,7 +516,7 @@ function validateOptionalMaterialWorkspaceTree({ text, label, errors, parentText
   }
 }
 
-function validateRealizabilityReview({ handoff, handoffDir, outcome, errors }) {
+function validateRealizabilityReview({ handoff, handoffDir, outcome, errors, mode }) {
   const body = sectionBody(handoff, "Delivery Slice Realizability Review");
   if (body === null) return;
   const planningClaim = ["IMPLEMENTATION_DETAILS_READY", "IMPLEMENTATION_DETAILS_PARTIAL"].includes(outcome);
@@ -561,13 +564,15 @@ function validateRealizabilityReview({ handoff, handoffDir, outcome, errors }) {
       errors.push("Delivery Slice Realizability Review is missing **" + name + ":**.");
       continue;
     }
-    const match = /^`(PASS|BLOCKED)`\s*(?:—|-)\s*(.+)$/.exec(value);
+    const match = /^`(PASS|BLOCKED|WAITING)`\s*(?:—|-)\s*(.+)$/.exec(value);
     if (!match) {
       errors.push("Delivery Slice Realizability Review **" + name + ":** must use `PASS` or `BLOCKED` followed by concrete evidence.");
       continue;
     }
     const [, status, evidence] = match;
-    statuses.push(status);
+    const waiting = mode === "planning" && name === "Execution-context readiness" && status === "WAITING"
+      && /planned upstream output|order group/i.test(evidence);
+    statuses.push(waiting ? "PASS" : status);
     if (!meaningful(evidence) || placeholder(evidence)) {
       errors.push("Delivery Slice Realizability Review **" + name + ":** lacks a concrete conclusion.");
     }
@@ -575,7 +580,7 @@ function validateRealizabilityReview({ handoff, handoffDir, outcome, errors }) {
     if (!localLinks.length) {
       errors.push("Delivery Slice Realizability Review **" + name + ":** must cite at least one existing canonical local link.");
     }
-    if (planningClaim && status !== "PASS") {
+    if (planningClaim && status !== "PASS" && !waiting) {
       errors.push(outcome + " requires PASS for realizability axis " + name + ".");
     }
   }
@@ -831,11 +836,20 @@ function validatePhysicalRealizabilityClosure({ handoff, handoffDir, handoffPath
     }
 
     const result = field(entry.body, "Current result")?.match(/^`([^`]+)`$/)?.[1] || null;
+    const plannedCovered = [...(requiredInputEntries(handoff)?.entries || []), ...(requiredInteractionEntries(handoff)?.entries || [])].some((item) => coveredIds.includes(item.id) && field(item.body, "Availability") === "`planned upstream output`");
+    if (plannedCovered && result !== "AWAITING_UPSTREAM") errors.push(entry.id + " covering planned upstream output must use AWAITING_UPSTREAM, not claim observed compatibility.");
+    if (/^`PLANNED_UPSTREAM_OUTPUT`/.test(field(entry.body, "Producer observation") || "") && (!plannedCovered || result !== "AWAITING_UPSTREAM")) errors.push(entry.id + " planned producer observation requires its declared pending upstream class.");
     if (!PHYSICAL_RESULTS.has(result)) errors.push(entry.id + " has an invalid **Current result:**.");
     const deltaOwner = field(entry.body, "Delta owner") || "";
     const owners = [...new Set(buildUnitScopes(deltaOwner))];
     if (result === "COMPATIBLE" && !isNone(deltaOwner)) {
       errors.push(entry.id + " COMPATIBLE must use `None.` for **Delta owner:**.");
+    }
+    if (result === "AWAITING_UPSTREAM") {
+      const covered = [...(requiredInputEntries(handoff)?.entries || []), ...(requiredInteractionEntries(handoff)?.entries || [])].filter((item) => coveredIds.includes(item.id));
+      if (!covered.length || covered.some((item) => field(item.body, "Availability") !== "`planned upstream output`") || !isNone(deltaOwner)
+          || candidate?.status !== "PLANNED" || provenance?.status !== "planned-proof") errors.push(entry.id + " AWAITING_UPSTREAM requires declared planned upstream obligations, planned proof, and no local delta owner.");
+      if (!/^`PLANNED_UPSTREAM_OUTPUT`/.test(field(entry.body, "Producer observation") || "")) errors.push(entry.id + " must identify its producer as PLANNED_UPSTREAM_OUTPUT.");
     }
     if (result === "DELTA_OWNED") {
       if (!owners.length) errors.push(entry.id + " DELTA_OWNED must name at least one selected Build Unit in **Delta owner:**.");
@@ -1317,6 +1331,18 @@ function validateRequiredInteractionClosure({ root, handoff, handoffDir, outcome
     const ownerScopes = buildUnitScopes(ownerField);
     const ownerScope = ownerScopes.length === 1 ? ownerScopes[0] : null;
     const proofOwner = ownerScope ? buildUnits.get(ownerScope.split(":")[1]) : null;
+    if (availability === "selected-slice consumer") {
+      const writable = buildUnitScopes(field(sectionBody(handoff, "Allowed Delivery Slice") || "", "Writable build units") || "");
+      if (!consumerScope || ownerScope !== consumerScope || !writable.includes(consumerScope)
+          || !producerScope || writable.includes(producerScope)
+          || field(entry.body, "Availability evidence scope") !== "`prerequisite`") {
+        errors.push(entry.id + " selected-slice consumer requires a writable consumer/proof owner, a separate read-only producer and explicit prerequisite evidence scope.");
+      }
+      if (!/^`Planned`(?:\s|$)/.test(field(entry.body, "Representation conformance") || "")
+          || !/^`Planned`(?:\s|$)/.test(field(entry.body, "Consumer challenge") || "")) {
+        errors.push(entry.id + " selected-slice consumer must schedule final conformance and consumer challenge as Planned; prerequisite proof is not completed consumer fitness.");
+      }
+    }
     if (externalConsumer || gated || ownerField) {
       if (!proofOwner || !/^REPO-\d{3}$/.test(proofOwner.repository || "") || !selectedScopes.includes(ownerScope)
         || !existingLocalLinks(ownerField, handoffDir).some(({ local }) => local.resolved === proofOwner.filePath)
@@ -1354,7 +1380,7 @@ function validateRequiredInteractionClosure({ root, handoff, handoffDir, outcome
         errors.push(entry.id + " Current-profile inputs must name existing INPUT records or explicit None. with justification in Current-profile verification.");
       }
       if (currentInputs.some((input) => !EARLY_INPUT_STAGES.has(codeFieldValue(input.body, "Consumed at", INPUT_CONSUMPTION_STAGES))
-        || !["`selected-slice output`", "`verified existing input`"].includes(field(input.body, "Availability")))) {
+        || !["`selected-slice output`", "`verified existing input`", "`planned upstream output`"].includes(field(input.body, "Availability")))) {
         errors.push(entry.id + " current-profile implementation/build/verification inputs must be available or owned selected outputs; later or missing inputs cannot be deferred.");
       }
       const profile = field(entry.body, "Current-profile verification") || "";
@@ -2425,8 +2451,12 @@ function currentHandoffFiles(layout) {
     .sort();
 }
 
-export function validateBuildAndDeliveryReadiness(root, { scope = "auto", handoffPath: requestedHandoffPath = null } = {}) {
+export function validateBuildAndDeliveryReadiness(root, { scope = "auto", handoffPath: requestedHandoffPath = null, validationMode: requestedMode = "execution" } = {}) {
+  const mode = validationMode(requestedMode);
+  if (scope === "build" && mode !== "execution") throw new Error("Planning validation is supported only for delivery readiness.");
   if (!["auto", "build", "delivery"].includes(scope)) throw new Error("Unknown validation scope: " + scope + ".");
+  const formatError = currentFormatError(root);
+  if (formatError) return { errors: [formatError], skipped: false, mappingOnly: false };
   if (scope !== "build" && !requestedHandoffPath) {
     const initialLayout = buildLayout(root);
     const availableHandoffs = currentHandoffFiles(initialLayout);
@@ -2437,6 +2467,7 @@ export function validateBuildAndDeliveryReadiness(root, { scope = "auto", handof
         const handoffResult = validateBuildAndDeliveryReadiness(root, {
           scope: "delivery",
           handoffPath: currentHandoffPath,
+          validationMode: mode,
         });
         const handoffLabel = rel(initialLayout.handoffsRoot, currentHandoffPath);
         for (const error of handoffResult.errors) {
@@ -2669,9 +2700,27 @@ export function validateBuildAndDeliveryReadiness(root, { scope = "auto", handof
   for (const { target, local } of linkPaths(handoff, handoffDir)) {
     if (local && !fs.existsSync(local.resolved)) errors.push("Broken handoff link: " + target);
   }
-  validateRealizabilityReview({ handoff, handoffDir, outcome, errors });
+  validateRealizabilityReview({ handoff, handoffDir, outcome, errors, mode });
   validateBoundedDiagnosticSweep({ handoff, handoffDir, outcome, errors });
   validateLaterLifecycleGates({ handoff, handoffDir, errors });
+
+  const writableScopes = buildUnitScopes(field(sectionBody(handoff, "Allowed Delivery Slice") || "", "Writable build units") || "");
+  const upstreamEntries = [...(requiredInputEntries(handoff)?.entries || []), ...(requiredInteractionEntries(handoff)?.entries || [])];
+  for (const entry of upstreamEntries) validateUpstreamDependency({ entry, handoff, handoffPath, rows: sequenceResult.rows, writableScopes, mode, errors });
+  // Validate producer planning authority through the same structural/decision call chain.
+  // Strictly earlier validated sequence edges make this bounded recursion acyclic.
+  if (!sequenceResult.errors.length) {
+    const selectedRow = sequenceResult.rows.find((row) => row.target === handoffPath);
+    const producers = new Set(upstreamEntries.filter((entry) => field(entry.body, "Availability") === "`planned upstream output`").flatMap((entry) => linkPaths(field(entry.body, "Producer handoff") || "", handoffDir).map(({ local }) => local?.resolved).filter(Boolean)));
+    for (const producerPath of producers) {
+      const row = sequenceResult.rows.find((candidate) => candidate.target === producerPath);
+      if (!row || !selectedRow || row.orderGroup >= selectedRow.orderGroup || !selectedRow.requires.includes(row.slug)) continue;
+      const result = validateBuildAndDeliveryReadiness(root, { scope: "delivery", handoffPath: producerPath, validationMode: "planning" });
+      errors.push(...result.errors.map((error) => "Planned producer " + row.slug + ": " + error));
+    }
+  }
+  validateCapabilityFeasibility({ handoff, handoffPath, writableScopes, entries: upstreamEntries, mode, errors });
+  errors.push(...validatePlannableHandoff(root, handoffPath, { validationMode: mode }).errors);
 
   const entries = routingEntries(handoff);
   if (!entries.length) errors.push("Handoff has no Build Unit Routing Index entries.");
@@ -2770,7 +2819,10 @@ export function validateBuildAndDeliveryReadiness(root, { scope = "auto", handof
   for (const scope of entryByScope.keys()) if (!selectedScopes.includes(scope)) errors.push("Routing entry " + scope + " is missing from **Selected build units:**.");
   for (const entry of entries) {
     for (const dependency of entry.dependencies) {
-      if (!selectedScopes.includes(dependency)) errors.push(entry.scope + " direct Build Unit dependency " + dependency + " must be selected in the delivery closure.");
+      const explicitUpstream = upstreamEntries.some((input) => field(input.body, "Producer handoff")
+        && buildUnitScopes(field(input.body, "Produced by") || field(input.body, "Producer") || "").includes(dependency)
+        && ["`planned upstream output`", "`verified existing input`", "`verified existing interaction`"].includes(field(input.body, "Availability")));
+      if (!selectedScopes.includes(dependency) && !explicitUpstream) errors.push(entry.scope + " direct Build Unit dependency " + dependency + " must be selected in the delivery closure or represented by an explicit contracted upstream dependency.");
     }
   }
   validateUiUxDeliveryReview({ root, handoff, handoffDir, outcome, buildUnits, selectedScopes, errors });

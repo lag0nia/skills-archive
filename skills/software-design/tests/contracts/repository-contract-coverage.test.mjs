@@ -215,7 +215,8 @@ test("material interactions close from logical contract through consumer fitness
   }
   assert.match(inventory, /read-before-write/);
   assert.match(inventory, /empty\/not-found versus forbidden versus stale\/unavailable/);
-  assert.match(readiness, /pre-existing producer requires identity\/freshness/);
+  assert.match(readiness, /verified existing interaction requires identity\/freshness/);
+  assert.match(readiness, /genuinely new selected consumer of an available read-only producer/);
   assert.match(readiness, /Only `high` interactions require/);
   assert.match(structureValidator, /stable <a id=/);
   assert.match(readinessValidator, /fresh independent consumer-side PASS challenge/);

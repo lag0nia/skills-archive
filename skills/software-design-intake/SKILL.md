@@ -39,7 +39,7 @@ Those artifacts belong to the downstream software-design workflow.
 
 1. Read the user's source material: prompt text, PDFs, docs, diagrams, repo files, notes, or existing code. If the user simply says `$software-design-intake`, use all attached or clearly referenced material as the source.
 2. Classify the role of each source before extracting components.
-3. Run a deep source digestion and mechanism-preservation pass before proposing the component map.
+3. Run a deep source digestion and mechanism-preservation pass, clarifying consequential concepts before proposing responsibilities and flows.
 4. Show an intake checkpoint before writing the final brief.
 5. Interview the user on missing product intent, expected behavior, scope, policy, or technical detail when it materially affects the main journey, authority boundaries, or architecture. Use the existing questions and brief sections; apply the Ask-Now rules below to decide what needs an answer now.
 6. Iterate until the component map, boundaries, flows, constraints, assumptions, and unresolved questions are clear enough.
@@ -156,7 +156,7 @@ The upload limit applies to the total uncompressed batch size. Compression reduc
 Source formula: batch size = sum of uncompressed file sizes (`B = Σ sᵢ`).
 ```
 
-Create a terminology translation when variables, reused letters, or domain-specific symbols could confuse downstream readers. Rename ambiguous source terms into clear implementation names in the brief.
+Create a terminology translation when variables, reused letters, or domain-specific symbols could confuse downstream readers. Use clear implementation names for understood concepts; a rename must not silently choose between materially different meanings. Resolve those through the Ask-Now rules before treating their boundaries as established.
 
 Do not put a long `Key Terms` or notation table in the checkpoint by default. Put source notation in the final brief only when it helps downstream work, and keep it after the summary, components, flows, questions, and risks. If the user asks for source details, show them under `Source Notes`, not before the main interpretation.
 
@@ -263,6 +263,12 @@ Do not use raw source notation unless it is necessary and already translated.
 Capture missing product intent, expected behavior, scope, or policy when it materially affects the main journey, authority boundaries, or architecture, using the existing summary, flows, questions, and scope sections.
 
 `Needs Your Answer Now` includes questions whose answers are necessary to establish a coherent, trustworthy brief. A possible change to the component map or a major flow does not by itself require an immediate answer. Use `Open But Design-Around` when a bounded uncertainty can safely remain explicit for later Software Design or prototype exploration. Do not defer essential safety or authority prerequisites, invent a missing transition, or use an assumption to conceal a blocker.
+
+When a term, relationship, or rule admits several plausible meanings, identify whether the difference would change behavior, ownership, state, a contract, or a design choice. Check relevant approved definitions, decisions, source history, and applicable implementation within the authorized source scope before asking. Reuse settled answers; distinguish current code from approved target intent, especially when code is stale. Surface a conflict only when authority or history cannot resolve it. Harmless synonyms and discoverable facts do not need user decisions.
+
+For a remaining consequential choice, use a concrete scenario when it reveals the difference: identify the actor, objects, relevant starting state, and action, then explain the different outcomes under the plausible interpretations. For example, if “account” could mean a person or an organization, ask whether disabling Alice's account removes only Alice's access or disables the organization's projects for everyone. Explain the ownership consequence before proposing responsibilities. Label invented scenario details as illustrative, not new requirements. Do not force examples into obvious questions or enumerate hypothetical edge cases without an effect on the current scope.
+
+Ask the narrow unresolved question with understandable options and their consequences. Distinguish necessary consequences from possible downstream effects; label the latter as conditional rather than inventing a policy or transition. Offer a recommendation when supported by the evidence, state its basis and any assumptions, and keep it explicitly proposed until approved; otherwise explain what evidence is missing. Apply the existing Ask Now versus Open But Design-Around distinction rather than turning every ambiguity into a blocker. Reconcile approved clarification into the affected checkpoint summary, mechanism registers, component boundaries, flows, constraints, and open questions; remove stale assumptions without erasing still-open choices. Persist it only under the existing Write Gate, in the existing brief sections, without adding a glossary or decision registry.
 
 Do not reduce the first checkpoint to only "is this source target architecture or reference?" when other material ambiguities are visible. This is targeted clarification, not a mandatory product questionnaire or a new approval gate.
 
@@ -388,7 +394,7 @@ Recommend:
 - likely blockers;
 - safer question handling.
 
-Do not recommend product direction, vendor choices, protocol choices, deployment choices, or implementation strategy as final answers unless the user asks for a recommendation. If advice is requested, mark it as advice pending approval.
+A supported recommendation may help resolve a material intake question; it is advice pending approval, never a final product direction, vendor, protocol, deployment, or implementation choice. Do not expand the intake into unrelated strategy advice.
 
 ## Misread Risk Review
 

@@ -33,7 +33,7 @@ test("frontmatter and routing expose backlog and GitHub ticket workflows", () =>
   assert.match(skill, /\[references\/ticket-projection\.md\]\(references\/ticket-projection\.md\)/);
 });
 
-test("canonical unresolved tickets require a concrete candidate proof and explicit parent", () => {
+test("canonical unresolved tickets require a concrete candidate proof without a retired parent", () => {
   const validProof = "An implementer cannot finish or verify activation relay behavior without choosing provider ordering and retry timing, and the current package does not already choose it.";
   assert.equal(candidateProofValid(validProof), true);
   assert.equal(candidateProofValid("The provider is still TBD."), false);
@@ -41,9 +41,9 @@ test("canonical unresolved tickets require a concrete candidate proof and explic
     candidateProofValid("An implementer cannot finish or verify <bounded behavior> without choosing <missing detail>, and the current package does not already choose it."),
     false,
   );
-  assert.match(ticketTemplate, /^ticket_file_version: 3$/m);
+  assert.match(ticketTemplate, /^ticket_file_version: 4$/m);
   assert.match(ticketTemplate, /^    candidate_proof:/m);
-  assert.match(ticketTemplate, /^    parent_decision: null$/m);
+  assert.doesNotMatch(ticketTemplate, /parent_decision/);
 });
 
 test("inventory completion is snapshot-bounded and missing historical receipts do not block Build Design", () => {

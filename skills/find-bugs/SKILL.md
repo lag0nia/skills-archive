@@ -1,6 +1,6 @@
 ---
 name: find-bugs
-description: Discover and independently confirm real defects in a bounded target without implementing fixes. Use for low-, medium-, or high-intensity bug audits of code, APIs, services, product-design packages, specifications, plans, procedures, configuration, infrastructure descriptions, or mixed artifact-and-implementation scopes, especially when the agent must distinguish bugs from intended behavior, open decisions, explicit exclusions, or unsupported speculation and produce one canonical Markdown audit report.
+description: Discover and independently confirm real defects in a bounded target without implementing fixes. Use for low-, medium-, or high-intensity bug audits of code, APIs, services, product-design packages, specifications, plans, procedures, configuration, infrastructure descriptions, or mixed artifact-and-implementation scopes, especially when Codex must distinguish bugs from intended behavior, open decisions, explicit exclusions, or unsupported speculation and produce one canonical Markdown audit report.
 ---
 
 # Find Bugs

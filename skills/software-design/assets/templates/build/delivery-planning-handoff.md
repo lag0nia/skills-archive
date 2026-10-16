@@ -44,7 +44,7 @@ Include this section when any selected Build Unit declares `ui_ux_applicability:
 
 **Approved UI/UX sources:** [UI/UX specification](../../../ui-ux/specification.md); [selected candidate](../../../ui-ux/alternatives/<candidate>/index.html); upstream UI/UX owner or `None.`.
 
-**Covered prototype states:** <links to exact specification journey anchors plus affected routes, dialogs, and materially distinct states; relevant pending changes must be reconciled>.
+**Covered prototype states:** <name the selected delivery scope and link exact specification journey anchors plus all approved routes, consequential interactions, dialogs, and materially distinct visible states in that scope; relevant pending changes and unanswered material UI decisions must be reconciled>.
 
 **Prototype walkthrough:** `Reviewed — no unresolved usability blockers` / `Blocked` — <review evidence or blocker>.
 
@@ -57,6 +57,23 @@ Include this section when any selected Build Unit declares `ui_ux_applicability:
 **Consistency result:** `PASS` / `BLOCKED` — <comparison among upstream requirements, Software Design behavior, UI/UX specification, prototype, Build Units, and this handoff>.
 
 A human-facing slice under either `IMPLEMENTATION_DETAILS_READY` or `IMPLEMENTATION_DETAILS_PARTIAL` requires a reviewed walkthrough with no unresolved usability blocker, a `PASS` consistency result, and separate functional-acceptance and implemented-UI/UX-review routes for the selected scope. Delivery Planning projects these approved sources, covered journeys, and separate routes into the workpack. Structural validation does not establish usability, accessibility conformance, implementation fidelity, or user-testing outcomes.
+
+**Writable paths:** <backticked approved repository-relative path ceiling>
+
+<!-- Optional producer declarations within Allowed Delivery Slice; omit when this slice promises no downstream output. -->
+### OUTPUT-001
+
+**Output:** <exact expected capability/output name>
+
+**Contract:** <approved exact contract/version expectation>
+
+**Contract authority:** <canonical contract or approved/inherited selection link>
+
+**Owner:** `BUILD_UNIT:BU-xxx`
+
+**Writable paths:** <approved producer paths>
+
+**Verification:** <producer proof and independent consumption route>
 
 ## Required Input Ledger
 
@@ -76,7 +93,25 @@ Enumerate the complete direct and transitive prerequisite closure. Use one entry
 
 **Produced at:** `Implementation` / `Build` / `Verification` / `Release` / `Deployment` / `Activation` / `Operation` / `Existing` / `External`
 
-**Availability:** `selected-slice output` / `verified existing input` / `later-lifecycle output` / `missing`
+**Availability:** `selected-slice output` / `verified existing input` / `planned upstream output` / `later-lifecycle output` / `missing`
+
+<!-- Required for planned upstream output; retain after verified reconciliation, otherwise omit. -->
+**Producer handoff:** [OUTPUT-001](<canonical-producer-handoff>#output-001)
+
+**Expected output:** <exact producer OUTPUT name>
+
+**Expected contract:** <exact approved producer OUTPUT contract/version expectation>
+
+**Consumption point:** <start or phase, stage and public consuming seam>
+
+**Availability check:** <actual prerequisite acquisition/identity/conformance and existing-consumer compatibility before use; final new-consumer proof after implementation>
+
+**Upstream receipt:** `None.` until actual compatible completed producer evidence is verified
+
+**Availability evidence:** `None.` until actual scoped availability/compatibility evidence is collected
+
+<!-- For an available producer and genuinely new writable consumer only, use `prerequisite`; otherwise omit to retain strict existing-consumer fitness. See planning-execution-contract.md. -->
+**Availability evidence scope:** `prerequisite` / `consumer-fitness`
 
 **Maturity:** `source-only` / `built` / `published` / `accessible` / `verified` / `not-applicable`
 
@@ -104,7 +139,7 @@ Enumerate every material logical interaction the selected slice must implement o
 
 **Consumer:** `BUILD_UNIT:BU-xxx` or `External` — <named actor/system and exact canonical IFACE.ACT link>
 
-**Proof owner:** <for an external consumer or gated interaction: one selected BUILD_UNIT:BU-xxx with canonical link and relevant action binding; verification ownership only>
+**Proof owner:** <for a selected-slice consumer: its writable consumer; for an external consumer or gated interaction: one selected BUILD_UNIT:BU-xxx with canonical link and relevant action binding; verification ownership only>
 
 **Producer:** `BUILD_UNIT:BU-yyy` with canonical local link, or `External`
 
@@ -118,7 +153,25 @@ Enumerate every material logical interaction the selected slice must implement o
 
 **Consumer path:** <BU consumer seam and link; for an external consumer, its actual entrypoint plus canonical action and selected proof-owner links>
 
-**Availability:** `selected-slice output` / `verified existing interaction` / `later-lifecycle output` / `missing`
+**Availability:** `selected-slice output` / `selected-slice consumer` / `verified existing interaction` / `planned upstream output` / `later-lifecycle output` / `missing`
+
+<!-- Required for planned upstream output; retain after verified reconciliation, otherwise omit. -->
+**Producer handoff:** [OUTPUT-001](<canonical-producer-handoff>#output-001)
+
+**Expected output:** <exact producer OUTPUT name>
+
+**Expected contract:** <exact approved producer OUTPUT contract/version expectation>
+
+**Consumption point:** <start or phase, stage and public consuming seam>
+
+**Availability check:** <actual prerequisite acquisition/identity/conformance and existing-consumer compatibility before use; final new-consumer proof after implementation>
+
+**Upstream receipt:** `None.` until actual compatible completed producer evidence is verified
+
+**Availability evidence:** `None.` until actual scoped availability/compatibility evidence is collected
+
+<!-- For an available producer and genuinely new writable consumer only, use `prerequisite`; otherwise omit to retain strict existing-consumer fitness. See planning-execution-contract.md. -->
+**Availability evidence scope:** `prerequisite` / `consumer-fitness`
 
 <!-- The next five fields apply only to later-lifecycle output. Omit them for ordinary current interactions. Reuse existing INPUT/LGATE records; do not duplicate INT identities. -->
 **Later-lifecycle gate:** `LGATE-NNN`
@@ -143,7 +196,7 @@ Enumerate every material logical interaction the selected slice must implement o
 
 **High-risk verification matrix:** `None.` for ordinary risk, or <local link and explicit positive, rejection/denial, and failure/recovery cases>
 
-Every material interaction requires `existence`, `behavioral`, and `consumer-fitness`; machine-consumable representations also require `structural-conformance`. A verified existing interaction additionally requires `identity-freshness`, verified representation conformance when applicable, and a fresh `PASS` consumer challenge. Producer-local tests, mocks, file existence, or a contract declaration alone cannot prove consumer fitness. `high` risk requires the bounded three-part verification matrix; ordinary risk must use `None.`. A selected-slice output may keep conformance and the consumer challenge `Planned` only when their proof owners are in the selected slice. Exact producer revision or immutable artifact identity is conditional: record it in Required Input Ledger or Fitness evidence when drift could invalidate the conclusion; do not create universal per-source hashes.
+Every material interaction requires `existence`, `behavioral`, and `consumer-fitness`; machine-consumable representations also require `structural-conformance`. A verified existing interaction additionally requires `identity-freshness`, verified representation conformance when applicable, and a fresh `PASS` consumer challenge. Producer-local tests, mocks, file existence, or a contract declaration alone cannot prove consumer fitness. `high` risk requires the bounded three-part verification matrix; ordinary risk must use `None.`. An explicit selected-slice consumer of an actually verified read-only producer retains conformance/challenge as Planned under the owned DELTA_OWNED and prerequisite-evidence contract; final proof is required before completion. A selected-slice output may keep conformance and the consumer challenge `Planned` only when their proof owners are in the selected slice. Exact producer revision or immutable artifact identity is conditional: record it in Required Input Ledger or Fitness evidence when drift could invalidate the conclusion; do not create universal per-source hashes.
 
 
 For gated interactions the existing conformance/challenge fields describe only the declared current profile. Its prerequisites and compatibility checks still apply; real provider evidence remains mandatory at the linked gate. Require the gate stage to match Required at and its INPUT records. A planned current output needs an already writable selected proof owner. External actor/proof ownership never grants authority or writable scope. See the Stage 9 reference for the complete cross-check contract.
@@ -162,9 +215,9 @@ Create a finite ledger of compatibility equivalence classes. Group inputs and in
 
 **Boundary class:** `protected-machine-interface` / `required-effectful-command` / `change-impact` / `ordinary`
 
-**Producer observation:** `OBSERVED` / `SELECTED_SLICE_OUTPUT` / `NOT_APPLICABLE` — <actual emitted value, candidate selected output, or concrete reason; include current local evidence>
+**Producer observation:** `OBSERVED` / `SELECTED_SLICE_OUTPUT` / `PLANNED_UPSTREAM_OUTPUT` / `NOT_APPLICABLE` — <actual emitted value, candidate selected output, or concrete reason; include current local evidence>
 
-**Consumer observation:** `OBSERVED` / `SELECTED_SLICE_OUTPUT` / `NOT_APPLICABLE` — <actual accepted value or validation rule, candidate selected output, or concrete reason; include current local evidence>
+**Consumer observation:** `OBSERVED` / `SELECTED_SLICE_OUTPUT` / `PLANNED_UPSTREAM_OUTPUT` / `NOT_APPLICABLE` — <actual accepted value or validation rule, candidate selected output, or concrete reason; include current local evidence>
 
 **Compared dimensions:** schema/version: <comparison or inapplicable reason>; identity/representation: <comparison or inapplicable reason>; transport/method: <comparison or inapplicable reason>; topology/ports: <comparison or inapplicable reason>; authority/caller: <comparison or inapplicable reason>; lifecycle/persistence: <comparison or inapplicable reason>; command/toolchain: <comparison or inapplicable reason>
 
@@ -176,7 +229,7 @@ Create a finite ledger of compatibility equivalence classes. Group inputs and in
 
 **Required-command effects:** `CHECKED` / `NOT_APPLICABLE` — <actual build/deploy/regenerate/migrate/cross-repository effects and protected-boundary compatibility with current local command evidence, or concrete inapplicability for an ordinary command-free seam>
 
-**Current result:** `COMPATIBLE` / `DELTA_OWNED` / `BLOCKED` / `EXCLUDED`
+**Current result:** `COMPATIBLE` / `DELTA_OWNED` / `AWAITING_UPSTREAM` / `BLOCKED` / `EXCLUDED`
 
 **Delta owner:** `None.` for `COMPATIBLE`; selected `BUILD_UNIT:BU-xxx` owner(s) for `DELTA_OWNED`; canonical blocker or exclusion link for `BLOCKED` or `EXCLUDED`
 
@@ -242,7 +295,7 @@ Perform this review from the canonical selected-source closure after Repository 
 
 **Verification adequacy:** `PASS` / `BLOCKED` — <claim-to-capability/environment match checked, with canonical local link>
 
-**Execution-context readiness:** `PASS` / `BLOCKED` — <target repository binding and external prerequisites checked, with canonical local link>
+**Execution-context readiness:** `PASS` / `WAITING` / `BLOCKED` — <target repository binding and external prerequisites checked, with canonical local link>
 
 **Target-outcome closure:** `PASS` / `BLOCKED` — <actor or consumer, real entrypoint, assembly owner, bootstrap/state/dependencies, minimum observable result, and artifact-appropriate proof owner checked against the declared runtime-profile claims, with canonical local link>
 
@@ -255,6 +308,25 @@ Perform this review from the canonical selected-source closure after Repository 
 **Physical compatibility preflight:** `PASS` / `BLOCKED` — <shipped seam, exact minimal command/procedure, expected identity and representation, observed result or selected-output candidate-fixture result, and final proof owner, with local link>
 
 **Affected-slice propagation:** `PASS` / `BLOCKED` — <exact mapped slice slugs and producer-delta, consumer-delta, evidence-only, blocked-pending-receipt, or unaffected dispositions, with Handoff Sequence or canonical mapping link>
+
+<!-- CAP entries belong to this existing review. Cover every essential implementation capability and verification tool; omit no required adapter or command effect. -->
+**Writable paths:** <backticked approved repository-relative path ceiling, consistent with Allowed Delivery Slice>
+
+### CAP-001
+
+**Capability:** <essential implementation capability or verification tool>
+
+**Disposition:** `Existing` / `Selected-slice output` / `Planned upstream output`
+
+**Owner:** <canonical owner; selected writable BUILD_UNIT for selected output>
+
+**Allowed interface:** <permitted public dependency/export or approved implementation seam>
+
+**Required changes:** `None.` for read-only capability, or <backticked source, test, adapter, fixture, manifest, generated-output and command-effect paths within the ceiling>
+
+**Evidence:** <observed allowed-interface link or exact defined INPUT/INT upstream dependency>
+
+**Verification:** <focused current probe or future scheduled proof; do not relabel planned proof observed>
 
 ### Known Consumer Compatibility Coverage
 

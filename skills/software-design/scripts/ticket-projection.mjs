@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import path from "node:path";
 import { createGitHubAdapter } from "./lib/ticket-projection/github/adapter.mjs";
 import { dispatchProjection, loadConfig, parseViewRenameArguments } from "./lib/ticket-projection/core.mjs";
 import { acquireSyncLock } from "./lib/ticket-projection/sync-lock.mjs";
+import { assertCurrentFormat } from "./lib/model/package-format.mjs";
 
 // sync --views-only: 0 = no audited drift (UI-only checks remain), 1 = API failure, 2 = GitHub interface work remains.
 const VIEW_REPAIR_EXIT_CODES = Object.freeze({
@@ -91,17 +93,19 @@ function parseArguments(argv) {
 async function main() {
   const { operation, options } = parseArguments(process.argv.slice(2));
   const config = loadConfig(process.cwd());
+  // A retired package is rejected before GitHub sign-in or the sync lock.
+  if (operation !== "auth") assertCurrentFormat(path.resolve(process.cwd(), config.ticketRoot), operation);
   const adapter = createGitHubAdapter({
     onProgress(event) {
       const elapsed = `${(event.elapsedMs / 1000).toFixed(1)}s`;
       if (event.type === "sync-start") {
-        console.error(`[ticket-projection] Syncing ${event.tickets} tickets and ${event.decisions} Technical Decisions with concurrency ${event.concurrency}.`);
+        console.error(`[ticket-projection] Syncing ${event.tickets} tickets with concurrency ${event.concurrency}.`);
       } else if (event.type === "sync-plan") {
         console.error(`[ticket-projection] ${event.phase}: ${event.changed}/${event.total} identities need ${event.mutations} mutations (${elapsed}).`);
       } else if (event.type === "sync-progress") {
         console.error(`[ticket-projection] ${event.phase}: ${event.completed}/${event.total} completed; latest ${event.id} (${elapsed}).`);
       } else if (event.type === "sync-complete") {
-        console.error(`[ticket-projection] Data sync complete (presentation not attempted): ${event.tickets} tickets, ${event.decisions} Technical Decisions, ${event.mutations} planned mutations (${elapsed}).`);
+        console.error(`[ticket-projection] Data sync complete (presentation not attempted): ${event.tickets} tickets, ${event.mutations} planned mutations (${elapsed}).`);
       }
     },
   });

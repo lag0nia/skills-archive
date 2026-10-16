@@ -4,7 +4,7 @@ Before Stage 8, this is a compact entry for the workflow and record links that a
 
 ## Construction At A Glance
 
-Replace this example with every canonical Repository and Build Unit. Begin with a brief whole-system orientation and, when applicable, link the [Build Unit Dependency Map](../diagrams/build-unit-dependency-map.canvas). Do not add another navigation, workflow, record, visual-navigation, or readiness section after this guide.
+Replace this example with every canonical Repository and Build Unit. Begin with a brief whole-system orientation and, when applicable, link the [Build Unit Dependency Map](../visuals/maps/build-unit-dependencies.html). Do not add another navigation, workflow, record, visual-navigation, or readiness section after this guide.
 
 Keep each linked heading in its canonical `REPO-xxx — Name` or `BU-xxx — Name` form. In the descriptive paragraphs, use Repository and Build Unit names instead of bare IDs. When the first cross-record mention in this guide needs traceability, append the canonical ID in parentheses—for example, `Public API (BU-002)`—then use the name alone thereafter.
 

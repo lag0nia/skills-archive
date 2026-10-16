@@ -1,0 +1,18 @@
+44a45
+> - repo-002-core-coordination.md: Bounded delta scope: IFACE-003.ACT-001 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-003-one-loan-offer-reservation-and-loan-binding.md
+50a52,53
+> - repo-002-core-coordination.md: Bounded delta scope: IFACE-003.ACT-001 must pin its canonical interface source.
+> - repo-002-core-coordination.md: Bounded delta scope: IFACE-003.ACT-002 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-003-one-loan-offer-reservation-and-loan-binding.md
+56a60,61
+> - repo-002-core-coordination.md: Bounded delta scope: IFACE-003.ACT-002 must pin its canonical interface source.
+> - repo-002-core-coordination.md: Bounded delta scope: IFACE-003.ACT-003 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-003-one-loan-offer-reservation-and-loan-binding.md
+62a68
+> - repo-002-core-coordination.md: Bounded delta scope: IFACE-003.ACT-003 must pin its canonical interface source.
+1003c1009
+<   "decisions": 394,
+---
+>   "decisions": 395,
+1005c1011
+<     "Human-approved · User specified": 80,
+---
+>     "Human-approved · User specified": 81,

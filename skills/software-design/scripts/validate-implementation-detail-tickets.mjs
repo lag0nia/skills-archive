@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 
+import { currentFormatError } from "./lib/model/package-format.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import { isEntryPoint } from "./lib/entry-point.mjs";
@@ -7,14 +8,12 @@ import { findFiles as files, readText as read } from "./lib/model/files.mjs";
 import { parseFrontmatter as frontmatter } from "./lib/model/frontmatter.mjs";
 import { commaSeparatedIds, findBuildUnitRecords } from "./lib/model/build-unit-records.mjs";
 import { currentShapeErrors } from "./lib/model/current-shape.mjs";
+import { ticketAttributionErrors } from "./lib/model/decision-attribution.mjs";
 import { parseTicketFile } from "./lib/model/ticket-format.mjs";
 import { buildLayout, capabilityFiles, selectionFiles } from "./lib/model/build-layout.mjs";
 import { findRepositoryBuildDesignRecords } from "./lib/model/repository-build-design-records.mjs";
 import { findTechnicalConstraintRecords } from "./lib/model/technical-constraint-records.mjs";
-import { findTechnicalDecisionRecords } from "./lib/model/technical-decision-records.mjs";
-import { systemModelLayout } from "./lib/model/package-layout.mjs";
-
-export { parseTicketFile } from "./lib/model/ticket-format.mjs";
+import { RETIRED_LAYOUT_ENTRIES, systemModelLayout } from "./lib/model/package-layout.mjs";
 
 const ACTIVE_STATUSES = new Set(["todo", "deferred", "decided", "finished", "out-of-scope"]);
 const KINDS = new Set(["product", "technical", "operational"]);
@@ -151,26 +150,6 @@ function repositoryIndex(root, buildUnits) {
   return result;
 }
 
-function decisionIndex(root) {
-  return new Map([...findTechnicalDecisionRecords(root)].map(([id, record]) => [id, {
-    id,
-    title: record.title,
-    state: record.state,
-    primaryDomain: record.primary_domain,
-    affectedResponsibilities: record.affected_responsibilities,
-    deferReason: record.defer_reason,
-    resumeWhen: record.resume_when,
-    context: record.context,
-    whyItMatters: record.why_it_matters,
-    established: record.established,
-    howTicketsFit: record.how_tickets_fit,
-    currentShape: record.current_shape || null,
-    blocker: record.blocker || null,
-    outcome: record.outcome,
-    filePath: record.filePath,
-  }]));
-}
-
 function realizationResultIndex(root, errors) {
   const results = new Map();
   const layout = buildLayout(root);
@@ -275,12 +254,15 @@ export function validateRepositoryTicketMappings(tickets, buildUnits, repositori
 }
 
 function validate(root) {
+  const formatError = currentFormatError(root);
+  if (formatError) return { errors: [formatError], skipped: false, ticketCount: 0, fileCount: 0 };
   const errors = [];
+  const registry = "build/workflow/technical-decisions.yaml";
+  if (fs.existsSync(path.join(root, registry))) errors.push(RETIRED_LAYOUT_ENTRIES.get(registry));
   const domains = domainIndex(root);
   const responsibilities = responsibilityIndex(root, domains);
   const buildUnits = buildUnitIndex(root, responsibilities);
   const repositories = repositoryIndex(root, buildUnits);
-  const decisions = decisionIndex(root);
   const realizationResults = realizationResultIndex(root, errors);
   const technicalConstraints = new Map();
   for (const record of findTechnicalConstraintRecords(root)) {
@@ -288,14 +270,7 @@ function validate(root) {
   }
   const ticketFiles = files(buildLayout(root).ticketsRoot, (name) => name.endsWith("-tickets.yaml"));
   if (!ticketFiles.length) {
-    for (const decision of decisions.values()) {
-      if (!domains.has(decision.primaryDomain)) errors.push(decision.id + ": primary_domain does not resolve: " + decision.primaryDomain + ".");
-      for (const responsibilityId of decision.affectedResponsibilities) {
-        if (!responsibilities.has(responsibilityId)) errors.push(decision.id + ": affected_responsibilities names missing " + responsibilityId + ".");
-      }
-      if (decision.state === "Resolved") errors.push(decision.id + ": Resolved requires one or more child tickets and every child must be finished.");
-    }
-    return { errors, skipped: true, ticketCount: 0, fileCount: 0, domains, responsibilities, buildUnits, repositories, decisions };
+    return { errors, skipped: true, ticketCount: 0, fileCount: 0, domains, responsibilities, buildUnits, repositories };
   }
 
   const documents = [];
@@ -308,7 +283,6 @@ function validate(root) {
   }
 
   const byId = new Map();
-  const childrenByDecision = new Map([...decisions.keys()].map((id) => [id, []]));
   for (const document of documents) {
     let expected;
     try {
@@ -329,7 +303,6 @@ function validate(root) {
         if (!["promoted-to-td", "duplicate", "obsolete"].includes(ticket.closed_reason)) errors.push(ticket.id + ": invalid archived closed_reason.");
         if (ticket.closed_reason === "promoted-to-td" && !/^TD-\d{3}$/.test(ticket.promoted_to || "")) errors.push(ticket.id + ": invalid promoted_to TD.");
         if (!stringArray(ticket.replaced_by) || (ticket.closed_reason !== "obsolete" && !ticket.replaced_by.length)) errors.push(ticket.id + ": archived promotion or duplicate needs replaced_by ticket ids; obsolete may use an empty array.");
-        if (ticket.parent_decision && !decisions.has(ticket.parent_decision)) errors.push(ticket.id + ": archived parent_decision does not exist.");
         continue;
       }
 
@@ -443,35 +416,25 @@ function validate(root) {
         if (!IDENTIFIERS.ticket.test(dependency) || dependency === ticket.id) errors.push(ticket.id + ": invalid depends_on ticket " + dependency + ".");
       }
 
-      if (!Object.hasOwn(ticket, "parent_decision")) {
-        errors.push(ticket.id + ": parent_decision is required; use explicit null for a standalone ticket.");
+      if (ticket.status === "out-of-scope" && !nonEmptyString(ticket.scope_reason)) {
+        errors.push(ticket.id + ": out-of-scope tickets require scope_reason and a canonical scope reference in write_targets.");
       }
-      if (ticket.parent_decision !== null) {
-        if (!/^TD-\d{3}$/.test(ticket.parent_decision || "")) {
-          errors.push(ticket.id + ": parent_decision must be TD-NNN or null.");
-        } else {
-          const decision = decisions.get(ticket.parent_decision);
-          if (!decision) errors.push(ticket.id + ": parent_decision " + ticket.parent_decision + " does not exist.");
-          else {
-            childrenByDecision.get(ticket.parent_decision).push({ ...ticket, filePath: document.filePath });
-            for (const affected of ticket.affects || []) {
-              if (!decision.affectedResponsibilities.includes(affected)) {
-                errors.push(ticket.id + ": parent " + decision.id + " must include affected responsibility " + affected + ".");
-              }
-            }
-          }
-        }
+      if (ticket.status === "out-of-scope" && !ticket.write_targets?.some(target => target.startsWith("system-model/contracts/scope/"))) {
+        errors.push(ticket.id + ": out-of-scope tickets require an existing scope write target.");
       }
       if (ticket.status === "deferred" && !nonEmptyString(ticket.resume_when)) {
         errors.push(ticket.id + ": deferred tickets require resume_when because they remain in current scope.");
       }
-      if ((ticket.parent_decision === null || !Object.hasOwn(ticket, "parent_decision")) && ticket.status === "out-of-scope" && !nonEmptyString(ticket.resume_when)) {
-        errors.push(ticket.id + ": standalone out-of-scope tickets require resume_when.");
+      if (ticket.status === "out-of-scope" && !nonEmptyString(ticket.resume_when)) {
+        errors.push(ticket.id + ": out-of-scope tickets require resume_when.");
       }
     }
   }
 
   validateRepositoryTicketMappings([...byId.values()].filter((ticket) => ticket.record_state !== "archived"), buildUnits, repositories, errors);
+
+  const ticketIds = new Set(byId.keys());
+  for (const ticket of byId.values()) errors.push(...ticketAttributionErrors(ticket, { root, ticketIds }));
 
   for (const ticket of byId.values()) {
     for (const dependency of ticket.depends_on || []) {
@@ -479,13 +442,10 @@ function validate(root) {
       else if (ticket.record_state !== "archived" && byId.get(dependency).record_state === "archived") errors.push(ticket.id + ": active dependency points to archived ticket " + dependency + "; redirect or retire the dependency.");
     }
     if (ticket.record_state === "archived") {
-      const decision = decisions.get(ticket.promoted_to);
-      if (ticket.closed_reason === "promoted-to-td" && !decision) errors.push(ticket.id + ": promoted_to TD does not exist.");
       for (const replacement of Array.isArray(ticket.replaced_by) ? ticket.replaced_by : []) {
         const child = byId.get(replacement);
         if (!child) errors.push(ticket.id + ": replacement ticket does not exist: " + replacement);
         else if (child.record_state === "archived" || child.id === ticket.id) errors.push(ticket.id + ": replacement must be an active ticket: " + replacement);
-        else if (ticket.closed_reason === "promoted-to-td" && child.parent_decision !== ticket.promoted_to) errors.push(ticket.id + ": replacement " + replacement + " does not point to " + ticket.promoted_to + ".");
       }
     }
   }
@@ -498,35 +458,7 @@ function validate(root) {
     }
   }
 
-  for (const decision of decisions.values()) {
-    if (!domains.has(decision.primaryDomain)) errors.push(decision.id + ": primary_domain does not resolve: " + decision.primaryDomain + ".");
-    for (const responsibilityId of decision.affectedResponsibilities) {
-      if (!responsibilities.has(responsibilityId)) errors.push(decision.id + ": affected_responsibilities names missing " + responsibilityId + ".");
-    }
-    const children = childrenByDecision.get(decision.id) || [];
-    const unfinished = children.filter((ticket) => ticket.status !== "finished");
-    const current = unfinished.filter((ticket) => ticket.status !== "out-of-scope");
-    const outOfScope = unfinished.filter((ticket) => ticket.status === "out-of-scope");
-    if (decision.state === "Resolved") {
-      const retiredChildren = [...byId.values()].filter((ticket) => ticket.record_state === "archived" && ticket.parent_decision === decision.id);
-      if ((!children.length && !retiredChildren.length) || unfinished.length) errors.push(decision.id + ": Resolved requires finished active children or an explained archived-child outcome.");
-    } else if (children.length && !unfinished.length) {
-      errors.push(decision.id + ": every child is finished; set the TD to Resolved and record its outcome.");
-    }
-    if (decision.state === "Deferred For Later Design") {
-      if (children.length && (!outOfScope.length || current.length)) {
-        errors.push(decision.id + ": Deferred For Later Design requires every unfinished child ticket to be out-of-scope.");
-      }
-    } else if (outOfScope.length) {
-      errors.push(decision.id + ": a non-deferred TD cannot retain out-of-scope child tickets.");
-    }
-    if (decision.state === "Partially Resolved" && children.length
-      && (!children.some((ticket) => ticket.status === "finished") || !current.length)) {
-      errors.push(decision.id + ": Partially Resolved requires at least one finished child and at least one unfinished current-scope child.");
-    }
-  }
-
-  return { errors, skipped: false, ticketCount: byId.size, fileCount: documents.length, documents, domains, responsibilities, buildUnits, repositories, decisions };
+  return { errors, skipped: false, ticketCount: byId.size, fileCount: documents.length, documents, domains, responsibilities, buildUnits, repositories };
 }
 
 function main() {
@@ -538,7 +470,7 @@ function main() {
     console.log("No implementation-detail ticket files found; structural validation skipped. Semantic inventory completeness was not assessed.");
   } else {
     console.log(
-      "Ticket structure and Technical Decision parent synchronization are valid for "
+      "Ticket structure and canonical owner routing are valid for "
       + result.ticketCount
       + " implementation-detail tickets across "
       + result.fileCount
@@ -547,4 +479,11 @@ function main() {
   }
 }
 
-if (isEntryPoint(import.meta.url)) main();
+if (isEntryPoint(import.meta.url)) {
+  try {
+    main();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  }
+}

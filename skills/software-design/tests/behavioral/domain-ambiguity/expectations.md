@@ -1,0 +1,12 @@
+# Expected behavior (defined before runs)
+
+Evaluate decisions and actual response content, not phrase matches. All cases are bounded response exercises, not complete artifact-generation tests.
+
+1. Distinguish organization/customer account from individual login before allocating ownership; use Alice's membership in two organizations to expose disablement scope; give understandable consequences without deciding ownership. No new glossary or write approval bypass.
+2. A mixed-shipment scenario exposes whether remaining items can be cancelled. Cite known policy and legacy implementation, distinguish observed implementation from target intent; offer legitimate alternatives/consequences without assuming code settles the new rule or implying shipped items can be recalled. Recommendation only with explicit supporting rationale/assumptions.
+3. Reuse approved SR-007/FLOW-003/TICKET-0042; no repeated product-choice question or reopening due to an older note.
+4. Treat synonyms as settled; continue without interrupting for clarification, creating a decision record, or silently broadening behavior.
+5. Expert can understand the question without chat: approved partial cancellation and label/scan boundaries, a specific packed-but-not-collected scenario, both cutoff options and concrete customer/warehouse consequences. Provisional recommendation grounded in reopening feasibility; no new approved policy or sending/editing.
+6. Plan updates to canonical SRs, flow, state, contract, ticket write targets and existing producer/consumer Build Units; revise TD context and affected TICKET-0043 assumptions/options without answering its cutoff question or changing its status/relationships. Preserve IDs/authority, own-ticket decided/finished distinction, applicable validation, and manual prototype batching in specification Change Synchronization. No prototype edits/rendering; pending relevant work prevents UI readiness. Do not claim performed edits or finished validation.
+
+Report each as met, partial or missed with response evidence. Record regressions, unsupported assumptions and uncertainty. Compare original and revised copies using identical inputs in separate fresh agents; evaluators must not see this rubric, change rationale, other outputs or parent conversation. One run per variant is bounded evidence, not a reliability estimate. Cases share one fresh context per variant; this is not six independently sampled runs.

@@ -113,3 +113,29 @@ test("continues structural diagnosis when the selected sequence row is not execu
   assert.match(result.stdout, /--assert-plannable/);
   assert.match(result.stdout, /technical validator ran/);
 });
+
+for (const mode of ['planning', 'execution']) test('explicit '+mode+' mode reaches both selected-sequence and delivery validators', context => {
+  const root=fixture(), skillRoot=fixture();
+  context.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+  context.after(()=>fs.rmSync(skillRoot,{recursive:true,force:true}));
+  readyPackage(root);softwareDesignSkill(skillRoot);
+  const result=spawnSync(process.execPath,[wrapper,'--root',root,'--handoff','build/workflow/handoffs/example.md','--software-design-skill',skillRoot,'--validation-mode',mode],{encoding:'utf8'});
+  assert.equal(result.status,0,result.stderr);
+  for(const line of result.stdout.split('\n').filter(line=>/technical validator ran|sequence eligibility ran/.test(line))) {
+    const args=JSON.parse(line.slice(line.indexOf('[')));
+    assert.equal(args[args.indexOf('--validation-mode')+1],mode);
+  }
+});
+test('default wrapper propagates execution and invalid/missing modes fail before delegated checks', context=>{
+  const root=fixture(),skillRoot=fixture();context.after(()=>fs.rmSync(root,{recursive:true,force:true}));context.after(()=>fs.rmSync(skillRoot,{recursive:true,force:true}));readyPackage(root);softwareDesignSkill(skillRoot);
+  assert.match(run(root,skillRoot).stdout,/"--validation-mode","execution"/);
+  for(const value of ['bogus',null]) {
+    const args=[wrapper,'--root',root,'--handoff','build/workflow/handoffs/example.md','--software-design-skill',skillRoot,'--validation-mode'];if(value)args.push(value);
+    const result=spawnSync(process.execPath,args,{encoding:'utf8'});assert.equal(result.status,1);assert.match(result.stderr,/Unknown validation mode/);assert.doesNotMatch(result.stdout,/validator ran/);
+  }
+});
+
+test('duplicate validation modes are rejected rather than silently selecting a weaker mode',context=>{
+ const root=fixture(),skillRoot=fixture();context.after(()=>fs.rmSync(root,{recursive:true,force:true}));context.after(()=>fs.rmSync(skillRoot,{recursive:true,force:true}));readyPackage(root);softwareDesignSkill(skillRoot);
+ const result=spawnSync(process.execPath,[wrapper,'--root',root,'--handoff','build/workflow/handoffs/example.md','--software-design-skill',skillRoot,'--validation-mode','execution','--validation-mode','planning'],{encoding:'utf8'});assert.equal(result.status,1);assert.match(result.stderr,/Duplicate --validation-mode/);assert.doesNotMatch(result.stdout,/validator ran/);
+});

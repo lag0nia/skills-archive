@@ -10,8 +10,9 @@ test('CLI works outside skill, ignores unrelated metadata, stays read-only, and 
  const root=fs.mkdtempSync(path.join(os.tmpdir(),'answerability-'));
  try {
   const dir=path.join(root,'build/workflow/tickets');fs.mkdirSync(dir,{recursive:true});
+  fs.mkdirSync(path.join(root,'system-model'));fs.writeFileSync(path.join(root,'system-model/architecture.md'),'---\ntype: system-architecture\ndesign_format: 2\n---\n');
   const file=path.join(dir,'cross-domain-tickets.yaml');
-  const body='ticket_file_version: 3\nscope: "cross-domain"\ntickets:\n  - id: "TICKET-0001"\n    title: "Choice"\n    status: "todo"\n    depends_on: ["TICKET-0002"]\n  - id: "TICKET-0002"\n    status: "todo"\n    depends_on: []\n';
+  const body='ticket_file_version: 4\nscope: "cross-domain"\ntickets:\n  - id: "TICKET-0001"\n    title: "Choice"\n    status: "todo"\n    depends_on: ["TICKET-0002"]\n  - id: "TICKET-0002"\n    status: "todo"\n    depends_on: []\n';
   fs.writeFileSync(file,body);
   const run=(args)=>spawnSync(process.execPath,[command,'--root',root,...args],{cwd:os.tmpdir(),encoding:'utf8'});
   const result=run(['--ticket','TICKET-0001','--json']);
@@ -19,8 +20,9 @@ test('CLI works outside skill, ignores unrelated metadata, stays read-only, and 
   assert.match(run(['--all']).stdout,/Answer after/);
   for(const args of [[],['--all','--ticket','TICKET-0001'],['--ticket'],['--ticket','bad'],['--unknown']]) assert.equal(run(args).status,1);
   assert.equal(fs.readFileSync(file,'utf8'),body);
-  const corrupt=path.join(dir,'broken-tickets.yaml'); fs.writeFileSync(corrupt,'ticket_file_version: 3\nscope: "x"\ntickets:\n  - id: "TICKET-0003"\n    depends_on: [bad]\n');
-  assert.equal(run(['--ticket','TICKET-0001','--json']).status,1);
+  const corrupt=path.join(dir,'broken-tickets.yaml'); fs.writeFileSync(corrupt,'ticket_file_version: 4\nscope: "x"\ntickets:\n  - id: "TICKET-0003"\n    depends_on: [bad]\n');
+  const broken=run(['--ticket','TICKET-0001','--json']);
+  assert.equal(broken.status,1);assert.match(broken.stderr,/broken-tickets\.yaml: invalid JSON-compatible YAML value for depends_on/);assert.doesNotMatch(broken.stderr,/design_format|retired/);
   assert.equal(run(['--all','--json']).stdout,'');
   assert.equal(fs.readFileSync(file,'utf8'),body);
   assert.deepEqual(fs.readdirSync(dir).sort(),['broken-tickets.yaml','cross-domain-tickets.yaml']);
@@ -45,8 +47,10 @@ test('CLI rejects missing and empty inventories explicitly without writing or re
     }
   };
   try {
+    fs.mkdirSync(path.join(root, 'system-model'));
+    fs.writeFileSync(path.join(root, 'system-model/architecture.md'), '---\ntype: system-architecture\ndesign_format: 2\n---\n');
     expectFailure(/Ticket inventory directory is missing/);
-    assert.deepEqual(fs.readdirSync(root), []);
+    assert.deepEqual(fs.readdirSync(root), ['system-model']);
     fs.mkdirSync(inventory, { recursive: true });
     expectFailure(/No recognized ticket files/);
     assert.deepEqual(fs.readdirSync(inventory), []);

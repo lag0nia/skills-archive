@@ -1,6 +1,8 @@
 # Staged Software Design Workflow
 
-Use this workflow to create, repair, or continue a Software Design package from an approved software brief. Read [package-layout.md](package-layout.md), [system-model-format.md](system-model-format.md), and [checkpoint-workflow.md](checkpoint-workflow.md) first.
+Apply [Planning Completeness And Execution Eligibility](planning-execution-contract.md) to validation mode selection, future producers, feasibility and authorized continuation.
+
+Use this workflow to create, repair, or continue a Software Design package from an approved software brief. Read [package-layout.md](package-layout.md), [system-model-format.md](system-model-format.md), and [checkpoint-workflow.md](checkpoint-workflow.md) first, and [system-guide.md](system-guide.md) before writing or reconciling `guide/`.
 
 ## Contents
 
@@ -16,7 +18,7 @@ Use this workflow to create, repair, or continue a Software Design package from 
 Use the complete canonical hierarchy and conditional-creation rules in [package-layout.md](package-layout.md). This workflow adds only the following stage-specific rules:
 
 - create only justified contract-category folders;
-- keep compact TD parents in `build/workflow/technical-decisions.yaml` when genuine consequential choices exist;
+- keep rationale in domain/architecture owners and answers/approvals in tickets;
 - create `build/README.md` with the first workflow artifact, decided Technical Constraint, or Stage 8 construction artifact;
 - create decided `CONS-xxx` records when their rules are established, including before Stage 8;
 - create ticket workflow without implying that Stage 8 Build Design exists;
@@ -24,21 +26,21 @@ Use the complete canonical hierarchy and conditional-creation rules in [package-
 - establish the conditional UI/UX specification and reviewed candidate coverage during Stage 7 for human-facing surfaces, allowing earlier bounded sketches; and
 - create current delivery-slice handoffs only during Stage 9.
 
-`README.md` is the package index with generic Blueprint Terms only. It should link the canonical system-model entry, lifecycle and flow destinations, and existing invariant/security/scope collections when present, justified diagrams, and the concrete `build/` entry point when workflow or Build Design exists. Route project-specific vocabulary, parameter ownership, security terminology, and scope claims to their exact canonical owners rather than keeping them in the root README. Technical Decisions are read through their human-first GitHub issues; the local YAML remains compact agent-first truth. Do not duplicate canonical system truth into parallel summary files.
+`README.md` is the package index with generic Blueprint Terms only. It should link the System Guide first, then the canonical system-model entry, lifecycle and flow destinations, and existing invariant/security/scope collections when present, justified diagrams, and the concrete `build/` entry point when workflow or Build Design exists. Route project-specific vocabulary, parameter ownership, security terminology, and scope claims to their exact canonical owners rather than keeping them in the root README. Ticket issues preserve discussion and approval history; canonical owners preserve settled behavior and rationale. Do not duplicate canonical system truth into parallel summary files.
 
 ## Stage Order
 
 Use this order unless the user explicitly changes it:
 
 1. **Stage 0 — Package confirmation:** confirm source brief, destination, scope, and checkpoint expectations. Write nothing.
-2. **Stage 1 — Architecture foundation:** create package navigation, `system-model/architecture.md`, the System Domain map, and any already-justified TD or scope-contract records.
-3. **Stage 2 — System Domains:** create one canonical Domain record at a time.
+2. **Stage 1 — Architecture foundation:** create package navigation, `system-model/architecture.md`, the architecture guide, the System Domain map, and any justified scope-contract records.
+3. **Stage 2 — System Domains:** create one canonical Domain record and its domain guide at a time.
 4. **Stage 3 — System Responsibilities:** create the `SR-xxx` records for one approved Domain at a time.
 5. **Stage 4 — Behavior:** create atomic `FLOW-xxx` records plus canonical `lifecycle.yaml`.
 6. **Stage 5 — Contracts:** create justified `IFACE`, `STATE`, `INV`, `SEC`, and `SCOPE` records, define structured VOs for all invariant/security records, and reconcile all relationships.
-7. **Stage 6 — Optional state visuals:** create a state machine only when one persisted object's established transitions need visual review.
+7. **Stage 6 — Optional state graphs:** author a reviewed state graph only when one persisted object's established transitions need visual review; the System Explorer later shows it from the components that manage the object.
 8. **Stage 7 — Completion and inventory:** reconcile the system model, complete the whole-package implementation-detail ticket inventory, and complete applicable prototype prerequisites, exploration, and journey reconciliation.
-9. **Stage 8 — Optional Build Design and Runtime Architecture:** consume Stage 7 UI/UX requirements and reviewed candidate coverage for human-facing surfaces; map System Responsibilities many-to-many to Build Units, assign structured VOs, group Build Units into repositories, and generate the Runtime Architecture only after Runtime Diagram Readiness passes.
+9. **Stage 8 — Optional Build Design and System Explorer:** consume Stage 7 UI/UX requirements and reviewed candidate coverage for human-facing surfaces; map System Responsibilities many-to-many to Build Units, assign structured VOs, group Build Units into repositories, and generate the System Explorer overview only after its overview readiness passes.
 10. **Stage 9 — Optional Delivery Readiness:** close selected VO assignments and other prerequisites, reconcile reviewed UI/UX for selected human-facing slices, assess the slice, and create one compact handoff only when ready.
 
 Stage numbers are writing order. `SR-xxx`, `FLOW-xxx`, contract, Build Unit, and repository identifiers are stable references and never imply implementation order.
@@ -83,11 +85,13 @@ Reuse approved upstream UI/UX decisions and link their owner rather than repeati
 
 Create `system-model/architecture.md` from [the architecture template](../assets/templates/system-model/architecture.md). It owns only system purpose/binding, authority and source-of-truth boundaries, the complete Domain index, and cross-domain boundaries. The root README routes readers to global contract collections.
 
+In the same pass, declare `system_guide: adopted` and write `guide/architecture.md` from [the architecture guide template](../assets/templates/guide/architecture.md) by [system-guide.md](system-guide.md#architecture-guide) and [guide-writing.md](guide-writing.md). It explains what the architecture record and the approved Domain map state, naming each planned domain; each domain guide link is added when Stage 2 creates that guide.
+
 Define System Domains as coherent logical concerns. A Domain is not a repository, deployment unit, build phase, team, or DDD bounded context unless the approved design explicitly makes it one. Give each Domain one stable lowercase slug and one `DOMAIN-<slug>` identity.
 
 Assign stable System Responsibility IDs during this stage so later stages can reference them. New IDs use exactly three digits (`SR-001`). Order them for stable comprehension, not delivery sequence. Every responsibility has exactly one owning Domain and one canonical future record; it may participate in other Domains only through explicit cross-domain contracts.
 
-Do not put lifecycle sequence, responsibility-local detail, Build Unit topology, repository construction, decision workflow, a parameter-owner registry, a security-change procedure, or ticket/readiness evidence in architecture. Create or update compact TD records for consequential coherent choices regardless of current answer state, and create `SCOPE-xxx` only for explicit deferred or excluded technical capability. Do not create a parallel decision dashboard in the package.
+Do not put lifecycle sequence, responsibility-local detail, Build Unit topology, repository construction, decision workflow, a parameter-owner registry, a security-change procedure, or ticket/readiness evidence in architecture. Record significant rationale in its canonical domain/architecture owner, and create `SCOPE-xxx` only for explicit deferred or excluded technical capability. Do not create a parallel decision dashboard in the package.
 
 For Stages 1–7, identify material interface questions and distinguish exploration prerequisites from questions a prototype can help answer. Establish the intended task, affected canonical owners, known authority and safety constraints, and explicit hypotheses before the bounded exploration that needs them. Material questions about responsibility boundaries, routes, persisted state, feedback, recovery, or cross-surface handoffs may remain open for prototype exploration; materiality alone does not make them pre-prototype prerequisites. Preserve approved answers in the existing canonical product or Software Design owner, and resolve material contradictions before claiming reconciliation. Resolve reversible presentation details in the Stage 7 UI/UX pass or earlier bounded sketches.
 
@@ -104,7 +108,7 @@ Each record declares:
 - material external responsibilities; and
 - exact cross-domain contracts when already known.
 
-Do not turn the Domain record into an essay, flow walkthrough, responsibility duplication, or repository proposal. Keep relationship metadata reciprocal with architecture and later responsibility records.
+In the same pass, when the package has adopted the System Guide (every new package does), write `guide/domains/<domain-slug>.md` from [the domain guide template](../assets/templates/guide/domain.md) by [system-guide.md](system-guide.md#domain-guides) and [guide-writing.md](guide-writing.md), and link it from the architecture guide and the domain record. It explains every responsibility, their cooperation and consequential exceptions so the domain stands alone; exhaustive rules stay in exact owners. Keep relationship metadata reciprocal with architecture and later responsibility records.
 
 ### 3. System Responsibilities
 
@@ -118,6 +122,8 @@ A System Responsibility owns one stable logical behavior, authority, state, or a
 
 Declare `depends_on` and `participates_in` relationships in frontmatter. Before Stage 8, `realized_by` is `None.`. After Build Design exists, it lists every Build Unit that realizes part of the responsibility, and each Build Unit reciprocally lists `source_responsibilities`.
 
+Link each new record from its domain guide by the responsibility's canonical name, and reconcile the guide's explanation with what the record now states.
+
 If a responsibility must be split, merged, moved, or renamed, treat that as a material boundary change and checkpoint it. Never copy one responsibility into several Domains.
 
 ### 4. Behavior
@@ -130,7 +136,7 @@ Create `system-model/behavior/lifecycle.yaml` from [the lifecycle template](../a
 
 When an approved target outcome spans several responsibilities, ensure the flow set contains the actual actor- or consumer-facing path from its entry predicate to its observable result. Do not create a synthetic “demo flow” when existing canonical flows already cover the journey, and do not let a verification scenario become the canonical user or operator flow.
 
-Run the structure validator after lifecycle reconciliation. If flow reconciliation reveals an earlier responsibility or authority error, stop and repair the earliest affected stage.
+Reconcile the guide scenarios that the new flows make exact. Run the structure validator after lifecycle reconciliation. If flow reconciliation reveals an earlier responsibility or authority error, stop and repair the earliest affected stage.
 
 ### 5. Atomic Contracts
 
@@ -146,30 +152,30 @@ Use the templates under [assets/templates/system-model/contracts](../assets/temp
 
 For `INV-xxx` and `SEC-xxx` records, read [Assurance Traceability](assurance-traceability.md). Keep stable VOs inside the owning record; give security threats and controls stable local identities and close every threat through a control and every control through at least one VO. A VO states an observable claim and required evidence category, not a test filename. Missing structured obligations fail validation. Consumer repairs require their own authorized scope.
 
-Move every durable shared rule to exactly one contract owner and link it from responsibilities and flows. Preserve interface payload identity, state authority/finality distinctions, invariant violation meaning, security misuse cases, and prohibited implications. For every material `IFACE-xxx` boundary, identify its independently invoked or observed `ACT-NNN` interactions, including consumer reads, observations, refresh, acknowledgement, and recovery where applicable. Do not treat the existence of a write/command surface as proof that a consumer read or projection surface exists. Keep the list at the public or cross-responsibility boundary; do not enumerate private helper calls. Do not copy TD questions into scope contracts or use a contract as a decision register.
+Move every durable shared rule to exactly one contract owner and link it from responsibilities and flows. Preserve interface payload identity, state authority/finality distinctions, invariant violation meaning, security misuse cases, and prohibited implications. For every material `IFACE-xxx` boundary, identify its independently invoked or observed `ACT-NNN` interactions, including consumer reads, observations, refresh, acknowledgement, and recovery where applicable. Do not treat the existence of a write/command surface as proof that a consumer read or projection surface exists. Keep the list at the public or cross-responsibility boundary; do not enumerate private helper calls. Do not copy unresolved ticket questions into scope contracts or use a contract as a decision register.
 
-After contract writes, reconcile root contract-category links, Domain cross-contracts, responsibility and flow metadata, lifecycle invariants, and local links. Run the structure validator.
+After contract writes, reconcile root contract-category links, Domain cross-contracts, responsibility and flow metadata, lifecycle invariants, local links, and the guide passages whose conditions the contracts now define. Run the structure validator.
 
-### 6. Optional State Visuals
+### 6. Optional State Graphs
 
-Read [diagram-selection.md](diagram-selection.md) before proposing a visual. Create a state machine only when it makes one persisted object's established transition rules easier to review. Create only the supported package visuals and never use a speculative architecture view. Human-readable Technical Decisions belong in GitHub rather than a second Canvas.
+Read [diagram-selection.md](diagram-selection.md) before proposing a visual. Author a reviewed state graph in `visuals/assets/graphs.json` only when it makes one persisted object's established transition rules easier to review. It is drawn in the System Explorer's states and transitions destination ([system-explorer.md](system-explorer.md)), reachable directly from the index and linked from the components that keep the object; never create a separate state page or a speculative architecture view.
 
-Validate a justified state-machine Canvas with the Canvas layout script. A geometry pass does not replace source review.
+Regenerate and inspect the complete transitions, conditions, failures, recovery, and focused paths in a browser. A geometry pass does not replace source review.
 
 ### 7. Completion And Whole-Package Ticket Inventory
 
-For human-facing scopes, this stage includes prototype prerequisites, exploration, reconciliation, and completion under [UI/UX Design](ui-ux-design.md). Preserve initial ticket visibility and the independent inventory below; do not wait for a prototype to expose tickets. Earlier bounded sketches are allowed. Establish canonical sources and representative journey prerequisites, explore explicit hypotheses, and reconcile approved findings at coherent journey boundaries through only affected canonical owners and dependencies. Complete agreed reviewed coverage with no unresolved material contradictions or usability blockers before claiming Stage 7 UI completion. Non-UI scopes require no prototype.
+For human-facing scopes, this stage includes prototype prerequisites, exploration, reconciliation, and completion under [UI/UX Design](ui-ux-design.md). Preserve initial ticket visibility and the independent inventory below; do not wait for a prototype to expose tickets. Earlier bounded sketches are allowed. Establish canonical sources and representative journey prerequisites, explore explicit hypotheses, and reconcile approved findings at coherent journey boundaries through only affected canonical owners and dependencies. Complete agreed reviewed coverage with no unresolved material contradictions or usability blockers before claiming Stage 7 UI completion; that claim does not make the whole application interface final. Name the scope of any selected-prototype completion claim. Non-UI scopes require no prototype.
 
-Reconcile the canonical system model and run every applicable decision, structure, ticket, and diagram check. Then complete:
+Reconcile the canonical system model, then the System Guide against its final owners, and run every applicable decision, structure, ticket, and diagram check. When the user wants PDFs, export and inspect them by [guide-pdf-export.md](guide-pdf-export.md). Then complete:
 
-1. **7A — Ticket/TD relationship validation:** every ticket declares one valid `parent_decision` or explicit `null`; every TD's child set is derived from those links.
-2. **7B — Independent discovery:** review every System Responsibility without starting from existing tickets or TDs and ask what material choices would still prevent implementation, verification, or the approved target outcome.
-3. **7C — Handoff, outcome/profile, reverse challenge, and decision-cluster audit:** inspect each direct boundary and each material `IFACE-xxx.ACT-NNN` from producer and consumer sides; trace every required target outcome and runtime-profile claim through entrypoint, composition/bootstrap, state/reset, external prerequisites or substitutes, and proof; reconcile overlaps; and propose meaningful TD parents for ticket groups that collectively form one consequential choice.
+1. **7A — Ticket/owner validation:** every ticket has truthful ownership, canonical write targets, and genuine dependency links.
+2. **7B — Independent discovery:** review every System Responsibility without starting from existing tickets and ask what material choices would still prevent implementation, verification, or the approved target outcome.
+3. **7C — Handoff, outcome/profile, reverse challenge, and compatibility review:** inspect each direct boundary and each material `IFACE-xxx.ACT-NNN` from producer and consumer sides; trace every required target outcome and runtime-profile claim through entrypoint, composition/bootstrap, state/reset, external prerequisites or substitutes, and proof; reconcile overlaps; and reconcile compatibility constraints in the canonical owners.
 4. **7D — Snapshot zero-delta:** preserve the initial whole-scope discovery and challenge, then verify repairs through the impact-based follow-up in [ticket-inventory-mode.md](ticket-inventory-mode.md#fixed-point-completion). Trace connected effects across the system; repeat the full review only when concrete evidence shows systemic omissions or unreliable coverage, including a destabilized responsibility/handoff map that invalidates prior coverage. Produce the per-responsibility coverage receipt, retained coverage, affected review scope, and snapshot boundary; return partial when material findings remain undispositioned, reporting the exact blocker when missing information or an unresolved decision prevents progress instead of repeating unchanged checks.
 
-Do not declare Stage 7 complete when only 7A is complete or the 7B–7D receipt is absent. Return `TICKET_INVENTORY_PARTIAL`. Report TD-linked and standalone ticket counts separately, plus every approved, rejected, or still-pending decision-cluster candidate.
+Do not declare Stage 7 complete when only 7A is complete or the 7B–7D receipt is absent. Return `TICKET_INVENTORY_PARTIAL`. Report counts by owner/status, overlaps, and unresolved boundary questions.
 
-The main Software Design is complete when architecture, Domains, System Responsibilities, flows, lifecycle, contracts, justified visuals, Technical Decision records and ticket relationships, and ticket inventory are coherent. Remaining `todo`, `deferred`, or `out-of-scope` tickets affect later readiness, not inventory snapshot completion; material contradictions in required UI journeys still prevent Stage 7 UI completion. Do not activate Stage 8 or create a handoff automatically.
+The main Software Design is complete when architecture, Domains, System Responsibilities, flows, lifecycle, contracts, justified visuals, canonical choice rationale and ticket relationships, and ticket inventory are coherent. Remaining `todo`, `deferred`, or `out-of-scope` tickets affect later readiness, not inventory snapshot completion; material contradictions in required UI journeys still prevent Stage 7 UI completion. Do not activate Stage 8 or create a handoff automatically.
 
 ### 8. Optional Build Design
 
@@ -187,9 +193,9 @@ For every material cross-Build-Unit or external `IFACE-xxx.ACT-NNN`, add a `Mate
 
 Every first-party Build Unit states one repository and code path; external/no-code units state an explicit repository disposition. Repository-specific construction belongs in that repository's `README.md`; derived future-agent instructions belong in its optional `agent-guidance.md`; portable technical must/must-not rules belong in CONS records. Unresolved tickets block readiness, not truthful mapping.
 
-When at least two Build Units exist, create or refresh `diagrams/build-unit-dependency-map.canvas`, link it from the root README and `build/README.md`, and validate it. Reconcile reciprocal unit mappings, repository membership, constraints, tickets, and the dependency map.
+When at least two Build Units exist, create or refresh `visuals/maps/build-unit-dependencies.html`, link it from the root README and `build/README.md`, and validate it. Reconcile reciprocal unit mappings, repository membership, constraints, tickets, and the dependency map.
 
-After Build Design, generate `diagrams/runtime-architecture.html` only when Runtime Diagram Readiness in [diagram-selection.md](diagram-selection.md) passes: diagram-relevant Build Units, runtime bindings, and tickets or Technical Decisions must be resolved enough to make the shown runtime truthful. Build a temporary model, run `validate-runtime-architecture.mjs`, render the one self-contained HTML file, link it from the root README as `Runtime Architecture`, and inspect it at Fit view and reading zoom. Do not retain the temporary model, create an SVG duplicate, or create preview artifacts.
+After Build Design, generate the System Explorer (index `visuals/index.html` and its two destinations) only when overview readiness in [system-explorer.md](system-explorer.md) passes: diagram-relevant Build Units, runtime bindings, and tickets must be resolved enough to make the shown runtime truthful. Author the source-bound `explorer.json`, generate, link the index from the root README, and walk both destinations from the index in a browser. Build the index, the overview and one representative complete lifecycle first and stop for the user's checkpoint before extending it across the system.
 
 ### 9. Optional Delivery Readiness And Handoff
 
@@ -211,6 +217,8 @@ The handoff selects Build Units, not repositories. It routes each selected unit 
 
 The `system-model/` is agent-first: exact frontmatter relationships plus bounded Markdown sections. Use one record per independently retrievable concern, stable typed IDs, explicit exclusions, and canonical links. Do not make it a long-form book or a YAML-only database.
 
+The System Guide is the reader-facing explanation, written by [guide-writing.md](guide-writing.md). It restates the system model in connected prose and owns none of its facts.
+
 The root README is the package index with generic Blueprint Terms only. Do not create a parallel summary surface.
 
 The `build/` model remains reader-oriented because it explains concrete artifacts, repository construction, and delivery boundaries. Use connected prose where rationale matters and tables for repeated mappings. Omit empty boilerplate.
@@ -222,13 +230,14 @@ After Stage 7, summarize:
 - package and source brief paths;
 - files created or updated;
 - system-model structure validation result;
-- Technical Decision totals by state and explicit deferred scope;
+- System Guide paths, and exported PDF paths with their `--check` result when produced;
+- Ticket totals by status and explicit deferred scope/revisit conditions;
 - implementation-detail ticket totals by status when present;
 - that main Software Design completion is independent of unresolved implementation-detail tickets;
 - Stage 8 Build Design and Stage 9 readiness outcomes only when assessed;
 - Build Unit records and current delivery-slice handoff paths when created;
 - whether the requested slice is ready for Delivery Planning; and
-- the exact TD, ticket, System Responsibility, Build Unit, or repository blockers when not ready.
+- the exact ticket, System Responsibility, Build Unit, or repository blockers when not ready.
 
 When the user asks whether the product or project is finished, report a compact completion matrix instead of one broad label: Software Design, Build Design, selected implementation slices, required target outcome by runtime profile, deployment, activation/operation, and production readiness. State `Not assessed` or `Not required for this target` where appropriate.
 
