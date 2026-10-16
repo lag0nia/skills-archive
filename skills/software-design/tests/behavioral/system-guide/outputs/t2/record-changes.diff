@@ -1,0 +1,501 @@
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/README.md t2/bitrise21/loan-system/design/technical-design/README.md
+--- pre/bitrise21/loan-system/design/technical-design/README.md	2026-10-14 13:45:48
++++ t2/bitrise21/loan-system/design/technical-design/README.md	2026-10-15 02:04:21
+@@ -16,6 +16,7 @@
+ 
+ ### Understand The System
+ 
++- [System Guide](./guide/architecture.md): how the system and each domain work, written for readers; also exported as PDFs. Start here.
+ - [Canonical System Model](./system-model/architecture.md): logical architecture, Domain map, authority boundaries, and cross-domain boundaries.
+ - [Lifecycle Data](./system-model/behavior/lifecycle.yaml): canonical structured lifecycle stages and terminal outcomes.
+ - [System Flows](./system-model/behavior/flows/): exact ordered behavior, failure routes, outcomes, and invariants.
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/build/records/constraints/cons-024-consumer-visible-workspace-and-operation-continuity.md t2/bitrise21/loan-system/design/technical-design/build/records/constraints/cons-024-consumer-visible-workspace-and-operation-continuity.md
+--- pre/bitrise21/loan-system/design/technical-design/build/records/constraints/cons-024-consumer-visible-workspace-and-operation-continuity.md	2026-09-18 19:55:21
++++ t2/bitrise21/loan-system/design/technical-design/build/records/constraints/cons-024-consumer-visible-workspace-and-operation-continuity.md	2026-10-15 02:15:25
+@@ -30,6 +30,8 @@
+ 
+ The 1.3.0 contract digest and refreshed producer snapshot are execution outputs. Producer-local schema tests or a historical generated profile do not establish Product Web fitness: proof must generate the current Product Web client from the new contract and exercise the actual built consumer decoder/workflows without changing BU-005 responsibility-owned source during the producer delta.
+ 
++This public-consumer continuity rule was needed because a producer-local command and passing harness alone do not ensure a browser can acquire state or recover an accepted operation.
++
+ ## Scope And Sources
+ 
+ [IFACE-003](../../../system-model/contracts/interfaces/iface-003-one-loan-offer-reservation-and-loan-binding.md), [IFACE-004](../../../system-model/contracts/interfaces/iface-004-vault-envelope-and-local-handoff.md), [IFACE-005](../../../system-model/contracts/interfaces/iface-005-origination-binding-and-package-manifest.md), [IFACE-013](../../../system-model/contracts/interfaces/iface-013-workspace-command-revision-outbox-and-result.md), [IFACE-015](../../../system-model/contracts/interfaces/iface-015-participant-gas-sponsorship.md), [IFACE-016](../../../system-model/contracts/interfaces/iface-016-p2a-cpfp-request-helper-and-core.md), [IFACE-017](../../../system-model/contracts/interfaces/iface-017-conditional-ecvs-publication.md), [IFACE-018](../../../system-model/contracts/interfaces/iface-018-manual-lender-default-package-export.md), [IFACE-020](../../../system-model/contracts/interfaces/iface-020-finalized-public-secret-to-fixed-bitcoin-action.md), [STATE-007](../../../system-model/contracts/states/state-007-ecvs-s.md), and [STATE-016](../../../system-model/contracts/states/state-016-workspace-command-outbox-and-projection.md) own the logical acquisition, narrow-resource, command, operation, conditional-publication, Bitcoin-observation, and recovery meanings. [SEL-017](../selections/sel-017-durable-workspace-command-and-projection-model.md) owns the relational D1 realization selection.
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/build/records/selections/sel-004-sequential-hardened-loan-indices.md t2/bitrise21/loan-system/design/technical-design/build/records/selections/sel-004-sequential-hardened-loan-indices.md
+--- pre/bitrise21/loan-system/design/technical-design/build/records/selections/sel-004-sequential-hardened-loan-indices.md	2026-09-13 23:53:05
++++ t2/bitrise21/loan-system/design/technical-design/build/records/selections/sel-004-sequential-hardened-loan-indices.md	2026-10-15 02:16:11
+@@ -12,7 +12,7 @@
+ 
+ # SEL-004 Sequential hardened loan-key indices
+ 
+-Each participant vault assigns the next unused sequential hardened index to each new loan's Bitcoin child key. This avoids hash-to-index collisions and makes allocation deterministic once the encrypted vault is restored.
++Each participant vault assigns the next unused sequential hardened index to each new loan's Bitcoin child key. This avoids hash-to-index collisions and makes allocation deterministic once the encrypted vault is restored. Hardened per-loan derivation avoids index reuse, cross-loan correlation, and expanded compromise.
+ 
+ ## Affected Scopes
+ 
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/build/records/selections/sel-035-local-demo-supervisor-and-runtime-layout.md t2/bitrise21/loan-system/design/technical-design/build/records/selections/sel-035-local-demo-supervisor-and-runtime-layout.md
+--- pre/bitrise21/loan-system/design/technical-design/build/records/selections/sel-035-local-demo-supervisor-and-runtime-layout.md	2026-09-05 18:12:15
++++ t2/bitrise21/loan-system/design/technical-design/build/records/selections/sel-035-local-demo-supervisor-and-runtime-layout.md	2026-10-15 02:15:25
+@@ -12,7 +12,7 @@
+ 
+ # SEL-035 — Local-Demo Supervisor And Runtime Layout
+ 
+-The approved direction assigns the runnable local composition to one independently buildable REPO-002 member instead of leaving the outcome distributed across unowned scripts or overloading the verification harness.
++The approved direction assigns the runnable local composition to one independently buildable REPO-002 member instead of leaving the outcome distributed across unowned scripts or overloading the verification harness. The local composition was added because independently implemented units did not by themselves supply a persistent runnable demonstration or safe profile separation.
+ 
+ ## Affected Scopes
+ 
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/system-model/architecture.md t2/bitrise21/loan-system/design/technical-design/system-model/architecture.md
+--- pre/bitrise21/loan-system/design/technical-design/system-model/architecture.md	2026-10-14 14:18:45
++++ t2/bitrise21/loan-system/design/technical-design/system-model/architecture.md	2026-10-15 02:04:21
+@@ -1,6 +1,7 @@
+ ---
+ type: system-architecture
+ design_format: 2
++system_guide: adopted
+ assurance_id: system-architecture
+ name: Bitcoin-backed USDC one-loan system
+ domains: "loan-terms-and-commitments, bitcoin-authorization-and-recovery, base-usdc-settlement-and-funding, base-observation-and-fallback-review, participant-access-and-loan-operations"
+@@ -13,17 +14,13 @@
+ 
+ Source brief: [Technical Brief](../../technical-brief.md)
+ 
+-## System Overview
++The [architecture guide](../guide/architecture.md) explains the system for readers. This record holds its exact purpose, binding, authority and boundaries.
+ 
+-The product coordinates one borrower, one selected lender, Bitcoin collateral, and USDC settlement on Base. Its five domains separate agreement meaning, participant Bitcoin authority, Base value movement, verified observation and conditional fallback, and durable application coordination. The separation matters because each can report progress without acquiring another's authority: login is not a Vault unlock, an accepted command is not a chain fact, and a Base refund is not a confirmed Bitcoin recovery.
+-
+-Loan Terms And Commitments supplies the shared identity and immutable candidate binding. Participant Access And Loan Operations presents and persists the workspace and sends narrowly bound actions to participant Vaults. Bitcoin Authorization And Recovery constructs and validates fixed participant-authorized packages, while Base USDC Settlement And Funding controls its own funding, acceptance, repayment, claim, and refund transitions. Base Observation And Fallback Review qualifies named Base events and independently constrains optional `S` publication. A normal repayment lets the lender disclose `Y`; lender silence can lead to a Base refund and, only for an activated precommitted fallback loan, conditional `S` recovery. Either Bitcoin path becomes final only when the expected spend confirms.
+-
+-Each domain below is a complete reading destination; responsibility and contract links provide precise detail. Runtime topology, construction dependencies, and state/sequence views are separate derived perspectives in the [visual index](../visuals/index.html). They do not replace this written architecture. Existing approval-wording and fee/count discrepancies identified by the migration remain unresolved source issues; this documentation revision does not choose new behavior.
+-
+ ## Purpose And Binding
+ 
+ The system coordinates a browsable lender-published one-loan offer, one atomic borrower reservation, Bitcoin collateral, and a Base USDC loan between one borrower and one selected lender. Publication is the lender's standing acceptance of the offer; reservation creates the canonical loan without a second lender approval. The selected lender separately retains explicit control of the later capital-funding action. V1 is not public or multi-lender matching, pooled capital, product custody, or automatic capital deployment.
++
++Unresolved source conflict: this paragraph's and the Cross-Domain Boundaries' "no second lender approval" wording conflicts with the detailed [SR-001](./domains/loan-terms-and-commitments/responsibilities/sr-001-loan-terms-offer-reservation-and-parameter-binding.md), [STATE-002](./contracts/states/state-002-canonical-loan-terms.md), and [FLOW-001](./behavior/flows/flow-001-origination-preparation-and-qualification.md) records, in which publication is standing approval of the commercial values only and both roles, including the lender, explicitly approve the same complete final candidate before the second matching approval commits it. The discrepancy is recorded without choosing new behavior.
+ 
+ Every domain identifies the same loan through one canonical `LoanTermsV1` value and `terms_hash`. The binding covers immutable participant references, the selected offer revision and reservation number, asset and amount terms, deadlines, loan-specific Bitcoin public keys, independently selected external Bitcoin destinations, Base protocol addresses and fixed settlement recipients, and the commitments to `X`, `Y`, and conditional `S`. `ProtocolDeploymentV1` separately binds environment-wide chain, contract, asset, Bitcoin-network, timing-policy, and upgrade-authority facts. Neither commitment is a wallet, signing key, source of funds, chain-state fact, or lifecycle action. A participant Vault payment account is a separate public source-of-funds identity; selecting it as a fresh loan's existing recipient field requires fresh approval and does not rewrite historical terms.
+ 
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/system-model/contracts/interfaces/iface-001-loan-terms-and-canonical-binding.md t2/bitrise21/loan-system/design/technical-design/system-model/contracts/interfaces/iface-001-loan-terms-and-canonical-binding.md
+--- pre/bitrise21/loan-system/design/technical-design/system-model/contracts/interfaces/iface-001-loan-terms-and-canonical-binding.md	2026-09-18 19:39:13
++++ t2/bitrise21/loan-system/design/technical-design/system-model/contracts/interfaces/iface-001-loan-terms-and-canonical-binding.md	2026-10-15 02:15:04
+@@ -74,6 +74,8 @@
+ 
+ An unbound, ambiguously bound, differently encoded, or differently hashed artifact is not part of the loan. The affected construction, transition, observation, display action, or execution fails closed; no mutable application copy, acceptance snapshot, Base record, package label, or observer projection may repair or reinterpret it.
+ 
++Rationale: one canonical encoding keeps the binding interoperable and verifiable; divergent encodings, or mixed immutable loan and deployment facts, could bind signatures, manifests, and chain actions to different loans or make a package impossible to reproduce.
++
+ ## Must Not Imply
+ 
+ - The binding does not grant signing, secret-disclosure, funding, payout-selection, chain-observation, or execution authority.
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/system-model/contracts/interfaces/iface-002-protocol-deployment-manifest.md t2/bitrise21/loan-system/design/technical-design/system-model/contracts/interfaces/iface-002-protocol-deployment-manifest.md
+--- pre/bitrise21/loan-system/design/technical-design/system-model/contracts/interfaces/iface-002-protocol-deployment-manifest.md	2026-08-27 01:42:26
++++ t2/bitrise21/loan-system/design/technical-design/system-model/contracts/interfaces/iface-002-protocol-deployment-manifest.md	2026-10-15 02:15:04
+@@ -16,7 +16,7 @@
+ 
+ ## Payload Or Artifact
+ 
+-`ProtocolDeploymentV1` is one static versioned JSON file per complete environment in the pinned protocol-core package. API, workers, and vault consume the same selected file; there are no separately versioned Base, Bitcoin, or vault manifests and no runtime-database manifest.
++`ProtocolDeploymentV1` is one static versioned JSON file per complete environment in the pinned protocol-core package. API, workers, and vault consume the same selected file; there are no separately versioned Base, Bitcoin, or vault manifests and no runtime-database manifest. Keeping environment-wide facts out of `LoanTermsV1` and in one fingerprinted manifest prevents different consumers from signing or processing different meanings under the same label.
+ 
+ The three V1 environment identities are:
+ 
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/system-model/contracts/interfaces/iface-007-bitcoin-fee-estimate-and-tier-selection.md t2/bitrise21/loan-system/design/technical-design/system-model/contracts/interfaces/iface-007-bitcoin-fee-estimate-and-tier-selection.md
+--- pre/bitrise21/loan-system/design/technical-design/system-model/contracts/interfaces/iface-007-bitcoin-fee-estimate-and-tier-selection.md	2026-08-27 01:43:16
++++ t2/bitrise21/loan-system/design/technical-design/system-model/contracts/interfaces/iface-007-bitcoin-fee-estimate-and-tier-selection.md	2026-10-15 02:09:11
+@@ -20,6 +20,8 @@
+ 
+ The approved policy shorthand is `F > estimated_target_sat_per_vB * 1.25`. The selector evaluates that strict inequality only with integer arithmetic as `(tier_sat_per_vB * 1000 * 4) > (estimated_milli_sat_per_vB * 5)`; binary floating point is forbidden. The tiers are `[10, 20, 50, 100, 150, 200]` sat/vB. If no tier satisfies the inequality, select 200 sat/vB, record CPFP eligibility, and alert for separate manual [IFACE-016](./iface-016-p2a-cpfp-request-helper-and-core.md) approval.
+ 
++Unresolved source conflict: the preceding rule and the approved fee-selection and refund tickets select the 200 sat/vB tier, record CPFP eligibility, and alert when no tier satisfies the inequality, while [ACT-002](#act-002) returns a fail-closed no-eligible-tier result that selects nothing. Both statements are preserved and the discrepancy is recorded for separate repair without authorizing either interpretation.
++
+ V1 has Mempool plus exactly two ordered external fallback-provider slots. Each request has a 15-second deadline and each unusable response receives one retry under the same deadline before the next provider, for at most six attempts and 90 seconds. A selected result is usable only when fetched no more than 120 seconds before the first parent broadcast attempt; later retries fetch again. Missing, zero, negative, non-numeric, non-finite, malformed, stale, or wrong-target values are unusable.
+ 
+ Before any activation or refund candidate enters the mempool, a fresh estimate may select another already signed candidate. Once an activation or terminal candidate is accepted, it is the sole parent and only CPFP may add fee. A relayed refund may advance only to an already borrower-signed higher-fee candidate that satisfies BIP-125; no lower tier or newly constructed refund is allowed. After the 200-sat/vB refund or when no suitable signed replacement remains, only the separately approved CPFP path may add fee.
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/system-model/contracts/scope/scope-013-runtime-profile-claims-and-activation-gates.md t2/bitrise21/loan-system/design/technical-design/system-model/contracts/scope/scope-013-runtime-profile-claims-and-activation-gates.md
+--- pre/bitrise21/loan-system/design/technical-design/system-model/contracts/scope/scope-013-runtime-profile-claims-and-activation-gates.md	2026-10-13 00:26:35
++++ t2/bitrise21/loan-system/design/technical-design/system-model/contracts/scope/scope-013-runtime-profile-claims-and-activation-gates.md	2026-10-15 02:15:25
+@@ -29,6 +29,7 @@
+ - Passing unit, integration, deterministic, or local-demo evidence does not satisfy a public-network credential, funding, deployment, monitoring, paid-service, legal, audit, or operational gate.
+ - Demo identities, tokens, wallets, funds, contracts, fixtures, routes, provider substitutes, and reset/seed actions must be structurally unreachable or rejected outside the explicit local-demo profile.
+ - Testnet deployment, if later completed, does not establish mainnet or production operation. Mainnet deployment, if later completed, does not establish activated operation.
++- A visual, fixture, healthy process, or local design check cannot satisfy a deferred-capability exclusion or activation gate.
+ 
+ ## Revisit Condition
+ 
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/system-model/contracts/states/state-019-base-deployment-upgrade-and-opener.md t2/bitrise21/loan-system/design/technical-design/system-model/contracts/states/state-019-base-deployment-upgrade-and-opener.md
+--- pre/bitrise21/loan-system/design/technical-design/system-model/contracts/states/state-019-base-deployment-upgrade-and-opener.md	2026-08-13 03:03:54
++++ t2/bitrise21/loan-system/design/technical-design/system-model/contracts/states/state-019-base-deployment-upgrade-and-opener.md	2026-10-15 02:16:11
+@@ -47,3 +47,5 @@
+ 
+ - Unrestricted unilateral upgrade/admin key, retroactive mutation/migration of existing loans, opener control over funds/terms, or pause role with recipient/withdrawal authority.
+ - Claiming immutable conversion, ownership renunciation, or successor opener mechanism before TICKET-0104's future decision.
++
++Unresolved source conflict: this record's pause/operational roles and "Paused for new/risky action" state conflict with [SR-003](../../domains/base-usdc-settlement-and-funding/responsibilities/sr-003-base-loan-state-and-usdc-settlement.md) and [SEL-009](../../../build/records/selections/sel-009-base-contract-upgrade-governance.md), under which V1 has no on-chain pause role and incidents pause only frontend/API actions and opener orchestration. Its prohibition of an unrestricted unilateral upgrade key also sits against SEL-009's dedicated single upgrade key for local/test and the short public mainnet beta before sole ownership moves to the 2-of-3 Safe timelock. Both discrepancies are recorded without choosing new behavior.
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/system-model/domains/base-observation-and-fallback-review/domain.md t2/bitrise21/loan-system/design/technical-design/system-model/domains/base-observation-and-fallback-review/domain.md
+--- pre/bitrise21/loan-system/design/technical-design/system-model/domains/base-observation-and-fallback-review/domain.md	2026-10-13 00:26:35
++++ t2/bitrise21/loan-system/design/technical-design/system-model/domains/base-observation-and-fallback-review/domain.md	2026-10-15 02:04:21
+@@ -8,39 +8,7 @@
+ 
+ # Base Observation And Fallback Review
+ 
+-## Domain Overview
+-
+-This domain makes evidence from one chain safe to use elsewhere in a Bitcoin-backed USDC loan. The Base contracts settle the USDC; Bitcoin independently controls the collateral. A transaction appearing in a wallet, an updated application screen, or a missing lender response cannot bridge those authorities. This domain supplies trustworthy observations of what happened on Base and defines a narrowly limited fallback that may help return Bitcoin after an unclaimed repayment has been refunded.
+-
+-It contains two distinct responsibilities. [Base observation and reconciliation](./responsibilities/sr-006-base-observation-finality-and-reconciliation.md) follows the approved deployment, records its events and their finality, and repairs the application's view when evidence changes. [The independent validation-service fallback](./responsibilities/sr-007-evidence-conditioned-validation-service-fallback.md) can publish a loan's precommitted secret after independently verifying one exact refund event. Observation reports facts; the fallback controls that secret's disclosure. Neither responsibility decides who deserves the collateral or signs a Bitcoin transaction.
+-
+-### Establishing a fact the rest of the system can use
+-
+-The observer reads named contract events for funding, acceptance, repayment, claim and refund. It checks which chain, contract deployment, loan, transaction and block produced each event. An event first seen in a Base block is provisional. Even the intermediate “safe” status is only progress information: application-side lifecycle advances and Bitcoin handoffs wait until the block reaches **Base L1 finality**, the stronger settlement condition defined in the [finality decision](../../../build/records/selections/sel-013-base-l1-finality-and-reorg-reconciliation.md). That decision accepts additional waiting in return for one consistent rule at consequential cross-chain boundaries; it is not a promise of an exact waiting time.
+-
+-The observer sends those facts to the application through a [versioned event-ingestion handoff](../../contracts/interfaces/iface-012-base-event-observation-and-correction.md). The application records the source evidence and derives the status a participant sees. It acknowledges storage before the observer advances its durable cursor—the saved position from which it can safely resume. If an acknowledgement is lost, the observer sends the same event again; the stable identity prevents a duplicate. This event history was selected so that a restart or provider change can reconstruct what happened, instead of trusting a mutable loan snapshot or an independently edited watcher status.
+-
+-Alchemy is the primary Base read source and QuickNode is the fallback. One healthy configured provider is sufficient for a finalized Base fact; the second provider supplies failover and disagreement detection. If both are unavailable or disagree, existing finalized projections remain visible while new consequential actions that depend on Base are blocked. When a chain reorganization displaces an observed event, the observer retains it as noncanonical evidence, appends a correction, and replays from the last common finalized block. An operator may request a recheck through the application, but cannot change the fact, override the result or advance the observer's cursor.
+-
+-The responsibility also reconciles independently sourced Bitcoin evidence. Bitcoin lifecycle gates require fresh agreement between the configured observers, unlike the one-healthy-source Base policy. Conflicts and outages block dependent automation; repeated reports update the same incident, recovery replays from the last agreed state, and a failure after borrower acceptance receives immediate critical treatment. Vault payment transfers have another limited meaning: exact transaction and nonce evidence can update a payment's own record, but only the named finalized contract event can establish loan funding or repayment. Even a confirmed standalone participant transfer does not advance the loan. The [observer's precise rules](./responsibilities/sr-006-base-observation-finality-and-reconciliation.md#owns) retain the provider, retry, escalation and payment-profile distinctions.
+-
+-### When the borrower repays but the lender does not claim
+-
+-A concrete case explains why the fallback is separate. Assume exact repayment has finalized by the repayment deadline, **D**. Normally the lender claims the USDC by revealing a secret called **Y** before the claim cutoff. Public Y then lets the Bitcoin finalizer complete a recovery transaction that the borrower already signed for a fixed destination. If the lender cannot or does not reveal Y, valid repayment alone does not release the Bitcoin.
+-
+-At **C = D + 172,800 seconds**, two days after the repayment deadline, Base permanently disables the lender claim and freezes the current borrower refund recipient. Anyone may call the fixed-effect refund; the caller cannot choose where the money goes. A borrower concerned about access to the original recipient may have switched it to the committed borrower protocol account before C; the choice is frozen at C. Once the refund's exact **UnclaimedRepaymentRefunded** event reaches Base L1 finality, the observer can report that the exact USDC repayment was returned once. [The unclaimed-repayment flow](../../behavior/flows/flow-005-valid-repayment-without-lender-claim.md) makes claim and refund mutually exclusive on Base. The refund does not require the fallback service, and the Bitcoin output remains separately unspent.
+-
+-The selected fallback is an **evidence-conditioned validation service**, or **ECVS**: one contracted independent service that holds a unique random secret **S** for each eligible loan. Before that loan is constructed and signed, it returns only **H(S)**, a hash commitment used later to check the disclosed secret. The Bitcoin recovery script must already contain this commitment. The company, borrower and lender do not receive unrevealed S and cannot command an early release.
+-
+-The ECVS does not accept the application observer's conclusion as authority. It independently checks the configured Base deployment, loan, exact refund event, amount, frozen recipient, provenance and L1 finality. Only then may it publish the matching S durably and publicly. Bitcoin finalization separately checks the publication, commitment, existing signatures and still-unspent escrow, then uses S in the **same borrower-signed recovery transaction** that could have used Y. No fresh borrower signature, second fallback transaction family, service signing key or new destination is introduced. Publication, broadcast and confirmed Bitcoin recovery are separate steps; the [conditional recovery flow](../../behavior/flows/flow-006-conditional-ecvs-borrower-recovery.md) and [fixed Bitcoin handoff](../../contracts/interfaces/iface-020-finalized-public-secret-to-fixed-bitcoin-action.md) preserve those boundaries.
+-
+-### Limits and remaining recovery paths
+-
+-This model is selected, but production use remains gated by counsel approval and implementation evidence. Until that gate is satisfied, a new loan must not commit H(S) or advertise this fallback. An existing Y-only escrow cannot acquire the capability later. The selected design avoids giving the service a Bitcoin key or discretionary evidence-arbitration role; its secret can still be disclosed too early, withheld, lost or compromised. Those risks are why independent controls and the activation gate remain material.
+-
+-Missing Y, elapsed time, an application assertion, a raw token transfer or the earlier **Repaid** event cannot trigger S publication. If the service is unavailable, evidence is wrong, or S cannot be published, the Base refund remains complete and Bitcoin recovery through S remains unavailable. The lender's pre-signed Bitcoin route can still mature at D plus three days under Bitcoin's consensus time rules. A separate borrower long-stop can mature at D plus ten days without Y or S, but does not cancel the already-mature lender route; one confirmed spend wins. Mutual cooperation is another separately authorized route. These are [residual Bitcoin risks](../../contracts/invariants/inv-025-missing-y-residual-lender-risk.md), not evidence of borrower default after valid repayment or a guarantee that collateral will return.
+-
+-[Automatic organization broadcast of lender-default packages](../../contracts/scope/scope-001-automatic-lender-default-broadcast.md) and [institutional collateral recovery](../../contracts/scope/scope-002-institutional-last-resort-collateral-recovery.md) remain outside the selected operating boundary. Monitoring, package storage and the ECVS give the company no collateral key, sale authority or discretionary payout power. Exact contracts and the two responsibility records below remain the owners of every rule summarized here.
++The [Base Observation And Fallback Review guide](../../../guide/domains/base-observation-and-fallback-review.md) explains this domain for readers. This record is its exact technical reference.
+ 
+ ## Agent-First Canonical Reference
+ 
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/system-model/domains/base-usdc-settlement-and-funding/domain.md t2/bitrise21/loan-system/design/technical-design/system-model/domains/base-usdc-settlement-and-funding/domain.md
+--- pre/bitrise21/loan-system/design/technical-design/system-model/domains/base-usdc-settlement-and-funding/domain.md	2026-10-13 00:26:35
++++ t2/bitrise21/loan-system/design/technical-design/system-model/domains/base-usdc-settlement-and-funding/domain.md	2026-10-15 02:17:24
+@@ -8,31 +8,7 @@
+ 
+ # Base USDC Settlement And Funding
+ 
+-## Domain Overview
+-
+-This domain owns what happens to USDC on Base. It gives one loan an authoritative contract record and fixed rules for funding, borrower acceptance, repayment, lender claim, and refund. Bitcoin collateral lives under a separate chain authority. A Base payout can expose a secret that makes a previously authorized Bitcoin transaction usable, but it cannot sign, broadcast, or confirm that transaction.
+-
+-A **funding vault** is a deployed immutable per-loan address for incoming principal; a **repayment vault** is the corresponding address for debt repayment. Transfers into either are provisional until the named main-contract action finalizes the required exact amount. **Payer-neutral** means that the sender can be any eligible address: sending tokens does not acquire the borrower's or lender's role, change a recipient, or gain a refund right. Fixed recipients come from the approved loan and contract state, not the identity of the payer.
+-
+-### Settlement And Lender Interaction
+-
+-**Base loan state and USDC settlement ([SR-003](responsibilities/sr-003-base-loan-state-and-usdc-settlement.md))** owns the contract's states, deadlines, calls, named events/errors, exact amounts, and fixed recipients. It registers the funding vault; successful borrower `acceptX` atomically pays principal to the fixed borrower recipient and deploys/registers the repayment vault. Failed or conflicting calls revert without a success event or unintended value movement. The contract also provides the exact permissionless fixed-effect finalization, sweep, expiry, and refund calls. Permissionless execution lets another caller pay gas; it does not give that caller control over amount, recipient, or meaning. [IFACE-009](../../contracts/interfaces/iface-009-base-transition-api-events-and-errors.md), [IFACE-010](../../contracts/interfaces/iface-010-funding-vault.md), and [IFACE-011](../../contracts/interfaces/iface-011-repayment-vault.md) retain the full public contracts.
+-
+-**Lender-controlled funding-vault interaction ([SR-005](responsibilities/sr-005-lender-controlled-funding-vault-interaction.md))** supplies the human and application boundary for the selected lender's explicit capital action. It presents the finalized deployed vault, chain, asset, loan, remaining principal, deadline, and fixed lender settlement recipient. The lender may use one or more ordinary transfers from a controlled wallet or treasury, including a recoverability-qualified Vault payment account. Partial deposits accumulate. This responsibility coordinates provisional balance display and finalization while leaving signing to the participant and authoritative transitions to the contract and observer. It never pools capital, substitutes a lender, or automatically draws funds.
+-
+-### From Funding To Repayment
+-
+-After qualified origination, the main contract opens the funding window. Exact-principal finalization produces a funded-but-unaccepted state with a bounded acceptance lifetime. The borrower must intentionally disclose `X` through its Vault-controlled call; acceptance pays principal and leaves Bitcoin activation pending. Only separate confirmed Bitcoin evidence can make the product's active-collateral projection eligible. If the borrower never accepts, fixed-recipient expiry/refund remains possible and prefunded Bitcoin has its own recovery path. [FLOW-001](../../behavior/flows/flow-001-origination-preparation-and-qualification.md), [FLOW-002](../../behavior/flows/flow-002-activation-completion-and-active-entry.md), [FLOW-003](../../behavior/flows/flow-003-preactivation-unwind.md), and [STATE-011](../../contracts/states/state-011-main-base-loan.md) preserve these distinctions.
+-
+-For repayment, sufficient vault balance is necessary but is not itself valid repayment. Exact debt must be finalized no later than `D`. A bound lender can then claim by revealing `Y` strictly before `C = D + 172,800 seconds`. The claim pays the fixed lender recipient once and exposes `Y`; the observation domain qualifies its finality, and Bitcoin operations can complete the fixed borrower recovery transaction. The borrower may make the one permitted refund-recipient switch before `C`; at `C` the current recipient freezes. [STATE-012](../../contracts/states/state-012-base-repayment-vault.md), [STATE-013](../../contracts/states/state-013-repayment-refund-recipient-and-claim-cutoff.md), and [FLOW-004](../../behavior/flows/flow-004-normal-repayment-close.md) own the exact conditions.
+-
+-If claim does not happen before `C`, the lender permanently loses that Base claim and the exact unclaimed repayment becomes permissionlessly refundable once to the frozen borrower recipient. The finalized `UnclaimedRepaymentRefunded` event is the only positive Base fallback trigger. Lender silence, a missing secret, elapsed time, or raw token activity is not that event. Base refund does not imply Bitcoin recovery, and Bitcoin lender-default maturity after `T = D + 259,200 seconds` remains independent. [INV-006](../../contracts/invariants/inv-006-valid-repayment.md), [INV-007](../../contracts/invariants/inv-007-claim-refund-exclusivity-and-fallback-trigger.md), and [INV-008](../../contracts/invariants/inv-008-default-timing-and-base-separation.md) keep these consequences separate.
+-
+-### Failure, Authority, And Scope
+-
+-Wrong loan, hash, role, recipient, amount, deadline, state, or deployment blocks the action. Excess and late configured USDC follow the specified fixed recovery paths; there is no generic asset rescue or arbitrary destination. Application retries must reload authoritative facts and preserve the same fixed effect. A workforce operator can request an already authorized operation but cannot edit contract meaning or claim success without evidence.
+-
+-The recorded construction choices use immutable ownerless vaults, while the main contract retains its explicit Transparent Proxy administration, 2-of-3 Safe, seven-day timelock, compatibility checks, and opener-replacement boundary. V1 has no on-chain pause; direct valid exits remain available during application or opener shutdown. These choices remain governed by [STATE-019](../../contracts/states/state-019-base-deployment-upgrade-and-opener.md), [INV-019](../../contracts/invariants/inv-019-funding-opener-and-pause-boundaries.md), and [INV-020](../../contracts/invariants/inv-020-base-upgrade-boundary.md). A Vault payment account and the separately scoped participant-transfer capability do not change payer-neutral contracts or historical recipients. Cooperative Bitcoin settlement does not yet provide a complete Base accounting capability ([SCOPE-005](../../contracts/scope/scope-005-cooperative-settlement-operations.md)); liquidation, organization custody, and automatic lender-capital allocation remain outside this domain.
++The [Base USDC Settlement And Funding guide](../../../guide/domains/base-usdc-settlement-and-funding.md) explains this domain for readers. This record is its exact technical reference.
+ 
+ ## Agent-First Canonical Reference
+ 
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/system-model/domains/bitcoin-authorization-and-recovery/domain.md t2/bitrise21/loan-system/design/technical-design/system-model/domains/bitcoin-authorization-and-recovery/domain.md
+--- pre/bitrise21/loan-system/design/technical-design/system-model/domains/bitcoin-authorization-and-recovery/domain.md	2026-10-13 00:26:35
++++ t2/bitrise21/loan-system/design/technical-design/system-model/domains/bitcoin-authorization-and-recovery/domain.md	2026-10-15 02:17:24
+@@ -8,33 +8,7 @@
+ 
+ # Bitcoin Authorization And Recovery
+ 
+-## Domain Overview
+-
+-This domain preserves participant control of Bitcoin collateral while making fixed, previously authorized transactions operable across interruptions. A **prefund** stages borrower Bitcoin before activation; an **escrow** is the later confirmed collateral output. A **PSBT** carries a transaction and signing material for review and signature. A signed package is evidence of exact prior authorization, not permission for an application to choose a new destination. Bitcoin consensus, including confirmations and timelocks, remains the authority for spendability and the final outcome.
+-
+-The secrets serve different actions: borrower `X` enables acceptance and fixed activation, lender `Y` enables normal borrower recovery after repayment claim, and optional independent `S` enables the same recovery transaction under the separate finalized-refund fallback. A long-stop is instead a participant-authorized absolute-timelock route without either recovery secret. None grants the organization a collateral key.
+-
+-### Construction And The Two Participants
+-
+-**Bitcoin prefund, escrow, and package construction ([SR-002](responsibilities/sr-002-bitcoin-prefund-escrow-and-package-construction.md))** constructs and validates scripts, outpoints, amounts, fixed outputs, fee candidates, manifests, signatures, and the package graph. It operates only the route justified by current chain and package evidence. It consumes committed terms and acknowledged participant allocations; it cannot allocate a key or invent a missing binding. It also owns constrained fee selection, relay, independent chain observation/reconciliation, and the boundary around a separately funded fee-bump child.
+-
+-**Borrower authorization and recovery ([SR-004](responsibilities/sr-004-borrower-bitcoin-authorization-and-recovery.md))** keeps the borrower Vault, seed, loan keys, `X`, and signing local to the dedicated Vault origin. It creates or restores the loan's immutable allocation, acknowledges the encrypted snapshot, prepares public destination/commitment material, and signs an exact canonical batch. Acceptance first reviews nonsecret facts; a narrowly unlocked worker prepares the exact secret-bearing transaction; a second confirmation tied to those bytes authorizes signing and submission. Password or login recovery cannot recreate a forgotten Vault password. **Lender authorization and recovery ([SR-009](responsibilities/sr-009-lender-bitcoin-authorization-and-recovery.md))** applies the corresponding local boundary to the lender's key and `Y`, fixed default-package signing, normal release, manual export, and fresh cooperative signatures. Account access never exposes either participant's plaintext authority. [IFACE-004](../../contracts/interfaces/iface-004-vault-envelope-and-local-handoff.md), [IFACE-014](../../contracts/interfaces/iface-014-participant-local-base-calls.md), and [IFACE-019](../../contracts/interfaces/iface-019-cooperative-settlement-package.md) retain these exact interactions.
+-
+-### Package Lifecycle And Recovery
+-
+-Origination can construct and sign against an exactly observed zero-confirmation prefund after its committed binding and preparation prerequisites, but six unchanged confirmations are required for funding-window opening, the pre-`X` gate, and reliance. The initial family contains six activation and six borrower refund candidates at 10, 20, 50, 100, 150, and 200 sat/vB. Terminal packages are constructed only for the actual activation winner after six confirmations. The current package contract specifies six borrower recovery, six lender recovery, and six borrower long-stop variants. A stale SR-002 archive sentence still says twelve terminal packages; this documented source conflict remains for a separate repair. [STATE-008](../../contracts/states/state-008-prefund-and-origination-attempt.md), [STATE-009](../../contracts/states/state-009-bitcoin-package-graph.md), [IFACE-005](../../contracts/interfaces/iface-005-origination-binding-and-package-manifest.md), and [INV-015](../../contracts/invariants/inv-015-zero-confirmation-boundary.md) remain the exact owners.
+-
+-The order is unsigned construction, immutable canonical signing batch, participant Vault signing, Core cryptographic validation and complete R2 writes, then the D1 receipt. The receipt cannot be an input to the signing action that produces it. Incomplete terminal signing after activation leaves an explicit pending condition and continued recovery work; it cannot undo principal or escrow. A different activation winner requires fresh terminal construction/signing. A changed or lost parent recursively invalidates descendants; a reorg of the same unchanged parent preserves bytes and signatures but suspends qualification. This avoids treating stale transactions as executable.
+-
+-Finalized public `Y`, or valid independently published `S` for an activated commitment, fills the same borrower-signed route-code-3 recovery transaction without changing its output, signature, ID, leaf, or manifest entry. Lender default and borrower long-stop have their own consensus deadlines and remain concurrent once both are valid; only one confirmed spend wins. A Base repayment or refund cannot revoke those signatures. Cooperative signing requires fresh participant agreement and both matching loan keys, while its complete product/accounting operation remains deferred. [IFACE-020](../../contracts/interfaces/iface-020-finalized-public-secret-to-fixed-bitcoin-action.md), [STATE-015](../../contracts/states/state-015-bitcoin-escrow-and-terminal-outcome.md), [INV-009](../../contracts/invariants/inv-009-one-terminal-escrow-outcome.md), and [INV-025](../../contracts/invariants/inv-025-missing-y-residual-lender-risk.md) preserve the exact boundary.
+-
+-### Fees, Failures, And Recorded Choices
+-
+-Fixed fees are necessary because the parent is signed before use. Provider-neutral integer units, actual vsize, strict buffer comparison, estimate freshness, and replacement rules prevent underestimation or unsafe reselection. The existing fee sources disagree about the case where no signed tier qualifies: an earlier ticket/payload selects the largest tier with an alert, while the action contract and former decision say fail closed. This migration preserves both statements and identifies the conflict; it does not authorize either interpretation. [IFACE-007](../../contracts/interfaces/iface-007-bitcoin-fee-estimate-and-tier-selection.md) holds the exact source text.
+-
+-A P2A anchor permits a separately funded CPFP child. Product export, deterministic unsigned construction, Core's manually unlocked signing/finalization/broadcast, and independent observation stay separate so a fee wallet gains no participant authority. [IFACE-016](../../contracts/interfaces/iface-016-p2a-cpfp-request-helper-and-core.md) owns the arithmetic and operator process. A relay timeout is ambiguous, not permission to send a different transaction; durable exact-attempt reconciliation and independent source agreement govern retry. Wrong binding, stale bytes, contested facts, missing primary archive evidence, or invalid route blocks the affected action.
+-
+-The recorded rationale for exact scripts and witnesses is that a mismatch can strand collateral or authorize the wrong party. Fixed envelope/KDF interoperability makes encrypted backups portable; hardened per-loan derivation avoids index reuse, cross-loan correlation, and expanded compromise. Those are reasons for the existing contracts, not permission to add recovery authority. Automatic organization default broadcast, institutional collateral recovery, nonresponse activation, stronger forgotten-password recovery, and complete cooperative operations remain excluded under [SCOPE-001](../../contracts/scope/scope-001-automatic-lender-default-broadcast.md), [SCOPE-002](../../contracts/scope/scope-002-institutional-last-resort-collateral-recovery.md), [SCOPE-003](../../contracts/scope/scope-003-borrower-nonresponse-activation-recovery.md), [SCOPE-006](../../contracts/scope/scope-006-stronger-participant-vault-recovery.md), and [SCOPE-005](../../contracts/scope/scope-005-cooperative-settlement-operations.md), each with its own revisit condition.
++The [Bitcoin Authorization And Recovery guide](../../../guide/domains/bitcoin-authorization-and-recovery.md) explains this domain for readers. This record is its exact technical reference.
+ 
+ ## Agent-First Canonical Reference
+ 
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/system-model/domains/bitcoin-authorization-and-recovery/responsibilities/sr-002-bitcoin-prefund-escrow-and-package-construction.md t2/bitrise21/loan-system/design/technical-design/system-model/domains/bitcoin-authorization-and-recovery/responsibilities/sr-002-bitcoin-prefund-escrow-and-package-construction.md
+--- pre/bitrise21/loan-system/design/technical-design/system-model/domains/bitcoin-authorization-and-recovery/responsibilities/sr-002-bitcoin-prefund-escrow-and-package-construction.md	2026-10-13 00:26:35
++++ t2/bitrise21/loan-system/design/technical-design/system-model/domains/bitcoin-authorization-and-recovery/responsibilities/sr-002-bitcoin-prefund-escrow-and-package-construction.md	2026-10-15 02:09:11
+@@ -33,7 +33,7 @@
+ - Parent fee calculation, actual fee/vsize recording, strict 25-percent-buffer tier selection using normalized integer milli-sat/vB estimates, and the ordered Mempool then Blockstream Esplora then Validation Cloud chain. Blockstream and Validation Cloud adapters consume only exact target-1 `/fee-estimates` values and retain distinct provider identities; the latter's API key is a Cloudflare secret and no estimator is self-hosted. Every provider retains the fixed 15-second attempt deadline, one retry, 120-second first-broadcast freshness, manual existing-tier override record, and fail-closed `fee-estimation-blocked` behavior.
+ - Relay submission as provisional only through Mempool first and Blockstream Esplora second. Each exact-byte attempt has a 15-second deadline; ambiguous outcomes reconcile independently before fallback or resend, and exhausted attempts retry from durable state after one minute, then two minutes, then every five minutes while permanent semantic rejection blocks and alerts. Independent Bitcoin observation uses Blockstream first and Validation Cloud second on production mainnet, Blockstream first and Mempool second on default Signet, and two connected Bitcoin Core nodes on local regtest. Immediate event/gate reads plus one-minute polling of only active transactions and outpoints retain the fixed retry/freshness/agreement rules, lower confirmation count for same-block disagreement, conflict/unavailability states, consensus-MTP readiness, reorg correction, and no manual override of contested Bitcoin facts. Repeated instances of the same unresolved observation problem update one durable incident, with escalation after five minutes or one missed block and immediate critical treatment after `X`.
+ - The explicit local-demo realization remains inside BU-008: two persistent connected regtest nodes, named controlled wallets, a Docker-free loopback provider/controller, bounded immediate wake plus one-minute recovery, and `prefund-current-binding`. Prefund accepts only a current Core loan/binding, allowlisted wallet label, and idempotency identity; BU-008 derives the exact script, destination, amount, and outpoint and returns only public operation/transaction identity. Arbitrary RPC, caller-selected destination/amount/raw transaction, key export, non-regtest network, or public-profile activation is rejected.
+-- Phase-specific archive readiness: the 12-package signed activation/refund phase is not qualified until `SR-011` verifies every unique locked R2 object and returns the final D1 complete-set receipt. After activation confirmation, the 12-package signed terminal phase must receive its own R2/D1 receipt before package-ready active status or terminal package operation. Hourly S3 backup is queued and monitored asynchronously rather than gating either existing phase; a 24-hour backup outage pauses only new qualification.
++- Phase-specific archive readiness: the 12-package signed activation/refund phase is not qualified until `SR-011` verifies every unique locked R2 object and returns the final D1 complete-set receipt. After activation confirmation, the 12-package signed terminal phase must receive its own R2/D1 receipt before package-ready active status or terminal package operation. Hourly S3 backup is queued and monitored asynchronously rather than gating either existing phase; a 24-hour backup outage pauses only new qualification. Unresolved source conflict: this bullet's "12-package signed terminal phase" wording conflicts with the six borrower-recovery, six lender-recovery, and six borrower-long-stop terminal variants above and with the exact 18-package terminal phase in [FLOW-002](../../../behavior/flows/flow-002-activation-completion-and-active-entry.md), [STATE-009](../../../contracts/states/state-009-bitcoin-package-graph.md), and [INV-026](../../../contracts/invariants/inv-026-durable-signed-exit-package-availability.md). The discrepancy is recorded for separate repair without choosing new behavior.
+ - P2A/manual CPFP projected, conservative pre-signing, and finalized-byte arithmetic. One current operator authorized under [CONS-019](../../../../build/records/constraints/cons-019-workforce-operator-authorization-and-audit.md) may approve and export an exact reviewed request; Core smart-selects only confirmed inputs from a dedicated BIP84 P2WPKH fee wallet, the local BU-009 helper independently constructs and verifies only an unsigned exact-fee PSBT using a conservative maximum finalized vsize, the dashboard never sends or authoritatively associates the child, Core remains the manually unlocked signer/finalizer/broadcaster, and independent observation owns the result.
+ - Activation persistence after finalized public `X`, automatic normal recovery after finalized public `Y`, conditional recovery after independently published valid `S`, automatic preactivation refund only under the exact fresh gate, manual/external lender-default broadcast, and one confirmed terminal spend.
+ 
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/system-model/domains/loan-terms-and-commitments/domain.md t2/bitrise21/loan-system/design/technical-design/system-model/domains/loan-terms-and-commitments/domain.md
+--- pre/bitrise21/loan-system/design/technical-design/system-model/domains/loan-terms-and-commitments/domain.md	2026-10-13 00:26:35
++++ t2/bitrise21/loan-system/design/technical-design/system-model/domains/loan-terms-and-commitments/domain.md	2026-10-15 02:17:24
+@@ -8,29 +8,7 @@
+ 
+ # Loan Terms And Commitments
+ 
+-## Domain Overview
+-
+-Every part of the product must refer to the same loan. A borrower and a selected lender can see an offer, authorize keys and recipients in their Vaults, move USDC on Base, and prepare collateral transactions on Bitcoin; those artifacts must agree about the participants, amounts, deadlines, destinations, and secret commitments. This domain owns that shared meaning. A matching identifier proves which agreement an artifact describes; it does not authorize a spend or establish a chain outcome.
+-
+-A **firm offer** records the lender's proposed commercial values. A **reservation** selects one offer revision for one borrower and creates a stable random `loan_id`. **LoanTermsV1** is the ordered, versioned agreement data; its `terms_hash` binds the exact encoded values. **ProtocolDeploymentV1** is different: it identifies the approved environment, chain, contracts, asset, Bitcoin network, and policy configuration. URLs, credentials, secrets, and mutable application state are not part of that deployment identity. Separating immutable loan facts from environment facts prevents different consumers from signing or processing different meanings under the same label.
+-
+-### One Responsibility, Shared Meaning
+-
+-**Loan terms, one-loan offer, reservation, and parameter binding ([SR-001](responsibilities/sr-001-loan-terms-offer-reservation-and-parameter-binding.md))** is the domain's single responsibility. It defines identity, encoding, candidate versions, approvals, commitment, cancellation, and supersession. Its output is used by every other domain: Bitcoin construction binds the package graph to it; Base settlement accepts only the pinned terms and deployment; observers reject wrong-deployment evidence; participant operations persist and present the same candidate; Vaults check the same role and loan binding before returning public identities or signing. [IFACE-001](../../contracts/interfaces/iface-001-loan-terms-and-canonical-binding.md), [IFACE-002](../../contracts/interfaces/iface-002-protocol-deployment-manifest.md), and [IFACE-003](../../contracts/interfaces/iface-003-one-loan-offer-reservation-and-loan-binding.md) own the exact representations and public boundaries.
+-
+-The detailed approved records distinguish commercial reservation from final agreement. Reservation creates the loan identity before loan-specific Vault derivation. Both roles then supply durable acknowledged public allocation results. The borrower prepares its public destination and `H(X)` result; Core assembles a complete candidate version and hash. Each role explicitly approves that same candidate, and the atomic second matching approval commits it once. A hashed-field edit invalidates earlier candidate approvals. Duplicate identical approvals and commitment retries return the same result; stale, wrong-role, wrong-loan, mismatched, expired, or cancelled approvals are rejected. [STATE-001](../../contracts/states/state-001-one-loan-offer-and-reservation.md), [STATE-002](../../contracts/states/state-002-canonical-loan-terms.md), and [FLOW-001](../../behavior/flows/flow-001-origination-preparation-and-qualification.md) preserve that ordering. The architecture's older standing-approval wording conflicts with these detailed records; this migration records the discrepancy without deciding new behavior.
+-
+-### Boundaries And Exceptions
+-
+-A protocol Bitcoin public key, Base protocol EOA, external payout destination, and Vault payment account are distinct identities. The payment account can fund an eligible transfer; it does not silently become a loan recipient or protocol caller. Selecting an address for a fresh loan's existing recipient field uses the normal role authorization and fresh candidate approvals. Historical terms remain immutable. Likewise, an acceptance snapshot or workspace copy cannot become a second authority for agreement meaning. [INV-001](../../contracts/invariants/inv-001-canonical-loan-binding.md), [INV-011](../../contracts/invariants/inv-011-selected-lender-capital-control.md), [INV-012](../../contracts/invariants/inv-012-authority-separation.md), and [INV-023](../../contracts/invariants/inv-023-key-destination-and-refund-separation.md) make those boundaries explicit.
+-
+-Every consumer rejects an unsupported encoding, changed fingerprint, wrong chain/contract/asset/network, mixed environment, wrong key or destination, or dependent artifact that does not bind exactly. Pre-activation amendment produces a later candidate/version and fresh dependent artifacts. Cancellation ends that reservation; reopening requires a fresh loan identity. These rules prevent an apparently successful retry from reviving old approval or signing material.
+-
+-### Choices And Scope
+-
+-The recorded rationale for canonical encoding is interoperability and verifiability: divergent encodings or mixed immutable and deployment facts could bind signatures, manifests, and chain actions to different loans, or make a package impossible to reproduce. The exact encoding and accepted address spellings remain in [IFACE-001](../../contracts/interfaces/iface-001-loan-terms-and-canonical-binding.md); the domain explanation does not duplicate that byte-level contract.
+-
+-The lender separately retains the capital-funding decision, even after an agreement is committed. Product authentication, Vault decryption, Bitcoin construction, Base execution, observation, and durable workflow coordination remain with their respective domains. Public or multi-lender matching, pooled capital, product custody, automatic deployment of lender capital, and liquidation remain excluded under [SCOPE-011](../../contracts/scope/scope-011-public-multi-lender-pooling-custody-and-automatic-capital.md). An unresolved implementation question belongs in its existing ticket; a narrative or diagram cannot supply a missing approval.
++The [Loan Terms And Commitments guide](../../../guide/domains/loan-terms-and-commitments.md) explains this domain for readers. This record is its exact technical reference.
+ 
+ ## Agent-First Canonical Reference
+ 
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/system-model/domains/loan-terms-and-commitments/responsibilities/sr-001-loan-terms-offer-reservation-and-parameter-binding.md t2/bitrise21/loan-system/design/technical-design/system-model/domains/loan-terms-and-commitments/responsibilities/sr-001-loan-terms-offer-reservation-and-parameter-binding.md
+--- pre/bitrise21/loan-system/design/technical-design/system-model/domains/loan-terms-and-commitments/responsibilities/sr-001-loan-terms-offer-reservation-and-parameter-binding.md	2026-10-13 00:26:35
++++ t2/bitrise21/loan-system/design/technical-design/system-model/domains/loan-terms-and-commitments/responsibilities/sr-001-loan-terms-offer-reservation-and-parameter-binding.md	2026-10-15 02:15:04
+@@ -14,7 +14,7 @@
+ 
+ Make every application, Base, Bitcoin, observation, package, optional fallback, and settlement artifact refer to one immutable loan meaning while preserving the difference between a firm one-loan offer, its atomic reservation, loan-specific terms, and environment-wide deployment configuration.
+ 
+-The agreement is the shared meaning consumed by Base settlement, Bitcoin package construction, observers, and participant operations. Read the ownership and failure sections for exact candidate approval, commitment, invalidation, and retry behavior; the Domain Overview explains the full cooperation scenario.
++The agreement is the shared meaning consumed by Base settlement, Bitcoin package construction, observers, and participant operations. Read the ownership and failure sections for exact candidate approval, commitment, invalidation, and retry behavior; the [Loan Terms And Commitments guide](../../../../guide/domains/loan-terms-and-commitments.md) explains the full cooperation scenario for readers.
+ 
+ ## Agent-First Canonical Reference
+ 
+@@ -28,7 +28,7 @@
+ - Immutable borrower/lender account references, selected offer revision and `(offer_id, reservation_number)`, Base protocol addresses, fixed Base recipients, principal, debt, deadlines, collateral, Bitcoin loan public keys, separate external Bitcoin destinations, and `SHA256(X)`/`SHA256(Y)` commitments. Conditional `H(S)` is present only for loans created with the approved capability.
+ - The distinction between loan-specific `LoanTermsV1` and `ProtocolDeploymentV1`. The latter is one strict versioned JSON document per production, test, or local environment and binds Base chain/proxy/implementation/runtime-code hash/USDC, Bitcoin network, uniform timing/policy, and declared upgrade authority while excluding URLs, credentials, application configuration, dynamic attempts, and secrets.
+ - Canonical manifest fingerprinting as `sha256:<lowercase-hex>` over strictly parsed, recursively lexicographically key-sorted UTF-8 JSON with only `fingerprint` omitted. Consumers reject unsupported, modified, mixed-environment, wrong-chain, wrong-contract, wrong-asset, or wrong-network manifests.
+-- Browsable firm lender-published one-loan offers. Publication is standing lender approval of the proposed commercial values only; one successful borrower selection atomically creates the reservation, stable `loan_id`, and durable commercial draft. Neither publication nor reservation approves or commits final bound terms. The selected lender separately controls the funding action.
++- Browsable firm lender-published one-loan offers. Publication is standing lender approval of the proposed commercial values only; one successful borrower selection atomically creates the reservation, stable `loan_id`, and durable commercial draft. Neither publication nor reservation approves or commits final bound terms. The selected lender separately controls the funding action. Unresolved source conflict: the [architecture record](../../../architecture.md#purpose-and-binding)'s wording that reservation creates the canonical loan without a second lender approval, echoed by [IFACE-003](../../../contracts/interfaces/iface-003-one-loan-offer-reservation-and-loan-binding.md), [SCOPE-011](../../../contracts/scope/scope-011-public-multi-lender-pooling-custody-and-automatic-capital.md), and [SEL-012](../../../../build/records/selections/sel-012-one-loan-offer-reservation-and-binding.md), conflicts with this bullet, the next bullet, [STATE-001](../../../contracts/states/state-001-one-loan-offer-and-reservation.md), [STATE-002](../../../contracts/states/state-002-canonical-loan-terms.md), and [FLOW-001](../../../behavior/flows/flow-001-origination-preparation-and-qualification.md), in which both roles, including the lender, explicitly approve the same final candidate. The discrepancy is recorded without deciding new behavior.
+ - Reservation creates the stable canonical `loan_id` before loan-specific Vault derivation. After both role-bound `VaultLoanPublicIdentityV1` results name that loan, the canonical network, the acknowledged current Vault revisions, the expected compressed Bitcoin public keys, and Base addresses equal to the participants' existing immutable public-identity registrations, Core assembles one complete versioned `LoanTermsV1` candidate and its exact hash. Product presents the understandable candidate and bound identities; borrower and lender each explicitly approve the same candidate version/hash through authenticated application authority. Any hashed-field change invalidates prior approvals. Only the atomic second matching approval commits the agreement exactly once.
+ - Terms states `commercial_draft`, `awaiting_allocations`, `awaiting_final_approvals`, `committed`, `cancelled`, and `superseded`; immutable candidate, approval, commitment, and cancellation history; idempotent retry; concurrency rejection; and fresh loan identity after cancellation/reopening.
+ 
+@@ -54,7 +54,7 @@
+ 
+ ## Failure And Recovery
+ 
+-Reject duplicate/concurrent reservation, wrong participant/offer revision, invalid recipient network, unsupported manifest, fingerprint mismatch, live deployment mismatch, missing/stale/cross-role allocation result, wrong key/destination/commitment, stale/wrong-role/wrong-loan/mismatched candidate approval, expired or cancelled draft, and any dependent artifact that does not bind exactly. A hashed-field change creates a new candidate version/hash and invalidates all prior candidate approvals. Duplicate identical approvals and commitment retries return the same durable result; concurrent final approvals commit at most once. Pre-activation amendment creates a later version and fresh dependent artifacts; cancellation is terminal for that reservation.
++Reject duplicate/concurrent reservation, wrong participant/offer revision, invalid recipient network, unsupported manifest, fingerprint mismatch, live deployment mismatch, missing/stale/cross-role allocation result, wrong key/destination/commitment, stale/wrong-role/wrong-loan/mismatched candidate approval, expired or cancelled draft, and any dependent artifact that does not bind exactly. A hashed-field change creates a new candidate version/hash and invalidates all prior candidate approvals. Duplicate identical approvals and commitment retries return the same durable result; concurrent final approvals commit at most once. Pre-activation amendment creates a later version and fresh dependent artifacts; cancellation is terminal for that reservation. These rules prevent an apparently successful retry from reviving old approval or signing material.
+ 
+ ## Invariants
+ 
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/system-model/domains/participant-access-and-loan-operations/domain.md t2/bitrise21/loan-system/design/technical-design/system-model/domains/participant-access-and-loan-operations/domain.md
+--- pre/bitrise21/loan-system/design/technical-design/system-model/domains/participant-access-and-loan-operations/domain.md	2026-10-13 00:26:35
++++ t2/bitrise21/loan-system/design/technical-design/system-model/domains/participant-access-and-loan-operations/domain.md	2026-10-15 02:17:24
+@@ -8,41 +8,7 @@
+ 
+ # Participant Access And Loan Operations
+ 
+-## Domain Overview
+-
+-This domain turns the separate agreement, Vault, Base, and Bitcoin authorities into a usable product workflow. It records who may act, what the application durably accepted, which public operation is pending, and which externally sourced result is known. It also owns a deliberately isolated developer demonstration. Application records coordinate those authorities; they cannot become private keys, participant consent, or chain truth.
+-
+-A **workspace** is the durable application view of a loan. A **revision** identifies the exact state a command was based on. An **outbox** records required work atomically with the state change so a lost immediate wake cannot lose the operation. A **handoff** grants a particular participant access to one bounded Vault action; it is not a general signing token. A **payment intent** fixes one exact public request before the participant's Vault signs. These concepts distinguish an accepted request from a submission, observation, finalized contract event, or confirmed Bitcoin spend.
+-
+-### Access, Coordination, And Local Composition
+-
+-**Participant identity and role access ([SR-010](responsibilities/sr-010-participant-identity-and-role-access.md))** owns accounts, role membership, sessions, recovery, reauthentication/MFA, and permission to retrieve bound opaque artifacts. Product authentication uses the selected provider adapter while stable accounts and loan authorization remain application-owned. Workforce operator access is separate. Authentication can authorize ciphertext retrieval; it cannot decrypt a Vault, recover a seed or secret, or make a chain action valid. [STATE-003](../../contracts/states/state-003-product-identity-session-and-fresh-access.md) and the access contracts retain exact denial and recovery behavior.
+-
+-**Loan workspace and application coordination ([SR-011](responsibilities/sr-011-loan-workspace-and-application-coordination.md))** owns revisioned commands, idempotency, durable outbox work, source records, projections, notifications, package archives, sponsorship records, and exact participant handoffs. A consumer can acquire and refresh its authorized workspace, distinguish absent, forbidden, stale, and unavailable results, obtain an accepted-command acknowledgement, and recover the same result after refresh or restart. A mock, health route, or producer-local method does not prove that public consumer path. [IFACE-013](../../contracts/interfaces/iface-013-workspace-command-revision-outbox-and-result.md) and [STATE-016](../../contracts/states/state-016-workspace-command-outbox-and-projection.md) preserve the exact routes and failures.
+-
+-**Local runtime composition and controlled demonstration ([SR-012](responsibilities/sr-012-local-runtime-composition-and-controlled-demonstration.md))** assembles the existing independently built units through their public seams. Its one developer entrypoint preflights, starts or resumes, health-gates, and reports the system; paired status, shutdown, and explicit reset/reseed actions make state ownership clear. The local profile uses loopback Base Anvil, fake USDC, two connected persistent Bitcoin regtest nodes, two isolated participant sessions/Vaults, the real Product/Vault/API/observer/operations paths, and identity-bound fixtures. A coordination descriptor references producer-owned state instead of owning or recursively deleting sibling repositories. Ordinary shutdown preserves that state; only explicit bounded reset invokes each producer's reset contract. [IFACE-021](../../contracts/interfaces/iface-021-local-demo-runtime-control.md) and [STATE-020](../../contracts/states/state-020-local-demo-runtime.md) own the lifecycle.
+-
+-### Cooperation Through A Loan
+-
+-Core first binds authenticated participants to a reserved loan and current terms candidate. The dedicated Vault returns acknowledged public identity and preparation material; both roles approve the same final candidate under the terms domain's exact rules. Bitcoin operations produce complete unsigned signing context, Core stores an immutable batch, Product launches the bounded Vault handoff, and the Vault signs locally. Core revalidates the result, writes the full package archive, and only then issues its receipt. After qualified funding and deliberate borrower acceptance, observed Base `X` and independent Bitcoin evidence drive separate projection and operation steps. Normal repayment similarly waits for finalized contract outcomes and confirmed Bitcoin recovery. [FLOW-001](../../behavior/flows/flow-001-origination-preparation-and-qualification.md), [FLOW-002](../../behavior/flows/flow-002-activation-completion-and-active-entry.md), and [FLOW-004](../../behavior/flows/flow-004-normal-repayment-close.md) provide the authoritative sequence.
+-
+-A required state change and its job commit in D1 together. Immediate private wake is only an optimization; a one-minute scan recovers missed or crashed work. Exact request, route, participant, amount, nonce, fees, bytes, provider, and transaction identities survive ambiguous outcomes. Consumers do not turn a lost response into a new payment or changed action. Known inclusion delay remains distinguishable from unresolved reconciliation; the bounded policy probes at 0, 15, and 60 seconds and escalates at 180 seconds to the declared visible block/recovery route. [IFACE-022](../../contracts/interfaces/iface-022-vault-owned-base-payment-account-and-exact-transfer.md) and [STATE-021](../../contracts/states/state-021-vault-owned-base-payment-account-and-intent.md) retain the exact phase, fencing, and evidence contract.
+-
+-### Payment Authority And Availability
+-
+-A Vault payment account is independent of its protocol EOA and per-loan Bitcoin keys. It becomes public only after snapshot and backup recoverability establish same-address restore. Core owns the public intent, lease revision, fence, atomic phase transitions, and provider gate; the Vault owns encrypted pending bytes and signing. Core enters durable Signing before invoking the signer. Public hash and broadcast-phase persistence must occur in their specified order; repeat broadcast uses identical bytes, and changes require fresh review. A timeout after Signing is not proof of non-submission. A new device must restore or verifiably reproduce the exact pending bytes, otherwise the account remains explicitly blocked. None of this changes historical terms, payer-neutral settlement, or observation authority.
+-
+-The selected narrow participant-transfer purpose permits configured USDC to a validated user-selected recipient with exact approval and balance/gas checks. It has no invented loan/workspace binding and cannot advance loan state. Arbitrary calls, approvals, swaps, other assets, native-value sends, and generic signing remain excluded. Local setup may provision disposable funds to public payment addresses, but that is neither participant-payment evidence nor production gas sponsorship. The latter remains an excluded ticketed capability.
+-
+-All selected V1 application artifacts share Cloudflare's provider failure domain, despite separate origins, projects, credentials, and releases. A provider-wide outage can suspend the Product, Vault, API/D1, observers, and automation together. The chains continue; new consequential application commands stop. Return requires canonical Base/Bitcoin reconciliation before idempotent jobs resume. Off-provider archive backups protect data recovery, not a running-service fallback or promised RTO/RPO.
+-
+-### Recorded Choices And Scope
+-
+-The public-consumer continuity work was needed because a producer-local command and passing harness alone do not ensure a browser can acquire state or recover an accepted operation. The local composition was added because independently implemented units did not by themselves supply a persistent runnable demonstration or safe profile separation. Vault-owned payment intent prevents unrecoverable exposed addresses, duplicate payment after lost responses, and accidental mixing of protocol keys with payer identities. The exact mechanics stay with their contracts; prior implementation repair history stays with tickets and handoffs.
+-
+-Verification, runnable local use, testnet/mainnet deployment, and activated production operation remain distinct claims under [SCOPE-013](../../contracts/scope/scope-013-runtime-profile-claims-and-activation-gates.md). The current payment capability is still an implementation target with no execution evidence established by this migration. Forgotten-password recovery and complete cooperative-settlement operation remain deferred under [SCOPE-006](../../contracts/scope/scope-006-stronger-participant-vault-recovery.md) and [SCOPE-005](../../contracts/scope/scope-005-cooperative-settlement-operations.md). A visual, fixture, healthy process, or local design check cannot satisfy those exclusions or activation gates.
+-
+-The existing future provider-replacement question remains deferred: WorkOS is the selected V1 identity provider, and a replacement must preserve internal account and immutable loan/Vault identities while proving authenticated linking, session/MFA/recovery parity, cutover, rollback and adapter conformance ([SCOPE-015](../../contracts/scope/scope-015-application-owned-authentication-replacement.md)). Optional platform-paid reveal relaying/paymaster execution is also deferred; current support is bounded protocol-EOA prefunding plus participant signing and direct submission ([SCOPE-014](../../contracts/scope/scope-014-platform-paid-base-reveal-execution.md)). These are existing exclusions, not newly selected capabilities.
++The [Participant Access And Loan Operations guide](../../../guide/domains/participant-access-and-loan-operations.md) explains this domain for readers. This record is its exact technical reference.
+ 
+ ## Agent-First Canonical Reference
+ 
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/visuals/assets/explorer.json t2/bitrise21/loan-system/design/technical-design/visuals/assets/explorer.json
+--- pre/bitrise21/loan-system/design/technical-design/visuals/assets/explorer.json	2026-10-14 14:19:51
++++ t2/bitrise21/loan-system/design/technical-design/visuals/assets/explorer.json	2026-10-15 02:19:04
+@@ -16,7 +16,7 @@
+     "build/units/bu-007-base-observation-worker.md": "5694da38178999d98fe3a8008d726730da8b91848e2e18f3f25ec54eba1311ad",
+     "build/units/bu-008-bitcoin-operations-worker.md": "6ca885b87d3dc1ec0cebf9a5cf07fcd66bed3d862bcad3c7a67297357a051d50",
+     "build/units/bu-011-local-demo-runtime.md": "d7a192588360b3ac9f66cde0afa3e34ad3d51a64b57167f445faf3d93bfa8415",
+-    "system-model/architecture.md": "0673de08e1a01ed71e274e4dc98c127b3ed8b5d838408fbe0d1e9d9513a1da72",
++    "system-model/architecture.md": "bacadc008c3f463463734c29f153abc3d7158d87976d3d22d3a6309ef28b43f3",
+     "system-model/behavior/flows/flow-002-activation-completion-and-active-entry.md": "f623fc3d270f202b41f0c225cbbe203be5c528158c75cec59c29933a43457da7",
+     "system-model/contracts/interfaces/iface-008-relay-submission-and-independent-confirmation.md": "bafaf9297e56ff69f907325b83536d78f87935be3bad43d45556b43f0004b72f",
+     "system-model/contracts/interfaces/iface-009-base-transition-api-events-and-errors.md": "2a46707ba88b63184d9158a35595c1be236196b5d9ac9b155d2e1571249c098f",
+@@ -27,7 +27,7 @@
+     "system-model/contracts/states/state-011-main-base-loan.md": "a5573deab9252b29841a932b710bdc5edf490635ba1efb881be54da04202a435",
+     "system-model/contracts/states/state-012-base-repayment-vault.md": "9359456c83b5194631d46df90aeab2d8156c13f4427182b2424598f65c63f6c6",
+     "system-model/contracts/states/state-013-repayment-refund-recipient-and-claim-cutoff.md": "cb59cb52bc8e43563ab7d051bb6849d520327c0d8c78479020e59daa11dceb1b",
+-    "system-model/contracts/states/state-019-base-deployment-upgrade-and-opener.md": "8fbc57695980e545fcce9b5db304d4470830a6b6a4ed478206a3a5f6862758ba"
++    "system-model/contracts/states/state-019-base-deployment-upgrade-and-opener.md": "72611f8766a4b2efb671b86d988007006c3c3350e6b4560441fa11d8636aabce"
+   },
+   "layout": "authored",
+   "groups": [
+diff -ruN --exclude=guide pre/bitrise21/loan-system/design/technical-design/visuals/assets/sources.json t2/bitrise21/loan-system/design/technical-design/visuals/assets/sources.json
+--- pre/bitrise21/loan-system/design/technical-design/visuals/assets/sources.json	2026-10-14 18:46:38
++++ t2/bitrise21/loan-system/design/technical-design/visuals/assets/sources.json	2026-10-15 02:19:07
+@@ -5,7 +5,7 @@
+     "build"
+   ],
+   "sources": {
+-    "system-model/architecture.md": "0673de08e1a01ed71e274e4dc98c127b3ed8b5d838408fbe0d1e9d9513a1da72",
++    "system-model/architecture.md": "bacadc008c3f463463734c29f153abc3d7158d87976d3d22d3a6309ef28b43f3",
+     "system-model/behavior/flows/flow-001-origination-preparation-and-qualification.md": "3a4ea0db85c1d57063cb8cd6323bd182ec4d1efbc40a86d72d2adce7a6611b22",
+     "system-model/behavior/flows/flow-002-activation-completion-and-active-entry.md": "f623fc3d270f202b41f0c225cbbe203be5c528158c75cec59c29933a43457da7",
+     "system-model/behavior/flows/flow-003-preactivation-unwind.md": "3ff2c9e880dfd2fcb66f8cb469ae276379ab68731f5dcb45cc010781f914f569",
+@@ -17,13 +17,13 @@
+     "system-model/behavior/flows/flow-009-cooperative-settlement.md": "8bf204e090cdfaab273ce55030578141a1bde9a84a8de6279e7ce08fe1fb94f0",
+     "system-model/behavior/flows/flow-010-borrower-long-stop-recovery.md": "a0c075a133980859234f0b79427d70749b17b591b0b375f199ce2166960b0d41",
+     "system-model/behavior/lifecycle.yaml": "8220816aada4aed4db881f4f8d67fa5b5c31a0a7f91826c949184197d4cce19f",
+-    "system-model/contracts/interfaces/iface-001-loan-terms-and-canonical-binding.md": "2301ec381cfdf0d849fa75fad4c74c8021134de1eea83e59ec750384ece28989",
+-    "system-model/contracts/interfaces/iface-002-protocol-deployment-manifest.md": "a7abbb62c601ffc8b06281480057fca9f46878532f15eb335e193aaa3aa4b3a8",
++    "system-model/contracts/interfaces/iface-001-loan-terms-and-canonical-binding.md": "572cc73a160a76f7c1f73df01b3a71455779629c3f066b124d3653922dd8166b",
++    "system-model/contracts/interfaces/iface-002-protocol-deployment-manifest.md": "b99b8d0dab6decdb3b385aec0ca86af6087b4e1574fc93db752070cd7b156741",
+     "system-model/contracts/interfaces/iface-003-one-loan-offer-reservation-and-loan-binding.md": "a82e8daf0a031b523d4bd99eb067a5aa36a960ac625bfa5c2787bb1b95c3d1d3",
+     "system-model/contracts/interfaces/iface-004-vault-envelope-and-local-handoff.md": "0620f33fe853cad9b2ba98b18078cbdb2212f2db9d7852df8ad593e91dc41711",
+     "system-model/contracts/interfaces/iface-005-origination-binding-and-package-manifest.md": "b6ae2d7a79a62c271bfd730fe4c4856e1444c9191e0332b2dca4bf819a01d1d9",
+     "system-model/contracts/interfaces/iface-006-bitcoin-observation-evidence.md": "3517c67e4f700636ff11f89b003aa37446b95a7b0289b1065cab393108ae0ca8",
+-    "system-model/contracts/interfaces/iface-007-bitcoin-fee-estimate-and-tier-selection.md": "d430981780c2e2d85557522e75806cbbffc02637576ba2b4e343668f704c1458",
++    "system-model/contracts/interfaces/iface-007-bitcoin-fee-estimate-and-tier-selection.md": "ce82b006ba8e85889c063cab98e44432b96f6d4dd6ab53d8230932053adfee79",
+     "system-model/contracts/interfaces/iface-008-relay-submission-and-independent-confirmation.md": "bafaf9297e56ff69f907325b83536d78f87935be3bad43d45556b43f0004b72f",
+     "system-model/contracts/interfaces/iface-009-base-transition-api-events-and-errors.md": "2a46707ba88b63184d9158a35595c1be236196b5d9ac9b155d2e1571249c098f",
+     "system-model/contracts/interfaces/iface-010-funding-vault.md": "d5764fe4d7d6898112ede0254c0ac614a15a6ed993b2bb227564104c59a9ff37",
+@@ -78,7 +78,7 @@
+     "system-model/contracts/scope/scope-010-final-ui-design.md": "f4451a0505d26ac9086607ae2b384ab592785f75d277fc323f53909ebbe494c9",
+     "system-model/contracts/scope/scope-011-public-multi-lender-pooling-custody-and-automatic-capital.md": "f76a4c89a9cd150a77fdf946af8045f299b531ae94d09004b20f5afecec8765a",
+     "system-model/contracts/scope/scope-012-bitcoin-liquidation-surplus-and-shortfall.md": "ab22e223f05edbc7218180477c0c964704c5aabf2bf34e68b642d8dd046a7935",
+-    "system-model/contracts/scope/scope-013-runtime-profile-claims-and-activation-gates.md": "3835c3ef3b773b6de3f3e6e0f2e0be14a0a4aae110c5981815b38e5b2d109ba8",
++    "system-model/contracts/scope/scope-013-runtime-profile-claims-and-activation-gates.md": "13aa7991c8c685583515279a5f5bf30fd39468aab1ae2c96dee82591534ffa93",
+     "system-model/contracts/scope/scope-014-platform-paid-base-reveal-execution.md": "1d30be41a6f3c76e198b061ad3a47bcdd83e8b0429e5c0ecb1f60f09bcb9b2a1",
+     "system-model/contracts/scope/scope-015-application-owned-authentication-replacement.md": "363d620c232de17f8c20b0eee019a3ff196acf4a0c348870100d985ed8fb5269",
+     "system-model/contracts/security/sec-001-database-or-opaque-vault-storage-breach.md": "cd1c9b9c09fb59587c9445a6325961c647f1a8183db7664d3d7a80394ffe76cb",
+@@ -127,22 +127,22 @@
+     "system-model/contracts/states/state-016-workspace-command-outbox-and-projection.md": "9645663b1d2231c6b895fb4181838e2bb53d116173e9e1f7755fd13ce75cdc60",
+     "system-model/contracts/states/state-017-participant-gas-sponsorship.md": "d9ec4d053d47994821d63c4f4a5a08f7746a71e993de91c3e9e2ed7f3c00af16",
+     "system-model/contracts/states/state-018-organization-p2a-cpfp-operation.md": "53e2905c75ff357ca068787d33c8180970098d3a83da696c8982ad60c2d7cc64",
+-    "system-model/contracts/states/state-019-base-deployment-upgrade-and-opener.md": "8fbc57695980e545fcce9b5db304d4470830a6b6a4ed478206a3a5f6862758ba",
++    "system-model/contracts/states/state-019-base-deployment-upgrade-and-opener.md": "72611f8766a4b2efb671b86d988007006c3c3350e6b4560441fa11d8636aabce",
+     "system-model/contracts/states/state-020-local-demo-runtime.md": "a683ac1093950da5f486c504336c01890c07b4eba77e2d574ceb6212619c81e9",
+     "system-model/contracts/states/state-021-vault-owned-base-payment-account-and-intent.md": "62fa7cd6d457e4a691f5103696e6f8e5154f892177d8397a4e4bb54d4a473de3",
+-    "system-model/domains/base-observation-and-fallback-review/domain.md": "cbdb85374708320b5edd21e9689ef9590649941c383c8ae7cff5cc93d902ac6b",
++    "system-model/domains/base-observation-and-fallback-review/domain.md": "918aa11aca4fe88f5d15aab0fa75d273ae7d30972d94de2520bbd4b44d03d795",
+     "system-model/domains/base-observation-and-fallback-review/responsibilities/sr-006-base-observation-finality-and-reconciliation.md": "da8036e01013b2e7218a20bd39e7c048c3e576071cc293523077d52ae8f4fe00",
+     "system-model/domains/base-observation-and-fallback-review/responsibilities/sr-007-evidence-conditioned-validation-service-fallback.md": "7db877c37192eaceb264cb8463f45debfae3fe243771ba074b0532360c5c6981",
+-    "system-model/domains/base-usdc-settlement-and-funding/domain.md": "cd6905d57480ee505b5ccfab52fc5ae4adbe5c6a59d259a0e691d50e5df8e7f0",
++    "system-model/domains/base-usdc-settlement-and-funding/domain.md": "676ae084adb5ced996e0e35da7d2a2c96fb9fa4c977588384d3fb275a2efeb9e",
+     "system-model/domains/base-usdc-settlement-and-funding/responsibilities/sr-003-base-loan-state-and-usdc-settlement.md": "d73813108391b44c07d0c05d2f351dced2184d2d067f576e3cfcdff43e8b23df",
+     "system-model/domains/base-usdc-settlement-and-funding/responsibilities/sr-005-lender-controlled-funding-vault-interaction.md": "b4f22dc7b6426b8424d6191ad527eb55ad5c568f653678561770bd7671bca1b3",
+-    "system-model/domains/bitcoin-authorization-and-recovery/domain.md": "84fda1020c89bad2c331efa06a4515950bb189c7b1d94788d27271e5a21ddee7",
+-    "system-model/domains/bitcoin-authorization-and-recovery/responsibilities/sr-002-bitcoin-prefund-escrow-and-package-construction.md": "2f45e8b610ad1dd2e8ffe2781fcd82e56bf6344e4e756843866db2d5f12c6e58",
++    "system-model/domains/bitcoin-authorization-and-recovery/domain.md": "2fa2ec2e4d13d8ac00c5c423d82389fdc7269056fb8af3fa66eff85a755b08c5",
++    "system-model/domains/bitcoin-authorization-and-recovery/responsibilities/sr-002-bitcoin-prefund-escrow-and-package-construction.md": "ed6d3b9317f2f33ffc99f78b32cba4d6436d96ba607f1a74b5c8bea464ca9c30",
+     "system-model/domains/bitcoin-authorization-and-recovery/responsibilities/sr-004-borrower-bitcoin-authorization-and-recovery.md": "306b97bfacb2798d4ebf5abf6d5e819f00ef07c3701305efc8b5b5dce9e35d7c",
+     "system-model/domains/bitcoin-authorization-and-recovery/responsibilities/sr-009-lender-bitcoin-authorization-and-recovery.md": "5cf2262376d2199cef39041f17eed11de932f7ab684f03768d13e7b17954b209",
+-    "system-model/domains/loan-terms-and-commitments/domain.md": "66e9fb7ebb4e2a0173c019941c1d862c5eeed7684f6ef3c71979b80e1ff5a2f6",
+-    "system-model/domains/loan-terms-and-commitments/responsibilities/sr-001-loan-terms-offer-reservation-and-parameter-binding.md": "d4a1fa95010b8a9e576bafe4fe20936855f6f204abcc79696c8f83acdd1b571c",
+-    "system-model/domains/participant-access-and-loan-operations/domain.md": "1c99f2f11a1029637b7207fb412e1e559f5f60e201d4b228895a7c437911b8b9",
++    "system-model/domains/loan-terms-and-commitments/domain.md": "02c9b49e8d45407dbbbbd49c45853c23b79dc0e489eb4184daa103c99254b4a9",
++    "system-model/domains/loan-terms-and-commitments/responsibilities/sr-001-loan-terms-offer-reservation-and-parameter-binding.md": "fed599454ae938fb6ba9a098298e88456cb28f492e66d72091151f47a23e327a",
++    "system-model/domains/participant-access-and-loan-operations/domain.md": "906a0a923ebba1a49359795610fb4e15048e9cf284e8b09b212787c47d4abc9c",
+     "system-model/domains/participant-access-and-loan-operations/responsibilities/sr-010-participant-identity-and-role-access.md": "666f90591732c8a4a59bd9e7a849ae6cb66b67922545bb69f2398e369d42e5d2",
+     "system-model/domains/participant-access-and-loan-operations/responsibilities/sr-011-loan-workspace-and-application-coordination.md": "96f899b10706e0f4f5a9cd5ddffb50e5913a09035390e701d1a4a1ef09f67deb",
+     "system-model/domains/participant-access-and-loan-operations/responsibilities/sr-012-local-runtime-composition-and-controlled-demonstration.md": "3ce75c9a79b7c868eed10e809f51df055e4661e7e9b38715ecbbe0e4e0c34d0e",
+@@ -180,7 +180,7 @@
+     "build/records/constraints/cons-021-single-dual-secret-borrower-recovery-psbt.md": "3e270bbbd8e50279e54a75a085859449e73325f002cf1c89f17988421b964b64",
+     "build/records/constraints/cons-022-dedicated-vault-custody-and-exact-action-isolation.md": "daeba6c7e49c0a140bb506d0bd2e149842bddea596c50d348a423a7dbb12e8a1",
+     "build/records/constraints/cons-023-least-authority-bitcoin-operation-and-independent-chain-truth.md": "67f069c19c9f751368ff3aaf9d9ef9269639e657100c0157cb7977fcbff57df6",
+-    "build/records/constraints/cons-024-consumer-visible-workspace-and-operation-continuity.md": "19e9049aa8c6fe66c24bcab7f114b0bbf1fc2a79ebb451b378fa8c84f7244bc3",
++    "build/records/constraints/cons-024-consumer-visible-workspace-and-operation-continuity.md": "1e68152dfe390964a4910abf3eda198fdca78e23669cb0cf5e461083d60ba4af",
+     "build/records/constraints/cons-025-fail-closed-local-demo-profile-isolation.md": "0247aa1dc42edb12a986be9e6867c0c7ea2a461d9505648a79174b2142ff6057",
+     "build/records/constraints/cons-026-runnable-local-demo-lifecycle-and-public-seam-closure.md": "df217dffebeaa30ab3c439eef95fe973f6b6df9c787b01c82c586d6807acf856",
+     "build/records/constraints/cons-027-borrower-long-stop-timing-and-race.md": "cc4fd91f1d2986d30d6a8fe4f49853972d529a9fd2ba2d6bfc2963980dd42056",
+@@ -189,7 +189,7 @@
+     "build/records/selections/sel-001-private-protocol-library-distribution.md": "c84d633d4c834fc8ffe97580702d5f1e243bf45a1a541bfd0a441f5f5ffe436c",
+     "build/records/selections/sel-002-rust-wasm-vault-bitcoin-signer.md": "06f03e0a02bd4e2eb6c77b4a13a8a73ee93b9fa411b1b9fc7ba837a2d831ec00",
+     "build/records/selections/sel-003-json-participant-vault-envelope.md": "31a683a2b717d1f4de6498b06b8bd48cffd8b7e5c8de447faaa5b85d2e0d1cd6",
+-    "build/records/selections/sel-004-sequential-hardened-loan-indices.md": "91246b00b3dc8866e608c520da323c317f7479762eb35bc6438e9d8b5cd5f0ab",
++    "build/records/selections/sel-004-sequential-hardened-loan-indices.md": "1953c67c0c0d835aca9f3a4068c8cd5c17122aea83df01c7399dbc5c09d8d4e5",
+     "build/records/selections/sel-005-bip39-twelve-word-vault-backup.md": "1fbe468e0ffd0d41e884740ca69dcc02fb0023c7e921663245ca3d7362fe0658",
+     "build/records/selections/sel-006-standard-hd-key-paths.md": "cdb6e03966baf50af22da787c87b95b49ba2a4af0c90ae5d649e73bdeff11d75",
+     "build/records/selections/sel-007-github-packages-release-and-consumer-access.md": "cf54082fa4a5d3384cda1e9091d6c80c49f93782149186a37011a008a1b60cf8",
+@@ -220,7 +220,7 @@
+     "build/records/selections/sel-032-vault-browser-rust-wasm-toolchain.md": "3062ba9b4c1ccf869ab2959404468801b32276be84ca99cd1e13f24f430ee88f",
+     "build/records/selections/sel-033-bitcoin-operations-typescript-cloudflare-container-toolchain.md": "72d3200579a6cf615a5d821f118c0b1b730c0fa5908523999afeb1a9dcbeec3d",
+     "build/records/selections/sel-034-cpfp-helper-rust-bitcoin-core-toolchain.md": "eb10396884a6f19573023aef28251e10431a7875030ee156702a4a1bc74c6575",
+-    "build/records/selections/sel-035-local-demo-supervisor-and-runtime-layout.md": "2ac84fc64d31838668217d8bbd7badcd0a10fc419dd0b2cbd6be1d1fb1b3c76f",
++    "build/records/selections/sel-035-local-demo-supervisor-and-runtime-layout.md": "c11454ec96d64cc64d1fe5b6e88971a77aa5b55f8a841d49b6ba5b85d4d9f193",
+     "build/records/selections/sel-036-local-demo-chain-asset-and-fixture-provisioning.md": "667ba14043e92d8fdfb68c1154b8fee1e6d0ed872c8594f9d0dcdb527718cf9a",
+     "build/records/selections/sel-037-local-demo-auth-vault-and-browser-acceptance.md": "de3ee04ed564c617ae8a32307942bdbe16c04de553e83bb4636cd95ad65c0fbc",
+     "build/records/selections/sel-038-vault-local-demo-base-signing-profile.md": "f52d7fad866f7450e7cf4053b7dc9443902a730916e1b874dcac6b7e76d1b21a",
+@@ -233,7 +233,7 @@
+     "build/records/verification/va-002-base-release-evidence-harness.md": "dbdb3e36edb53a73a2bf0df1a71538ac41d3356e4cf28a87ef9d50d3a40ef53f",
+     "build/records/verification/va-003-runnable-local-demo-browser-acceptance.md": "5280a738c57cd2843d2062fd0940fb76d7a12c53e1847c5dc4a81bdba37e1dc5",
+     "build/records/verification/va-004-ticket-0150-allocation-lifecycle-execution.md": "e1e8b48a6f498a97d69aa6c306431d744910a781a66b3f9b8cabbcb2a3275ef0",
+-    "visuals/assets/explorer.json": "55cebce4f536a46ffdcbf51d407e84aa7e9e3b4ec7d828ad18c2feb9c3366c17",
++    "visuals/assets/explorer.json": "98d8b5e597244078083647495b722f762b3ac21f5ebf1c157cd39bb0eea8c427",
+     "visuals/assets/graphs.json": "43b06166a818f4718c85a3f722391eda119b5c6454f074fe96a6bd2ad1ce8174",
+     "visuals/assets/generate-visuals.mjs": "1d0904c2f2f46712258c286ba6117f9c2227840f9ef91bccc4157f6bb0c3aced",
+     "visuals/assets/lib/system-explorer.mjs": "77a0846e19130b6f8b798c4f64dff607aba9b2384d023a517901acbf23471527",

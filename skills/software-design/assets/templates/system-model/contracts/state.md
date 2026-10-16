@@ -16,6 +16,8 @@ State who owns the canonical state and how one instance is identified.
 
 ## States
 
+List every state. `Terminal` is a machine value: exactly `Yes` or `No`, whatever language explains the record. Write conditions, qualifications and reopening rules in `Meaning`, the transitions or Observation And Finality, never in the `Terminal` cell.
+
 | State | Meaning | Terminal |
 | --- | --- | --- |
 | Initial | Exact meaning | No |

@@ -27,7 +27,8 @@ function snapshot() {
 test("project-view-audit CLI returns nonzero drift diagnostics and zero for correct saved API settings", (t) => {
   const cwd = fs.mkdtempSync(path.join(os.tmpdir(), "project-view-cli-"));
   t.after(() => fs.rmSync(cwd, { recursive: true, force: true }));
-  fs.mkdirSync(path.join(cwd, "design"));
+  fs.mkdirSync(path.join(cwd, "design", "system-model"), {recursive: true});
+  fs.writeFileSync(path.join(cwd, "design", "system-model", "architecture.md"), "---\ntype: system-architecture\ndesign_format: 2\n---\n");
   fs.writeFileSync(path.join(cwd, "software-design-ticket-projection.json"), JSON.stringify({ provider: "github", ticketRoot: "design", repository: "owner/repo", project: "owner/1", syncBranch: "shared" }));
   const bin = path.join(cwd, "bin"); fs.mkdirSync(bin);
   fs.writeFileSync(path.join(bin, "gh"), `#!${process.execPath}
@@ -78,7 +79,7 @@ test("view-repair flags belong only to sync and fail before configuration or pro
     [["sync", "--fields-only", "--answering-option", "abc=Ready", "--answering-option", "abc=Needs attention"], /unique existing option/],
     [["sync", "--fix"], /Unexpected argument: --fix/],
     [["sync", "--views-only", "--views-only"], /Unexpected argument: --views-only/],
-    [["sync", "--rename-view", "4=Decision Areas"], /--rename-view requires --views-only/],
+    [["sync", "--rename-view", "4=Out-of-Scope"], /--rename-view requires --views-only/],
     [["sync", "--views-only", "--rename-view"], /--rename-view needs <view-number>=<contract view name>/],
     [["sync", "--views-only", "--rename-view", "0=Tickets"], /--rename-view needs <view-number>=<contract view name>/],
     [["sync", "--views-only", "--rename-view", "4=Decisions"], /target must be a contract view name/],
@@ -102,10 +103,12 @@ test("explicit view repair and REST creation honor the publishing lock, prefligh
   git("init", "-b", "shared");
   git("config", "user.name", "Test"); git("config", "user.email", "test@example.invalid");
   fs.writeFileSync(path.join(cwd, "README.md"), "consumer\n");
+  fs.mkdirSync(path.join(cwd, "design/system-model"), {recursive: true});
+  fs.writeFileSync(path.join(cwd, "design/system-model/architecture.md"), "---\ntype: system-architecture\ndesign_format: 2\n---\n");
   git("add", "."); git("commit", "-m", "baseline"); git("remote", "add", "origin", remote); git("push", "origin", "shared");
   fs.writeFileSync(path.join(cwd, ".git", "info", "exclude"), "software-design-ticket-projection.json\n");
   fs.writeFileSync(path.join(cwd, "software-design-ticket-projection.json"), JSON.stringify({ provider: "github", ticketRoot: "design", repository: "owner/repo", project: "owner/1", syncBranch: "shared" }));
-  fs.mkdirSync(path.join(cwd, "design"));
+  fs.mkdirSync(path.join(cwd, "design"), {recursive: true});
 
   const statePath = path.join(root, "state.json");
   const logPath = path.join(root, "gh-calls.log");
@@ -219,7 +222,7 @@ process.exit(9);
   output = JSON.parse(result.stdout);
   assert.equal(output.outcome, "view-setup-api-verified-browser-pending");
   assert.equal(output.verified[0].id, "NEW_VIEW");
-  assert.deepEqual(output.audit.requiredVisibleOrder, ["Tickets", "Software", "Product & Operations", "All Tickets", "Decision Areas", "Out-of-Scope"]);
+  assert.deepEqual(output.audit.requiredVisibleOrder, ["Tickets", "Product & Operations", "Software", "All Tickets", "Out-of-Scope"]);
   assert.equal(output.audit.manualUiChecks.some((check) => check.id === "repositories-repo-slice"), false);
   assert.deepEqual(JSON.parse(fs.readFileSync(statePath, "utf8")).views.nodes.slice(0, -1), preservedViews);
   assert.equal(fs.existsSync(syncLockPath(cwd)), false);

@@ -89,6 +89,7 @@ function createReadyFixture(root, { withSelection = true, withVerification = tru
 `);
   write(path.join(root, "system-model", "architecture.md"), `---
 type: system-architecture
+design_format: 2
 name: Example system
 domains: "example"
 global_invariants: "None."
@@ -424,7 +425,7 @@ The selection fixes the build and test command family.
     withSelection ? "build/records/selections/sel-001-runtime.md" : null,
     withVerification ? "build/records/verification/va-001-local-integration-harness.md" : null,
   ].filter(Boolean);
-  write(path.join(root, "build", "workflow", "tickets", "example", "sr-001", "sr-001-tickets.yaml"), `ticket_file_version: 3
+  write(path.join(root, "build", "workflow", "tickets", "example", "sr-001", "sr-001-tickets.yaml"), `ticket_file_version: 4
 scope: "responsibility:SR-001"
 
 tickets:
@@ -439,7 +440,6 @@ tickets:
     build_units: ["BU-001"]
     build_unit_disposition: null
     cluster: "public-api"
-    parent_decision: null
     question: "Which public seam will the implementation expose?"
     context: "The logical responsibility is fixed and the code-facing seam has been selected."
     options: []
@@ -645,7 +645,7 @@ The surface uses semantic controls, visible focus, keyboard operation, and respo
 ## Change Synchronization
 None.
 `);
-  write(path.join(root, "ui-ux", "prototype.html"), fs.readFileSync(path.join(skillRoot, "references/ui-ux/templates/prototype.html"), "utf8"));
+  write(path.join(root, "ui-ux", "index.html"), fs.readFileSync(path.join(skillRoot, "references/ui-ux/templates/index.html"), "utf8"));
   write(path.join(root, "ui-ux", "alternatives", "main", "index.html"), `<!doctype html>
 <html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${surface} prototype</title></head>
 <body data-demo-only="Representative fake data"><p data-prototype-disclosure>Prototype with fake records.</p><main data-product-surface data-prototype-state="empty"><h1>${surface} workspace</h1><p>See https://example.test/help for the displayed support address.</p><a href="https://example.com/policy">Open policy</a><button type="button" data-product-action data-action-target="success">Complete task</button><button type="button" data-cancel-action data-action-target="cancelled">Cancel</button><section data-product-outcome><h2>Task complete</h2><button type="button" data-next-step data-action-target="empty">Return</button></section><button type="button" data-recovery-action data-action-target="empty">Try again</button></main><details data-prototype-reviewer><summary>Reviewer tools</summary><select data-review-actor><option>Fake user</option></select><button type="button" data-review-state-target="empty">Empty</button><button type="button" data-review-state-target="success">Success</button></details>
@@ -682,7 +682,6 @@ None.
     build_units: []
     build_unit_disposition: "Excluded from the selected UI delivery slice."
     cluster: "future-analytics"
-    parent_decision: null
     question: "Should the future analytics enhancement enter this slice?"
     context: "The selected UI behavior is complete without this later enhancement."
     options: []
@@ -1414,7 +1413,8 @@ test("Delivery Readiness rejects placeholder Required evidence in VO closure", (
 test("ticket files alone do not activate Build Design", (context) => {
   const root = fixture();
   context.after(() => fs.rmSync(root, { recursive: true, force: true }));
-  write(path.join(root, "build", "workflow", "tickets", "example", "sr-001", "sr-001-tickets.yaml"), "ticket_file_version: 3\nscope: responsibility:SR-001\ntickets: []\n");
+  write(path.join(root, "system-model", "architecture.md"), "---\ntype: system-architecture\ndesign_format: 2\n---\n\n# System Architecture\n");
+  write(path.join(root, "build", "workflow", "tickets", "example", "sr-001", "sr-001-tickets.yaml"), "ticket_file_version: 4\nscope: responsibility:SR-001\ntickets: []\n");
 
   const result = run(buildValidator, root);
   assert.equal(result.status, 0, result.stderr);
@@ -2355,3 +2355,270 @@ for (const reference of ['IFACE-001.ACT-002', '[declared target](../../../system
     assert.notEqual(result.status, 0); assert.match(result.stderr, /cannot be excluded: declared Target outcome/);
   });
 }
+
+function addPlanningCapabilityReview(handoff, unit='001', disposition='Existing', changes='`None.`') {
+  const ceiling='`packages/example`';
+  handoff=handoff.replace('## Selected Or Inherited Implementation Shape', `**Writable paths:** ${ceiling}\n\n### OUTPUT-001\n**Output:** API ${unit}\n**Contract:** v2\n**Contract authority:** [Approved selection](../../records/selections/sel-${unit}-runtime.md)\n**Owner:** \`BUILD_UNIT:BU-${unit}\`\n**Writable paths:** ${ceiling}\n**Verification:** Exercise the built public package entrypoint.\n\n## Selected Or Inherited Implementation Shape`);
+  return handoff.replace('### Known Consumer Compatibility Coverage',`**Writable paths:** ${ceiling}\n\n### CAP-001\n**Capability:** Public package implementation and its deterministic verification harness\n**Disposition:** \`${disposition}\`\n**Owner:** \`BUILD_UNIT:BU-${unit}\`\n**Allowed interface:** Approved package export and harness.\n**Required changes:** ${changes}\n**Evidence:** [BU-${unit}](../../units/bu-${unit}-example-unit.md) describes inspected interface and proof route.\n**Verification:** Run the public package and harness procedures.\n\n### Known Consumer Compatibility Coverage`);
+}
+function createCompletePlannedChain(root) {
+  let guides=[];
+  for (let index=1;index<=3;index++) {
+    const n=String(index).padStart(3,'0');const isolated=fixture();createReadyFixture(isolated);
+    const copy=(dir)=>{for(const item of fs.readdirSync(dir,{withFileTypes:true})){const file=path.join(dir,item.name);if(item.isDirectory())copy(file);else{
+      const relative=path.relative(isolated,file).replaceAll('001',n);
+      let content=fs.readFileSync(file,'utf8').replaceAll('001',n).replaceAll('0001',String(index).padStart(4,'0')).replaceAll('INPUT-'+n,'INPUT-001').replaceAll('PSEAM-'+n,'PSEAM-001');
+      if(relative==='build/README.md'){guides.push(content.slice(content.indexOf('### [REPO-')));continue;}
+      if(relative.endsWith(`repo-${n}-example-slice.md`)) content=addPlanningCapabilityReview(content,n);
+      write(path.join(root,relative),content);
+    }}};
+    copy(isolated);fs.rmSync(isolated,{recursive:true,force:true});
+  }
+  write(path.join(root,'build/README.md'),'# Build\n\nThe three independent packages form one delivery cohort.\n\n## Construction At A Glance\n\n'+guides.join('\n'));
+  const domain=path.join(root,'system-model/domains/example/domain.md');write(domain,fs.readFileSync(domain,'utf8').replace('responsibilities: "SR-003"','responsibilities: "SR-001, SR-002, SR-003"'));
+  const dir=path.join(root,'build/workflow/handoffs');
+  const paths=[1,2,3].map(i=>path.join(dir,`repo-00${i}-example-slice.md`));
+  write(path.join(dir,'README.md'),`# Handoff Sequence\n\n**Current order group:** \`1\`\n\n| Order group | Delivery slice | Repository | Build Units | Requires | State |\n| --- | --- | --- | --- | --- | --- |\n${paths.map((p,i)=>`| ${i+1} | [repo-00${i+1}-example-slice](./${path.basename(p)}) | REPO-00${i+1} | BU-00${i+1} | ${i?`repo-00${i}-example-slice`:'None.'} | ${i?'Waiting':'Ready'} |`).join('\n')}\n`);
+  for (const i of [1,2]) {
+    const n=String(i+1).padStart(3,'0'),prev=String(i).padStart(3,'0');
+    const unit=path.join(root,`build/units/bu-${n}-example-unit.md`);
+    write(unit,fs.readFileSync(unit,'utf8').replace('depends_on_build_units: "None."',`depends_on_build_units: "BU-${prev}"`));
+    let handoff=fs.readFileSync(paths[i],'utf8').replace('**Dependencies:** `None.`',`**Dependencies:** \`BUILD_UNIT:BU-${prev}\` — [Producer](../../units/bu-${prev}-example-unit.md)`);
+    handoff=handoff.replace('**Produced by:** `External`',`**Produced by:** \`BUILD_UNIT:BU-${prev}\` — [Producer](../../units/bu-${prev}-example-unit.md)`)
+      .replace('**Producer repository:** `External`',`**Producer repository:** \`REPO-${prev}\``).replace('**Produced at:** `Existing`','**Produced at:** `Implementation`')
+      .replace('**Availability:** `verified existing input`','**Availability:** `planned upstream output`').replace('**Maturity:** `verified`','**Maturity:** `not-applicable`')
+      .replace('## Required Interaction Closure',`**Producer handoff:** [Expected output](./${path.basename(paths[i-1])}#output-001)\n**Expected output:** API ${prev}\n**Expected contract:** v2\n**Consumption point:** Phase 1 built package consumer\n**Availability check:** Acquire exact producer and exercise its public seam with this consumer.\n\n## Required Interaction Closure`)
+      .replace('**Execution-context readiness:** `PASS`','**Execution-context readiness:** `WAITING`')
+      .replace('binds the selected artifact and environment.','binds the environment; planned upstream output awaits earlier order group.')
+      .replace('INPUT-001 is the verified deterministic fixture','INPUT-001 is the planned upstream output');
+    const seam=/### `PSEAM-001`[^\n]*\n([\s\S]*?)(?=^## )/m.exec(handoff)[0];
+    const future=seam.replace('PSEAM-001','PSEAM-002').replace('**Covers:** `INPUT-001`, `Target outcome`','**Covers:** `INPUT-001`')
+      .replace('**Implementation situation:** `existing-unchanged`','**Implementation situation:** `new-output`')
+      .replace('**Producer observation:** `OBSERVED`','**Producer observation:** `PLANNED_UPSTREAM_OUTPUT`')
+      .replace('emits the accepted deterministic value.','declares the expected representation; no actual output is claimed.')
+      .replace('**Candidate compatibility proof:** `NOT_APPLICABLE`','**Candidate compatibility proof:** `PLANNED`')
+      .replace('**Evidence provenance:** `accepted-receipt`','**Evidence provenance:** `planned-proof`')
+      .replace('records the current observation.','defines the scheduled future consumer proof, not observed success.')
+      .replace('**Current result:** `COMPATIBLE`','**Current result:** `AWAITING_UPSTREAM`');
+    handoff=handoff.replace(seam,seam.replace('**Covers:** `INPUT-001`, `Target outcome`','**Covers:** `Target outcome`')+future)
+      .replace('PSEAM-001 confirms compatibility','PSEAM-001 and PSEAM-002 retain target compatibility and planned upstream proof');
+    write(paths[i],handoff);
+  }
+  for(const handoffPath of paths)writeDeliverySnapshot({root,handoffPath});
+  return paths;
+}
+test('complete A/B/C handoffs validate in planning mode before producer implementation, while B/C strict readiness fails',context=>{
+ const root=fixture();context.after(()=>fs.rmSync(root,{recursive:true,force:true}));const handoffs=createCompletePlannedChain(root);
+ for(const [index,handoff] of handoffs.entries()) {
+  const result=spawnSync(process.execPath,[deliveryValidator,'--root',root,'--handoff',handoff,'--validation-mode','planning'],{encoding:'utf8'});
+  assert.equal(result.status,0,result.stderr);
+  const strict=run(deliveryValidator,root,handoff);assert.equal(strict.status,index?1:0,strict.stderr);
+  if(index)assert.match(strict.stderr,/awaits actual compatible|requires PASS.*Execution-context|not executable/);
+ }
+});
+test('planning retains capability scope gates and rejects an adapter beyond a coverage-route ceiling',context=>{
+ const root=fixture();context.after(()=>fs.rmSync(root,{recursive:true,force:true}));const handoff=createReadyFixture(root);
+ write(handoff,addPlanningCapabilityReview(fs.readFileSync(handoff,'utf8'),'001','Selected-slice output','`assurance/adapters/proof.mjs`'));refreshSnapshot(root);
+ const result=spawnSync(process.execPath,[deliveryValidator,'--root',root,'--handoff',handoff,'--validation-mode','planning'],{encoding:'utf8'});
+ assert.equal(result.status,1);assert.match(result.stderr,/changes exceed.*ceiling/);
+});
+test('delivery CLI mode is explicit and build-only/unknown combinations fail',context=>{
+ const root=fixture();context.after(()=>fs.rmSync(root,{recursive:true,force:true}));createReadyFixture(root);
+ for(const [command,mode] of [[buildValidator,'planning'],[buildValidator,'execution'],[deliveryValidator,'unknown']]) {
+  const result=spawnSync(process.execPath,[command,'--root',root,'--validation-mode',mode],{encoding:'utf8'});assert.equal(result.status,1);assert.match(result.stderr,/supported only|Unknown validation mode/);
+ }
+});
+
+test('matching producer fixture evidence enables bounded downstream reconciliation; incompatible evidence still fails',context=>{
+ const root=fixture();context.after(()=>fs.rmSync(root,{recursive:true,force:true}));const handoffs=createCompletePlannedChain(root);
+ const dir=path.dirname(handoffs[0]);
+ write(path.join(dir,'producer-summary.txt'),`# Fixture producer evidence\n**Outcome:** \`COMPLETE\`\n**Output:** API 001\n**Contract:** v2\n**Producer:** \`BUILD_UNIT:BU-001\`\n**Executed snapshot:** \`sha256:${'a'.repeat(64)}\`\n**Executed workpack content:** \`sha256:${'b'.repeat(64)}\`\n`);
+ write(path.join(dir,'consumer-proof.txt'),'# Fixture consumer observation\n**Outcome:** `PASS`\n**Output:** API 001\n**Contract:** v2\n**Consumer:** `BUILD_UNIT:BU-002`\n');
+ const sequence=path.join(dir,'README.md');write(sequence,fs.readFileSync(sequence,'utf8').replace('**Current order group:** `1`','**Current order group:** `2`').replace('| None. | Ready |','| None. | Implemented |').replace('| repo-001-example-slice | Waiting |','| repo-001-example-slice | Ready |'));
+ let b=fs.readFileSync(handoffs[1],'utf8').replace('**Availability:** `planned upstream output`','**Availability:** `verified existing input`').replace('**Maturity:** `not-applicable`','**Maturity:** `verified`')
+ .replace('**Execution-context readiness:** `WAITING`','**Execution-context readiness:** `PASS`')
+ .replace('**Current result:** `AWAITING_UPSTREAM`','**Current result:** `COMPATIBLE`').replace('**Producer observation:** `PLANNED_UPSTREAM_OUTPUT`','**Producer observation:** `OBSERVED`')
+ .replace('**Candidate compatibility proof:** `PLANNED`','**Candidate compatibility proof:** `PASS`').replace('**Evidence provenance:** `planned-proof`','**Evidence provenance:** `accepted-receipt`')
+ .replace('## Required Interaction Closure','**Upstream receipt:** [Actual matching fixture receipt](./producer-summary.txt)\n**Availability evidence:** [Actual matching fixture consumer proof](./consumer-proof.txt)\n\n## Required Interaction Closure');
+ write(handoffs[1],b);writeDeliverySnapshot({root,handoffPath:handoffs[1]});
+ const accepted=run(deliveryValidator,root,handoffs[1]);assert.equal(accepted.status,0,accepted.stderr);
+ write(path.join(dir,'producer-summary.txt'),fs.readFileSync(path.join(dir,'producer-summary.txt'),'utf8').replace('v2','v1'));
+ const rejected=run(deliveryValidator,root,handoffs[1]);assert.equal(rejected.status,1);assert.match(rejected.stderr,/matching completed producer receipt/);
+});
+
+
+test('aggregate planning preserves the same A/B/C rules as individual checks; execution stays strict', context => {
+  const root = fixture(); context.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const handoffs = createCompletePlannedChain(root);
+  for (const handoff of handoffs) {
+    const result = spawnSync(process.execPath, [deliveryValidator, '--root', root, '--handoff', handoff, '--validation-mode', 'planning'], { encoding: 'utf8' });
+    assert.equal(result.status, 0, result.stderr);
+  }
+  const aggregate = mode => spawnSync(process.execPath, [deliveryValidator, '--root', root, '--validation-mode', mode], { encoding: 'utf8' });
+  assert.equal(aggregate('planning').status, 0, aggregate('planning').stderr);
+  const strict = aggregate('execution'); assert.equal(strict.status, 1); assert.match(strict.stderr, /awaits actual compatible upstream output/);
+  assert.equal(run(deliveryValidator, root).status, 1);
+  const build = run(buildValidator, root); assert.equal(build.status, 0, build.stderr);
+  write(handoffs[1], fs.readFileSync(handoffs[1], 'utf8').replace('**Expected contract:** v2', '**Expected contract:** unapproved'));
+  writeDeliverySnapshot({ root, handoffPath: handoffs[1] });
+  const selected = spawnSync(process.execPath, [deliveryValidator, '--root', root, '--handoff', handoffs[1], '--validation-mode', 'planning'], { encoding: 'utf8' });
+  assert.equal(selected.status, 1); assert.match(selected.stderr, /promised output\/contract\/owner/);
+  const invalidAggregate = aggregate('planning'); assert.equal(invalidAggregate.status, 1); assert.match(invalidAggregate.stderr, /promised output\/contract\/owner/);
+});
+
+
+function createNewConsumerScenario(root) {
+  const handoffs = createCompletePlannedChain(root);
+  const dir = path.dirname(handoffs[0]);
+  const isolated = fixture(); createReadyFixture(isolated); addMaterialInteraction(isolated, { availability: 'selected-slice output', conformance: 'Planned' });
+  const initial = fs.readFileSync(path.join(isolated, 'build/workflow/handoffs/repo-001-example-slice.md'), 'utf8');
+  let interaction = initial.match(/## Required Interaction Closure[\s\S]*?(?=\n## Physical Realizability Closure)/)[0].replaceAll('BU-001', 'BU-002').replaceAll('bu-001', 'bu-002');
+  interaction = interaction.replace('**Producer:** `BUILD_UNIT:BU-002` — [BU-002 producer](../../units/bu-002-example-unit.md)', '**Producer:** `BUILD_UNIT:BU-001` — [A producer](../../units/bu-001-example-unit.md)')
+    .replace('**Availability:** `selected-slice output`', '**Availability:** `selected-slice consumer`\n**Proof owner:** `BUILD_UNIT:BU-002` — [New consumer and final proof](../../units/bu-002-example-unit.md)');
+  const contractPath = path.join(root, 'system-model/contracts/interfaces/iface-001-read-state.md');
+  write(contractPath, fs.readFileSync(path.join(isolated, 'system-model/contracts/interfaces/iface-001-read-state.md'), 'utf8').replace('consumers: "None."', 'consumers: "SR-002"'));
+  const binding = fs.readFileSync(path.join(isolated, 'build/units/bu-001-example-unit.md'), 'utf8').match(/\| Logical interaction \|[\s\S]*?(?=\n\n)/)[0];
+  fs.rmSync(isolated, { recursive: true, force: true });
+  for (const n of ['001', '002']) {
+    const unit = path.join(root, `build/units/bu-${n}-example-unit.md`);
+    write(unit, fs.readFileSync(unit, 'utf8').replace('**Material interaction bindings:** `None.` — This isolated unit has no material cross-Build-Unit or external interaction.', binding.replace('Producer and consumer', n === '001' ? 'Producer' : 'Consumer').replace('`Planned`', n === '001' ? '`Verified`' : '`Planned`')));
+    const responsibility = path.join(root, `system-model/domains/example/responsibilities/sr-${n}-example.md`);
+    write(responsibility, fs.readFileSync(responsibility, 'utf8').replace('participates_in: "None."', 'participates_in: "IFACE-001"'));
+  }
+  // Synthetic completed A receipt and actual disposable A bytes; B's consumer is absent.
+  write(path.join(dir, 'a-output.json'), JSON.stringify({ subject: 'subject-1', state: 'active', contract: 'v2' }));
+  const actual = JSON.parse(fs.readFileSync(path.join(dir, 'a-output.json'), 'utf8'));
+  assert.equal(actual.contract, 'v2'); assert.equal(actual.state, 'active');
+  const artifactHash = 'sha256:' + createHash('sha256').update(fs.readFileSync(path.join(dir, 'a-output.json'))).digest('hex');
+  write(path.join(dir, 'a-conformance.txt'), 'Actual fixture A output exposes the approved v2 subject/state representation. No B consumer is implemented or observed.\n');
+  write(path.join(dir, 'existing-compatibility.txt'), 'Existing A reader compatibility probe: subject-1 maps to active. This is an existing reader, not the new B client.\n');
+  const existingReader = value => value.state; assert.equal(existingReader(actual), 'active');
+  write(path.join(dir, 'producer-summary.txt'), `# Synthetic completed A receipt\n**Outcome:** \`COMPLETE\`\n**Output:** API 001\n**Contract:** v2\n**Producer:** \`BUILD_UNIT:BU-001\`\n**Executed snapshot:** \`sha256:${'a'.repeat(64)}\`\n**Executed workpack content:** \`sha256:${'b'.repeat(64)}\`\n`);
+  write(path.join(dir, 'prerequisite-proof.txt'), `# A prerequisite observation for B\n**Scope:** \`prerequisite\`\n**Outcome:** \`PASS\`\n**Output:** API 001\n**Contract:** v2\n**Consumer:** \`BUILD_UNIT:BU-002\`\n**Artifact:** [Actual A bytes](./a-output.json)\n**Artifact identity:** \`${artifactHash}\`\n**Producer identity:** Actual acquired A artifact \`${artifactHash}\`; see linked A conformance observation.\n**Producer conformance:** \`PASS\` — [Observed A representation](./a-conformance.txt)\n**Existing-consumer compatibility:** \`PASS\` — [Existing reader probe](./existing-compatibility.txt)\n`);
+  const dependency = '**Producer handoff:** [Expected output](./repo-001-example-slice.md#output-001)\n**Expected output:** API 001\n**Expected contract:** v2\n**Consumption point:** B implementation consumes A through its public state representation.\n**Availability check:** Verify A exact bytes, v2 conformance and existing-reader compatibility before source edits; final B fitness follows B implementation.\n**Availability evidence scope:** `prerequisite`\n**Upstream receipt:** [A receipt](./producer-summary.txt)\n**Availability evidence:** [Actual prerequisite observation](./prerequisite-proof.txt)\n';
+  interaction += '\n' + dependency;
+  let b = fs.readFileSync(handoffs[1], 'utf8')
+    .replace(/## Required Interaction Closure[\s\S]*?(?=\n## Physical Realizability Closure)/, interaction.trimEnd())
+    .replace(/\*\*Producer handoff:\*\*[\s\S]*?(?=\n## Required Interaction Closure)/, dependency)
+    .replace('**Availability:** `planned upstream output`', '**Availability:** `verified existing input`')
+    .replace('**Maturity:** `not-applicable`', '**Maturity:** `verified`')
+    .replace('**Execution-context readiness:** `WAITING`', '**Execution-context readiness:** `PASS`')
+    .replace(/^\*\*Interaction closure:\*\*.*$/m, '**Interaction closure:** `PASS` — INT-001 [B consumer](../../units/bu-002-example-unit.md) owns final fitness; A prerequisite is verified.')
+    .replace('**Required interactions:** `None.`', '**Required interactions:** `IFACE-001.ACT-001`');
+  const seam = b.match(/### `PSEAM-002`[^\n]*\n[\s\S]*?(?=^## )/m)[0];
+  const owned = seam.replace('**Covers:** `INPUT-001`', '**Covers:** `INPUT-001`, `INT-001`')
+    .replace('**Producer observation:** `PLANNED_UPSTREAM_OUTPUT`', '**Producer observation:** `OBSERVED`')
+    .replace('declares the expected representation; no actual output is claimed.', 'is observed in [A prerequisite evidence](./prerequisite-proof.txt); B fitness is not observed.')
+    .replace(/^\*\*Consumer observation:\*\*.*$/m, '**Consumer observation:** `SELECTED_SLICE_OUTPUT` — [B owner](../../units/bu-002-example-unit.md) will implement the new consumer and final proof; no B fitness is observed.')
+    .replace('**Current result:** `AWAITING_UPSTREAM`', '**Current result:** `DELTA_OWNED`')
+    .replace('**Delta owner:** `None.`', '**Delta owner:** `BUILD_UNIT:BU-002`');
+  b = b.replace(seam, owned);
+  // All B construction and its proof harness are inside the approved ceiling.
+  b = b.replace('**Disposition:** `Existing`', '**Disposition:** `Selected-slice output`').replace('**Required changes:** `None.`', '**Required changes:** `packages/example/state-client.mjs`, `packages/example/state-client.test.mjs`');
+  write(handoffs[1], b);
+  const sequence = path.join(dir, 'README.md');
+  write(sequence, fs.readFileSync(sequence, 'utf8').replace('**Current order group:** `1`', '**Current order group:** `2`').replace('| None. | Ready |', '| None. | Implemented |').replace('| repo-001-example-slice | Waiting |', '| repo-001-example-slice | Ready |'));
+  writeDeliverySnapshot({ root, handoffPath: handoffs[1] });
+  return { root, handoff: handoffs[1], dir };
+}
+
+test('a verified A prerequisite permits owned new B consumer implementation without claiming final consumer fitness', context => {
+  const root = fixture(); context.after(() => fs.rmSync(root, { recursive: true, force: true }));
+  const f = createNewConsumerScenario(root);
+  assert.equal(fs.existsSync(path.join(root, 'packages/example/state-client.mjs')), false);
+  const ready = run(deliveryValidator, root, f.handoff); assert.equal(ready.status, 0, ready.stderr);
+  const proof = path.join(f.dir, 'prerequisite-proof.txt'); const original = fs.readFileSync(proof, 'utf8');
+  write(proof, original.replace('**Existing-consumer compatibility:** `PASS`', '**Existing-consumer compatibility:** `Planned`'));
+  const incompatibleExisting = run(deliveryValidator, root, f.handoff); assert.equal(incompatibleExisting.status, 1); assert.match(incompatibleExisting.stderr, /existing-consumer compatibility/);
+  write(proof, original);
+  write(path.join(f.dir, 'a-output.json'), '{}');
+  const stale = run(deliveryValidator, root, f.handoff); assert.equal(stale.status, 1); assert.match(stale.stderr, /exact artifact identity/);
+});
+
+
+function consumerWorkpack(f, workspace) {
+  const handoff = fs.readFileSync(f.handoff, 'utf8');
+  const wp = path.join(workspace, 'delivery-workpacks/repo-002-example-slice/WORKPACK.md');
+  const handoffDir = path.dirname(f.handoff); const wpDir = path.dirname(wp);
+  const field = (body, name) => new RegExp('^\\*\\*' + name + ':\\*\\*\\s*(.+)$', 'm').exec(body)?.[1] || '';
+  const records = kind => [...handoff.matchAll(new RegExp('^### `?(' + kind + '-\\d{3})`?[^\\n]*\\n([\\s\\S]*?)(?=^#{1,3} |$(?![\\s\\S]))', 'gm'))].map(m => ({ id: m[1], body: m[2] }));
+  const rebase = value => value.replace(/\[([^\]]+)\]\(([^)#]+)(#[^)]*)?\)/g, (_, label, file, anchor = '') => `[${label}](${path.relative(wpDir, path.resolve(handoffDir, file)).split(path.sep).join('/')}${anchor})`);
+  const ref = path.relative(wpDir, f.handoff).split(path.sep).join('/');
+  let obligations = '## Stage 9 Obligation Coverage\n';
+  for (const kind of ['INPUT', 'INT']) for (const record of records(kind)) {
+    obligations += `### \`${record.id}\` — ${kind === 'INT' ? '`IFACE-001.ACT-001`' : 'Actual A prerequisite'}\n- **Handoff source:** [${record.id}](${ref}#${record.id.toLowerCase()})\n`;
+    const names = kind === 'INPUT' ? ['Availability', 'Produced by'] : ['Consumer', 'Producer', 'Proof owner', 'Required at', 'Availability', 'Required evidence classes'];
+    for (const name of [...names, 'Producer handoff', 'Expected output', 'Expected contract', 'Consumption point', 'Availability check', 'Availability evidence scope', 'Upstream receipt', 'Availability evidence']) obligations += `- **${name}:** ${rebase(field(record.body, name))}\n`;
+    obligations += '- **Handling:** Verify A prerequisite before construction; implement B and run final consumer proof afterwards.\n- **Coverage:** `VE-001`\n';
+    if (kind === 'INT') obligations += '- **High-risk cases:** `None.`\n';
+    obligations += '\n';
+  }
+  for (const record of records('PSEAM')) {
+    obligations += `### \`${record.id}\` — B physical seam\n- **Handoff source:** [${record.id}](${ref}#${record.id.toLowerCase()})\n`;
+    for (const [name, source] of [['Handoff result', 'Current result'], ['Implementation situation', 'Implementation situation'], ['Boundary class', 'Boundary class'], ['Candidate compatibility proof', 'Candidate compatibility proof'], ['Evidence provenance', 'Evidence provenance']]) obligations += `- **${name}:** ${rebase(field(record.body, source))}\n`;
+    obligations += '- **Handling:** Preserve verified A; implement B and prove B consumer fitness.\n- **Direct change-impact handling:** Keep source, tests, fixtures, manifests, generated surfaces and evidence inside the approved B ceiling.\n- **Required-command-effect handling:** Preserve approved command-effect limits.\n- **Coverage:** `VE-001`\n- **Protected-boundary compatibility:** `PB-001` — approved contract remains unchanged.\n\n';
+  }
+  obligations += `**Verification obligations:** \`None.\` — [VO-free selected scope](${ref}#allowed-delivery-slice)\n\n`;
+  const snapshot = field(handoff, 'Snapshot ID').replaceAll('`', '');
+  const template = fs.readFileSync(path.join(skillRoot, 'tests/support/new-consumer-workpack.md'), 'utf8');
+  let workpack = template.replaceAll('sha256:SNAPSHOT', snapshot).replaceAll('sha256-SNAPSHOT', snapshot.replace(':', '-'))
+    .replace(/## Stage 9 Obligation Coverage[\s\S]*?(?=## Delivery Responsibility Coverage)/, obligations)
+    .replace('handoff declares no interaction obligations.', 'INT-001 preserves the final consumer-fitness obligation.')
+    .replace('| Upstream Build Unit |', '| Interface contract | IFACE-001 | IFACE-001 | [Contract](../../software-design/system-model/contracts/interfaces/iface-001-read-state.md) | Consumer behavior. |\n| Upstream Build Unit |');
+  write(wp, workpack);
+  return wp;
+}
+
+// Paths are supplied explicitly by the test caller; this portable skill does not locate another installation.
+const planningIntegrationSkill = process.env.DELIVERY_PLANNING_SKILL;
+const executionIntegrationSkill = process.env.DELIVERY_EXECUTION_SKILL;
+test('full handoff/workpack/start/completion path separates A prerequisites from final new B consumer fitness', {
+  skip: !planningIntegrationSkill || !executionIntegrationSkill,
+}, context => {
+  const workspace = fixture(); context.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
+  const root = path.join(workspace, 'software-design'); const f = createNewConsumerScenario(root);
+  const workpack = consumerWorkpack(f, workspace);
+  const validateWorkpack = () => spawnSync(process.execPath, [path.join(planningIntegrationSkill, 'scripts/validate-workpack.mjs'), '--workpack', workpack, '--software-design-skill', skillRoot, '--validation-mode', 'execution'], { encoding: 'utf8' });
+  const ready = validateWorkpack(); assert.equal(ready.status, 0, ready.stderr);
+  assert.equal(fs.existsSync(path.join(root, 'packages/example/state-client.mjs')), false);
+  const originalWorkpack = fs.readFileSync(workpack, 'utf8');
+  write(workpack, originalWorkpack.replace('- **Evidence scope:** `consumer-fitness`', '- **Evidence scope:** `prerequisite`'));
+  const noFinalRoute = validateWorkpack(); assert.equal(noFinalRoute.status, 1); assert.match(noFinalRoute.stderr, /mapped final VE/);
+  write(workpack, originalWorkpack.replace('- **Availability evidence scope:** `prerequisite`', '- **Availability evidence scope:** `consumer-fitness`'));
+  const substituted = validateWorkpack(); assert.equal(substituted.status, 1); assert.match(substituted.stderr, /preserve upstream dependency/);
+  write(workpack, originalWorkpack);
+  const artifact = path.join(f.dir, 'a-output.json'); const bytes = fs.readFileSync(artifact);
+  fs.rmSync(artifact); const missing = validateWorkpack(); assert.equal(missing.status, 1); assert.match(missing.stderr, /exact artifact identity|Broken handoff link/); write(artifact, bytes);
+  const receipt = path.join(f.dir, 'producer-summary.txt'); const originalReceipt = fs.readFileSync(receipt, 'utf8');
+  write(receipt, originalReceipt.replace('**Contract:** v2', '**Contract:** v1')); const incompatible = validateWorkpack(); assert.equal(incompatible.status, 1); assert.match(incompatible.stderr, /matching completed producer receipt/); write(receipt, originalReceipt);
+  const proof = path.join(f.dir, 'prerequisite-proof.txt'); const originalProof = fs.readFileSync(proof, 'utf8');
+  write(proof, originalProof.replace('**Existing-consumer compatibility:** `PASS`', '**Existing-consumer compatibility:** `Planned`'));
+  const existing = validateWorkpack(); assert.equal(existing.status, 1); assert.match(existing.stderr, /existing-consumer compatibility/); write(proof, originalProof);
+  const originalHandoff = fs.readFileSync(f.handoff, 'utf8');
+  for (const [mutation, error] of [
+    [text => text.replace('**Availability:** `selected-slice consumer`', '**Availability:** `verified existing interaction`'), /existing consumer fitness cannot be deferred|requires a fresh independent consumer/],
+    [text => text.replace('**Proof owner:** `BUILD_UNIT:BU-002`', '**Proof owner:** `BUILD_UNIT:BU-001`'), /writable consumer\/proof owner|Proof owner/],
+    [text => text.replace('`packages/example/state-client.test.mjs`', '`assurance/adapters/unapproved.mjs`'), /changes exceed.*ceiling/],
+  ]) {
+    write(f.handoff, mutation(originalHandoff)); writeDeliverySnapshot({ root, handoffPath: f.handoff });
+    // Keep snapshot and exact projection current so the actual semantic gate is exercised.
+    consumerWorkpack(f, workspace);
+    const blocked = validateWorkpack(); assert.equal(blocked.status, 1); assert.match(blocked.stderr, error);
+  }
+  write(f.handoff, originalHandoff); writeDeliverySnapshot({ root, handoffPath: f.handoff }); consumerWorkpack(f, workspace);
+  const repository = path.join(workspace, 'synthetic-b-evidence'); fs.mkdirSync(repository);
+  const start = spawnSync(process.execPath, [path.join(executionIntegrationSkill, 'scripts/execution-record.mjs'), '--mode', 'start', '--validation-mode', 'execution', '--workpack', workpack, '--repository', repository, '--planning-skill', planningIntegrationSkill, '--software-design-skill', skillRoot], { encoding: 'utf8' });
+  assert.equal(start.status, 0, start.stderr);
+  const summaryPath = start.stdout.trim(); const startText = fs.readFileSync(summaryPath, 'utf8');
+  const snapshot = /\*\*Executed snapshot:\*\* `(sha256:[a-f0-9]+)`/.exec(startText)[1];
+  const content = /\*\*Executed workpack content:\*\* `(sha256:[a-f0-9]+)`/.exec(startText)[1];
+  const evidenceDir = path.join(repository, 'delivery-evidence');
+  write(path.join(evidenceDir, 'README.md'), `**Latest implemented snapshot:** \`${snapshot}\`\n**Latest execution summary:** [Summary](./executions/${snapshot.replace(':', '-')}/SUMMARY.md)\n`);
+  write(path.join(evidenceDir, 'IMPLEMENTATION-DELIVERY-REPORT.md'), `**Implemented snapshot:** \`${snapshot}\`\n**Executed snapshot:** \`${snapshot}\`\n**Executed workpack content:** \`${content}\`\n**Outcome:** \`COMPLETE\`\n**Execution summary:** [Summary](./executions/${snapshot.replace(':', '-')}/SUMMARY.md)\n`);
+  const completion = (status, scope) => startText.replace('**Outcome:** `IN_PROGRESS`', '**Outcome:** `COMPLETE`') + `\n**Implemented snapshot:** \`${snapshot}\`\n\n## Acceptance Criteria\n### AC-001: B behavior\n- **Status:** \`PASS\`\n- **Evidence:** \`VE-001\`\n- **Observed result:** Synthetic completion schema fixture only.\n\n## Verification Evidence\n### VE-001: B consumer fitness\n- **Supports:** \`AC-001\`\n- **Status:** \`${status}\`\n- **Evidence scope:** \`${scope}\`\n- **Procedure:** B public client integration cases.\n- **Observed result:** Synthetic completed B observation; no application was implemented.\n- **Artifacts:** \`None.\`\n`;
+  const validateCompletion = () => spawnSync(process.execPath, [path.join(executionIntegrationSkill, 'scripts/validate-delivery-evidence.mjs'), '--workpack', workpack, '--repository', repository], { encoding: 'utf8' });
+  write(summaryPath, completion('Planned', 'consumer-fitness')); const pending = validateCompletion(); assert.equal(pending.status, 1); assert.match(pending.stderr, /summary status must be PASS/);
+  write(summaryPath, completion('PASS', 'prerequisite')); const producerOnly = validateCompletion(); assert.equal(producerOnly.status, 1); assert.match(producerOnly.stderr, /prerequisite\/producer\/fixture/);
+  // Schema acceptance of a synthetic final observation; this does not execute or prove B application behavior.
+  write(summaryPath, completion('PASS', 'consumer-fitness')); const completeSchema = validateCompletion(); assert.equal(completeSchema.status, 0, completeSchema.stderr);
+});

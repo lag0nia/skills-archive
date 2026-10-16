@@ -1,0 +1,40 @@
+## 1. Existing PDFs (copied from the final export) checked against the unchanged package
+current: pdf/bitcoin-backed-usdc-one-loan-system-architecture.pdf
+current: pdf/bitcoin-backed-usdc-one-loan-system-domain-loan-terms-and-commitments.pdf
+current: pdf/bitcoin-backed-usdc-one-loan-system-domain-bitcoin-authorization-and-recovery.pdf
+current: pdf/bitcoin-backed-usdc-one-loan-system-domain-base-usdc-settlement-and-funding.pdf
+current: pdf/bitcoin-backed-usdc-one-loan-system-domain-base-observation-and-fallback-review.pdf
+current: pdf/bitcoin-backed-usdc-one-loan-system-domain-participant-access-and-loan-operations.pdf
+exit=0
+current: pdf/bitcoin-backed-usdc-one-loan-system-system-guide.pdf
+exit=0
+## 2. Apply the owner and guide change
+19 replacements in 15 files
+## 3. Check the PDFs after the change
+stale: pdf/bitcoin-backed-usdc-one-loan-system-architecture.pdf
+current: pdf/bitcoin-backed-usdc-one-loan-system-domain-loan-terms-and-commitments.pdf
+current: pdf/bitcoin-backed-usdc-one-loan-system-domain-bitcoin-authorization-and-recovery.pdf
+stale: pdf/bitcoin-backed-usdc-one-loan-system-domain-base-usdc-settlement-and-funding.pdf
+stale: pdf/bitcoin-backed-usdc-one-loan-system-domain-base-observation-and-fallback-review.pdf
+current: pdf/bitcoin-backed-usdc-one-loan-system-domain-participant-access-and-loan-operations.pdf
+exit=1
+stale: pdf/bitcoin-backed-usdc-one-loan-system-system-guide.pdf
+exit=1
+## 4. Re-export
+written: pdf/bitcoin-backed-usdc-one-loan-system-architecture.pdf (14 pages)
+written: pdf/bitcoin-backed-usdc-one-loan-system-domain-base-usdc-settlement-and-funding.pdf (3 pages)
+written: pdf/bitcoin-backed-usdc-one-loan-system-domain-base-observation-and-fallback-review.pdf (4 pages)
+unchanged: pdf/bitcoin-backed-usdc-one-loan-system-domain-loan-terms-and-commitments.pdf
+unchanged: pdf/bitcoin-backed-usdc-one-loan-system-domain-bitcoin-authorization-and-recovery.pdf
+unchanged: pdf/bitcoin-backed-usdc-one-loan-system-domain-participant-access-and-loan-operations.pdf
+written: pdf/bitcoin-backed-usdc-one-loan-system-system-guide.pdf (30 pages)
+## 5. Check again
+current: pdf/bitcoin-backed-usdc-one-loan-system-architecture.pdf
+current: pdf/bitcoin-backed-usdc-one-loan-system-domain-loan-terms-and-commitments.pdf
+current: pdf/bitcoin-backed-usdc-one-loan-system-domain-bitcoin-authorization-and-recovery.pdf
+current: pdf/bitcoin-backed-usdc-one-loan-system-domain-base-usdc-settlement-and-funding.pdf
+current: pdf/bitcoin-backed-usdc-one-loan-system-domain-base-observation-and-fallback-review.pdf
+current: pdf/bitcoin-backed-usdc-one-loan-system-domain-participant-access-and-loan-operations.pdf
+exit=0
+current: pdf/bitcoin-backed-usdc-one-loan-system-system-guide.pdf
+exit=0

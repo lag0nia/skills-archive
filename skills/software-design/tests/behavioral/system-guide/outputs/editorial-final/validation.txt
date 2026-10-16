@@ -1,0 +1,7 @@
+Structure validation: no new findings against T23 after normalizing disposable root paths. Both exit 1 for the same inherited runtime/UI evidence findings.
+
+Runtime evidence: missing, stale, or mismatched candidate/resource identity.
+<package>/ui-ux/alternatives/role-split: must include a meaningful product action.
+<package>/ui-ux/alternatives/role-split: must expose a next step from a representative outcome.
+<package>/ui-ux/alternatives/role-split: must include representative cancellation behavior.
+<package>/ui-ux/alternatives/role-split: must include representative failure recovery behavior.

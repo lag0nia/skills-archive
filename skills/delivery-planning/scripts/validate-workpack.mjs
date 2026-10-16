@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import { validationMode } from "./lib/validation-mode.mjs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
@@ -64,11 +65,13 @@ const EXECUTION_PREFLIGHT_FIELDS = [
 ];
 
 function parseArgs(argv) {
-  const args = { workpack: null, softwareDesignSkill: null };
+  const args = { workpack: null, softwareDesignSkill: null, validationMode: "execution" };
+  let modeSeen = false;
   for (let index = 2; index < argv.length; index += 1) {
     const value = argv[index];
     if (value === "--workpack") args.workpack = argv[++index];
     else if (value === "--software-design-skill") args.softwareDesignSkill = argv[++index];
+    else if (value === "--validation-mode") { if (modeSeen) throw new Error("Duplicate --validation-mode."); modeSeen = true; args.validationMode = validationMode(argv[++index] || ""); }
     else throw new Error("Unknown argument: " + value);
   }
   if (!args.workpack || !args.softwareDesignSkill) {
@@ -297,7 +300,7 @@ function validateWorkpackLocation({ workpackPath, handoffPath, errors }) {
   }
 }
 
-function validateCurrentHandoff({ handoffPath, softwareDesignSkill, errors }) {
+function validateCurrentHandoff({ handoffPath, softwareDesignSkill, errors, mode }) {
   const wrapper = path.resolve(SCRIPT_DIR, "validate-stage9-handoff.mjs");
   if (!fs.existsSync(wrapper)) {
     errors.push("Delivery Planning lacks scripts/validate-stage9-handoff.mjs: " + wrapper + ".");
@@ -306,6 +309,7 @@ function validateCurrentHandoff({ handoffPath, softwareDesignSkill, errors }) {
   const softwareDesignRoot = path.resolve(path.dirname(handoffPath), "..", "..", "..");
   const result = spawnSync(process.execPath, [
     wrapper,
+    "--validation-mode", mode,
     "--software-design-skill",
     softwareDesignSkill,
     "--root",
@@ -331,7 +335,7 @@ function sourceResponsibilities(buildUnitPath) {
   return unique(ids(value, /SR-\d{3,}/g));
 }
 
-function validate(workpackPath, softwareDesignSkill) {
+function validate(workpackPath, softwareDesignSkill, mode) {
   const errors = [];
   const text = fs.readFileSync(workpackPath, "utf8");
   const baseDir = path.dirname(workpackPath);
@@ -450,7 +454,7 @@ function validate(workpackPath, softwareDesignSkill) {
     } else if (workpackSnapshot && workpackSnapshot !== handoffSnapshot) {
       errors.push("WORKPACK.md Software Design snapshot does not match the linked Stage 9 handoff Snapshot ID.");
     }
-    validateCurrentHandoff({ handoffPath, softwareDesignSkill, errors });
+    validateCurrentHandoff({ handoffPath, softwareDesignSkill, errors, mode });
 
     handoffSelectedScopes = unique(ids(field(handoff, "Selected build units"), /BUILD_UNIT:BU-\d{3,}/g));
     handoffWritableScopes = unique(ids(field(handoff, "Writable build units"), /BUILD_UNIT:BU-\d{3,}/g));
@@ -535,14 +539,18 @@ function validate(workpackPath, softwareDesignSkill) {
     errors.push("Delivery Scope selected Build Units do not match the linked Stage 9 handoff.");
   }
   const deliveryRoles = new Map();
+
   if (handoffPhysicalRealizability.length) {
     for (const scope of selectedScopes) {
       const roleLines = selectedBody.split("\n").filter((line) => line.includes(scope));
-      const roles = unique(roleLines.flatMap((line) => [...line.matchAll(/`(Target|Existing prerequisite)`/g)].map((match) => match[1])));
+      const roles = unique(roleLines.flatMap((line) => [...line.matchAll(/`(Target|Existing prerequisite|Planned prerequisite)`/g)].map((match) => match[1])));
       if (roleLines.length !== 1 || roles.length !== 1) {
-        errors.push(scope + " must appear once under Selected Build Units with exactly one `Target` or `Existing prerequisite` role.");
+        errors.push(scope + " must appear once under Selected Build Units with exactly one `Target`, `Existing prerequisite`, or `Planned prerequisite` role.");
       } else {
         deliveryRoles.set(scope, roles[0]);
+        const plannedForScope = [...handoffInputs, ...handoffInteractions].some((item) => normalizedField(field(item.body, "Availability")) === "planned upstream output" && (field(item.body, "Produced by") || field(item.body, "Producer") || "").includes(scope));
+        if (roles[0] === "Planned prerequisite" && !plannedForScope) errors.push(scope + " Planned prerequisite role requires a defined planned upstream dependency.");
+        if (roles[0] === "Existing prerequisite" && plannedForScope) errors.push(scope + " cannot label a planned upstream output Existing prerequisite.");
       }
     }
     if (![...deliveryRoles.values()].includes("Target")) {
@@ -697,6 +705,12 @@ function validate(workpackPath, softwareDesignSkill) {
     if (!handoffPath || !citesHandoffEntry(field(obligation.body, "Handoff source"), baseDir, handoffPath, obligation.id)) {
       errors.push(obligation.id + " **Handoff source:** must link its exact entry in the selected Stage 9 handoff.");
     }
+    const upstreamDependency = handoffInputs.find((record) => record.id === obligation.id);
+    if (normalizedField(field(upstreamDependency?.body || "", "Availability")) === "planned upstream output" || field(upstreamDependency?.body || "", "Producer handoff")) {
+      for (const name of ["Availability", "Produced by", "Producer handoff", "Expected output", "Expected contract", "Consumption point", "Availability check", ...(field(upstreamDependency.body, "Availability evidence scope") ? ["Availability evidence scope"] : []), ...(field(upstreamDependency.body, "Upstream receipt") ? ["Upstream receipt"] : []), ...(field(upstreamDependency.body, "Availability evidence") ? ["Availability evidence"] : [])]) {
+        if (interactionProjectionValue(field(obligation.body, name), baseDir) !== interactionProjectionValue(field(upstreamDependency.body, name), path.dirname(handoffPath))) errors.push(obligation.id + " must preserve upstream dependency **" + name + ":** exactly.");
+      }
+    }
     if (!meaningful(field(obligation.body, "Handling"))) errors.push(obligation.id + " lacks concrete **Handling:**.");
     const coverageValue = field(obligation.body, "Coverage");
     const mapped = unique(ids(coverageValue, /(?:AC|VE)-\d{3}|LGATE-\d{3}/g));
@@ -739,8 +753,10 @@ function validate(workpackPath, softwareDesignSkill) {
     }
     const gatedInteraction = normalizedField(field(upstream?.body || "", "Availability")) === "later-lifecycle output";
     const externalConsumer = /^`External`(?:\s|$)/.test(field(upstream?.body || "", "Consumer") || "");
-    if (gatedInteraction || externalConsumer) {
-      const preserved = ["Consumer", "Producer", "Proof owner", "Required at", "Availability"];
+    const upstreamPlanned = normalizedField(field(upstream?.body || "", "Availability")) === "planned upstream output" || Boolean(field(upstream?.body || "", "Producer handoff"));
+    if (gatedInteraction || externalConsumer || upstreamPlanned) {
+      const preserved = ["Consumer", "Producer", ...(gatedInteraction || externalConsumer || field(upstream?.body || "", "Proof owner") ? ["Proof owner"] : []), "Required at", "Availability"];
+      if (upstreamPlanned) preserved.push("Producer handoff", "Expected output", "Expected contract", "Consumption point", "Availability check", ...(field(upstream.body, "Availability evidence scope") ? ["Availability evidence scope"] : []), ...(field(upstream.body, "Upstream receipt") ? ["Upstream receipt"] : []), ...(field(upstream.body, "Availability evidence") ? ["Availability evidence"] : []));
       if (gatedInteraction) preserved.push("Later-lifecycle gate", "Lifecycle inputs", "Current-profile inputs", "Current-profile availability", "Current-profile verification");
       for (const name of preserved) {
         const expected = field(upstream?.body || "", name);
@@ -785,6 +801,13 @@ function validate(workpackPath, softwareDesignSkill) {
     } else if (upstream) {
       errors.push(obligation.id + " has no valid upstream risk classification.");
     }
+  }
+
+  for (const obligation of [...inputObligations, ...interactionObligations]) {
+    if (normalizedField(field(obligation.body, "Availability evidence scope")) !== "prerequisite") continue;
+    const finalProof = unique(ids(field(obligation.body, "Coverage"), /VE-\d{3}/g)).some((id) =>
+      normalizedField(field(evidence.find((record) => record.id === id)?.body || "", "Evidence scope")) === "consumer-fitness");
+    if (!finalProof) errors.push(obligation.id + " prerequisite evidence must retain a mapped final VE with Evidence scope consumer-fitness; producer availability does not discharge final proof.");
   }
 
   if (handoffPhysicalRealizability.length) {
@@ -932,10 +955,10 @@ function validate(workpackPath, softwareDesignSkill) {
       if (role === "Target" && !dispositions.includes("Deliver")) {
         errors.push(scope + " is a Target but has no Deliver RCOV entry.");
       }
-      if (role === "Existing prerequisite") {
-        if (dispositions.includes("Deliver")) errors.push(scope + " is an Existing prerequisite but has a Deliver RCOV entry.");
-        if (!dispositions.includes("Existing prerequisite")) {
-          errors.push(scope + " is an Existing prerequisite but has no verification-only Existing prerequisite RCOV entry.");
+      if (["Existing prerequisite", "Planned prerequisite"].includes(role)) {
+        if (dispositions.includes("Deliver")) errors.push(scope + " is an " + role + " but has a Deliver RCOV entry.");
+        if (!dispositions.includes(role)) {
+          errors.push(scope + " is an " + role + " but has no verification-only " + role + " RCOV entry.");
         }
       }
     }
@@ -965,7 +988,7 @@ function validate(workpackPath, softwareDesignSkill) {
     if (!links.length || !links.some((target) => fs.existsSync(target))) {
       errors.push(record.id + " **Canonical responsibility:** must cite an existing canonical local link.");
     }
-    const disposition = field(record.body, "Disposition")?.match(/^`(Deliver|Existing prerequisite|Excluded by Stage 9)`$/)?.[1] || null;
+    const disposition = field(record.body, "Disposition")?.match(/^`(Deliver|Existing prerequisite|Planned prerequisite|Excluded by Stage 9)`$/)?.[1] || null;
     if (!disposition) errors.push(record.id + " has an invalid **Disposition:**.");
     const coverageValue = field(record.body, "Coverage");
     if (!meaningful(coverageValue)) errors.push(record.id + " lacks concrete **Coverage:**.");
@@ -974,9 +997,9 @@ function validate(workpackPath, softwareDesignSkill) {
       if (!mapped.length) errors.push(record.id + " Deliver disposition must map to at least one AC-xxx.");
       for (const id of mapped) if (!acceptanceIds.has(id)) errors.push(record.id + " maps to unknown " + id + ".");
     }
-    if (disposition === "Existing prerequisite") {
+    if (["Existing prerequisite", "Planned prerequisite"].includes(disposition)) {
       const mapped = unique(ids(coverageValue, /VE-\d{3}/g));
-      if (!mapped.length) errors.push(record.id + " Existing prerequisite disposition must map to at least one VE-xxx.");
+      if (!mapped.length) errors.push(record.id + " " + disposition + " disposition must map to at least one VE-xxx.");
       for (const id of mapped) if (!evidenceIds.has(id)) errors.push(record.id + " maps to unknown " + id + ".");
     }
     if (disposition === "Excluded by Stage 9") {
@@ -1083,8 +1106,8 @@ function validate(workpackPath, softwareDesignSkill) {
   ];
   for (const name of reviewFields) {
     const value = field(review, name);
-    const match = /^`(PASS|BLOCKED)`\s*(?:—|-)\s*(.+)$/.exec(value || "");
-    if (!match || match[1] !== "PASS" || !meaningful(match[2])) {
+    const match = /^`(PASS|BLOCKED|WAITING)`\s*(?:—|-)\s*(.+)$/.exec(value || "");
+    if (!match || (match[1] !== "PASS" && !(mode === "planning" && name === "Execution eligibility" && match[1] === "WAITING")) || !meaningful(match[2])) {
       errors.push("Workpack Integrity Review **" + name + ":** must be `PASS` with a concrete conclusion.");
       continue;
     }
@@ -1182,12 +1205,13 @@ try {
   const args = parseArgs(process.argv);
   const workpackPath = path.resolve(args.workpack);
   if (!fs.existsSync(workpackPath)) throw new Error("Workpack does not exist: " + workpackPath);
-  const errors = validate(workpackPath, path.resolve(args.softwareDesignSkill));
+  const errors = validate(workpackPath, path.resolve(args.softwareDesignSkill), args.validationMode);
   if (errors.length) {
     console.error("Workpack integrity validation failed:");
     for (const error of errors) console.error("- " + error);
     process.exitCode = 1;
   } else {
+    console.log("VALIDATION_MODE: " + args.validationMode + "; STRUCTURAL_CHECKS_ONLY; planning does not authorize implementation.");
     console.log("Verified workpack/handoff scope and source closure, current Stage 9 readiness, exact INPUT/INT/PSEAM/VO obligation and LGATE projection, applicable UI/UX source and journey coverage, target/prerequisite roles, bounded environment preflight when required, repository guidance routing, responsibility and protected-boundary coverage, AC/VE content and reciprocity, snapshot-scoped delivery-evidence contract, phase contract, and integrity receipt.");
   }
 } catch (error) {

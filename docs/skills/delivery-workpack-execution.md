@@ -36,6 +36,6 @@ Ask the agent to use `delivery-workpack-execution` for the task described above.
 
 ## Source
 
-Imported from [Alangr6/ai-prompts](https://github.com/Alangr6/ai-prompts/tree/ef249ef32d4e50183d4669741332a4d51078ce40/skills/blueprint-development/delivery/delivery-workpack-execution) at revision `ef249ef32d4e50183d4669741332a4d51078ce40`. The complete directory is retained, including its tests and any third-party notices. The repository-level software-design.zip and all legacy skills are excluded.
+Imported byte-for-byte from [Alangr6/ai-prompts](https://github.com/Alangr6/ai-prompts/tree/1499c5dcdf540b89500aa3d2b0e0d4671119ec35/skills/blueprint-development/delivery/delivery-workpack-execution) at revision `1499c5dcdf540b89500aa3d2b0e0d4671119ec35`. The complete tracked directory is retained, including tests, assets and third-party notices. There are no local adaptations. The repository-level software-design.zip and all legacy skills are excluded.
 
 The upstream repository does not declare a repository-wide license in this revision. This import does not assert a new license for upstream material; preserve any included notices.

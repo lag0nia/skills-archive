@@ -38,7 +38,7 @@ Use one `executions/sha256-<digest>/SUMMARY.md` for the workpack. Record:
 
 AC and VE identifiers are local to this workpack snapshot. Do not continue a repository-global VE number sequence and do not create a Markdown file per VE. A concise result belongs directly in `SUMMARY.md`.
 
-Initialize the summary as `IN_PROGRESS` before implementation using `scripts/execution-record.mjs`; preserve its start fields. Finalize the summary only after every required VE passes. If execution stops or remains incomplete, do not create a `COMPLETE` summary and do not advance the implementation report or README.
+Initialize the summary as `IN_PROGRESS` before implementation using `scripts/execution-record.mjs`; preserve its start fields. Finalize the summary only after every required VE passes. When a final VE declares `Evidence scope: consumer-fitness`, preserve that scope in its SUMMARY record and report the actual implemented consumer observation. Prerequisite/producer/fixture-only evidence and scheduled proof cannot discharge it. If execution stops or remains incomplete, do not create a `COMPLETE` summary and do not advance the implementation report or README.
 
 ## UI/UX Delivery Review
 
@@ -134,3 +134,5 @@ node <execution-skill-directory>/scripts/validate-delivery-evidence.mjs \
 ```
 
 This mode checks current readiness and requires identical workpack content except propagation of the handoff snapshot and snapshot-derived paths. It validates the old execution basis, not execution of the new ID. A broader truthful documentation-only change requires reviewed reconciliation of the complete difference; this narrow automated mode cannot certify its semantics. Such review does not require reimplementation or a no-op workpack, and must retain the executed identities and distinguish reconciled documentation from executed acceptance. Implementation-impacting changes always require real execution of the current delta workpack.
+
+A planning refresh preserves prior implemented receipts even when the current plan is newer. Before execution bind actual prerequisite outputs to their expected contract and capture the final exact workpack identity. See [planning-execution-contract.md](planning-execution-contract.md).

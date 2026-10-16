@@ -25,6 +25,7 @@ function writeSystemModel(root, responsibilityId = "SR-001") {
   const responsibilitySlug = responsibilityId.toLowerCase();
   write(path.join(root, "system-model", "architecture.md"), `---
 type: system-architecture
+design_format: 2
 name: Example system
 domains: "example"
 global_invariants: "None."
@@ -128,23 +129,6 @@ function writeBlueprintFixture(workspace, responsibilityId = "SR-001") {
   const root = path.join(workspace, "software-design");
   const brief = path.join(workspace, "software-brief.md");
   writeSystemModel(root, responsibilityId);
-  write(path.join(root, "build", "workflow", "technical-decisions.yaml"), `technical_decision_file_version: 1
-
-decisions:
-  - id: "TD-001"
-    title: "Example choice"
-    state: "Open"
-    primary_domain: "example"
-    affected_responsibilities: ["${responsibilityId}"]
-    context: "The example representation must be chosen."
-    why_it_matters: "The choice controls interoperable realization."
-    established: "The logical responsibility boundary is approved."
-    how_tickets_fit: "Future implementation questions must preserve one representation contract."
-    blocker: null
-    outcome: null
-    defer_reason: null
-    resume_when: null
-`);
   write(brief, "# Software Brief\n");
   write(path.join(root, "README.md"), "# Software Design\n");
   return { root, brief };
@@ -154,7 +138,7 @@ function writeTicketFixture(workspace, responsibilityId = "SR-001") {
   const root = path.join(workspace, "software-design");
   const responsibilitySlug = responsibilityId.toLowerCase();
   writeSystemModel(root, responsibilityId);
-  write(path.join(root, "build", "workflow", "tickets", "example", responsibilitySlug, `${responsibilitySlug}-tickets.yaml`), `ticket_file_version: 3
+  write(path.join(root, "build", "workflow", "tickets", "example", responsibilitySlug, `${responsibilitySlug}-tickets.yaml`), `ticket_file_version: 4
 scope: "responsibility:${responsibilityId}"
 
 tickets:
@@ -170,7 +154,6 @@ tickets:
     build_unit_disposition: "Realization mapping has not started."
     repositories: []
     repository_contract_area: null
-    parent_decision: null
     cluster: "representation"
     question: "Which storage representation will realize the example responsibility?"
     context: "The logical boundary is known, but its storage representation is not selected."
@@ -238,16 +221,30 @@ test("structure validation rejects an existing local Markdown link with a missin
   assert.match(structured.stderr, /broken local link anchor/);
 });
 
-test("runtime architecture is linked from README", (context) => {
+test("the visual index is linked from README", (context) => {
+  const workspace = fixture("software-design-visual-index-");
+  context.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
+  const blueprint = writeBlueprintFixture(workspace);
+  write(path.join(blueprint.root, "visuals", "index.html"), "<!doctype html><title>System Explorer</title>\n");
+  let result = spawnSync(process.execPath, [structureValidator, "--root", blueprint.root], { encoding: "utf8" });
+  assert.notEqual(result.status, 0);
+  assert.match(result.stderr, /README must link to visuals\/index\.html/);
+
+  write(path.join(blueprint.root, "README.md"), "# Software Design\n\n[System Explorer](./visuals/index.html)\n");
+  result = spawnSync(process.execPath, [structureValidator, "--root", blueprint.root], { encoding: "utf8" });
+  assert.equal(result.status, 0, result.stderr);
+});
+
+test("a retired format-1 package is rejected instead of validated against the diagrams/ lane", (context) => {
   const workspace = fixture("software-design-runtime-architecture-");
   context.after(() => fs.rmSync(workspace, { recursive: true, force: true }));
   const blueprint = writeBlueprintFixture(workspace);
+  const architecture = path.join(blueprint.root, "system-model", "architecture.md");
+  write(architecture, fs.readFileSync(architecture, "utf8").replace("design_format: 2\n", ""));
   write(path.join(blueprint.root, "diagrams", "runtime-architecture.html"), "<!doctype html><title>Runtime Architecture</title>\n");
-  let result = spawnSync(process.execPath, [structureValidator, "--root", blueprint.root], { encoding: "utf8" });
-  assert.notEqual(result.status, 0);
-  assert.match(result.stderr, /README\.md: must link directly to diagrams\/runtime-architecture\.html/);
-
   write(path.join(blueprint.root, "README.md"), "# Software Design\n\n[Runtime Architecture](./diagrams/runtime-architecture.html)\n");
-  result = spawnSync(process.execPath, [structureValidator, "--root", blueprint.root], { encoding: "utf8" });
-  assert.equal(result.status, 0, result.stderr);
+  const result = spawnSync(process.execPath, [structureValidator, "--root", blueprint.root], { encoding: "utf8" });
+  assert.equal(result.status, 1);
+  assert.match(result.stderr, /design_format is missing; current packages declare design_format: 2\. Design format 1, ticket schema 3, the Technical Decision registry and the Canvas diagrams\/ lane are retired/);
+  assert.doesNotMatch(result.stderr, /runtime-architecture\.html|^\s+at /m);
 });

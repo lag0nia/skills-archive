@@ -1,0 +1,151 @@
+/* System Guide print style: restrained black and white, A4.
+   Fonts are bundled (assets/pdf/fonts, SIL OFL 1.1); nothing loads from the network.
+   Running header text and page names are generated per document by render.mjs. */
+
+@font-face { font-family: "Guide Serif"; src: url("fonts/NotoSerif-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Guide Serif"; src: url("fonts/NotoSerif-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "Guide Serif"; src: url("fonts/NotoSerif-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Guide Serif"; src: url("fonts/NotoSerif-BoldItalic.woff2") format("woff2"); font-weight: 700; font-style: italic; }
+@font-face { font-family: "Guide Sans"; src: url("fonts/NotoSans-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Guide Sans"; src: url("fonts/NotoSans-Italic.woff2") format("woff2"); font-weight: 400; font-style: italic; }
+@font-face { font-family: "Guide Sans"; src: url("fonts/NotoSans-Bold.woff2") format("woff2"); font-weight: 700; font-style: normal; }
+@font-face { font-family: "Guide Mono"; src: url("fonts/NotoSansMono-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+@font-face { font-family: "Guide Math"; src: url("fonts/NotoSansMath-Regular.woff2") format("woff2"); font-weight: 400; font-style: normal; }
+
+:root {
+  --ink: #000;
+  --muted: #555;
+  --rule: #b5b5b5;
+  --hairline: #d4d4d4;
+  --serif: "Guide Serif", "Guide Math";
+  --sans: "Guide Sans", "Guide Math";
+  --mono: "Guide Mono", "Guide Math";
+}
+
+@page {
+  size: A4;
+  margin: 26mm 21mm 22mm 21mm;
+  @top-left { vertical-align: bottom; padding-bottom: 2.4mm; margin-bottom: 7mm; border-bottom: 0.5pt solid var(--rule); font: 400 7.6pt/1.2 var(--sans); letter-spacing: 0.03em; text-transform: uppercase; color: var(--ink); }
+  @top-right { vertical-align: bottom; padding-bottom: 2.4mm; margin-bottom: 7mm; border-bottom: 0.5pt solid var(--rule); font: 400 7.6pt/1.2 var(--sans); letter-spacing: 0.03em; text-transform: uppercase; color: var(--muted); text-align: right; }
+  @bottom-left { vertical-align: top; padding-top: 2.4mm; margin-top: 7mm; border-top: 0.5pt solid var(--rule); font: 400 7.6pt/1.2 var(--sans); color: var(--muted); }
+  @bottom-right { vertical-align: top; padding-top: 2.4mm; margin-top: 7mm; border-top: 0.5pt solid var(--rule); font: 400 7.6pt/1.2 var(--sans); color: var(--muted); text-align: right; content: "Page " counter(page) " of " counter(pages); }
+}
+
+* { box-sizing: border-box; }
+
+html { font-synthesis: none; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+
+body {
+  margin: 0;
+  background: #fff;
+  color: var(--ink);
+  font: 400 10.3pt/1.5 var(--serif);
+  font-kerning: normal;
+  font-variant-ligatures: common-ligatures;
+  hyphens: manual;
+  overflow-wrap: break-word;
+  orphans: 3;
+  widows: 3;
+}
+
+/* Document opening */
+.guide-doc + .guide-doc, .guide-doc.starts-page { break-before: page; }
+.eyebrow { margin: 0 0 7mm; font: 400 8.6pt/1.3 var(--sans); letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+h1 { margin: 0 0 6mm; font: 400 25pt/1.14 var(--serif); letter-spacing: -0.005em; break-after: avoid; }
+.lede { margin: 0 0 6mm; font: 400 11.6pt/1.5 var(--sans); }
+.scope-note { margin: 0 0 7mm; padding-left: 3mm; border-left: 0.75pt solid var(--rule); font: 400 8.6pt/1.5 var(--sans); color: var(--muted); }
+
+/* Headings stay with what follows */
+h2, h3, h4 { font-family: var(--sans); font-weight: 700; color: var(--ink); break-after: avoid; break-inside: avoid; }
+h2 { margin: 8mm 0 2.6mm; font-size: 12.4pt; line-height: 1.3; }
+h3 { margin: 6mm 0 2mm; font-size: 10.8pt; line-height: 1.35; }
+h4 { margin: 4.5mm 0 1.6mm; font-size: 9.8pt; line-height: 1.35; }
+h1 + .lede, h2 + *, h3 + *, h4 + * { margin-top: 0; }
+.keep-with-next { break-after: avoid; }
+/* A guide's final paragraph does not start a page alone. */
+.guide-doc > p:last-child { break-before: avoid; }
+
+p { margin: 0 0 3mm; }
+strong { font-weight: 700; }
+em { font-style: italic; }
+code { font-family: var(--mono); font-size: 0.88em; }
+a { color: inherit; text-decoration: underline; text-decoration-thickness: 0.4pt; text-underline-offset: 1.6pt; }
+.ref { text-decoration: none; }
+
+ul, ol { margin: 0 0 3mm; padding-left: 6mm; }
+li { margin: 0 0 1.4mm; }
+li > p { margin: 0 0 1.4mm; }
+li > ul, li > ol { margin: 1.4mm 0 0; }
+ol ol { list-style-type: lower-alpha; }
+
+pre {
+  margin: 0 0 3.5mm;
+  padding: 2.4mm 3mm;
+  border-left: 0.75pt solid var(--rule);
+  font: 400 8.4pt/1.45 var(--mono);
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  break-inside: avoid;
+}
+pre code { font-size: inherit; }
+
+/* Tables: rules only, header repeated on every page */
+table { width: 100%; margin: 1mm 0 4.5mm; border-collapse: separate; border-spacing: 0; font: 400 8.9pt/1.42 var(--sans); }
+thead { display: table-header-group; }
+th { padding: 0 3mm 2mm 0; border-bottom: 0.75pt solid var(--ink); font-weight: 700; text-align: left; vertical-align: bottom; }
+td { padding: 2.2mm 3mm 2.2mm 0; border-bottom: 0.5pt solid var(--hairline); vertical-align: top; overflow-wrap: break-word; }
+/* Words size the columns; only code may break inside a token to fit. */
+td code { overflow-wrap: anywhere; }
+th:last-child, td:last-child { padding-right: 0; }
+tr { break-inside: avoid; }
+table.label-column td:first-child { font-weight: 700; }
+td[data-align="right"], th[data-align="right"] { text-align: right; }
+td[data-align="center"], th[data-align="center"] { text-align: center; }
+
+/* Callouts: ruled above and below, sans text */
+.callout { margin: 4mm 0 5mm; padding: 3mm 0 1mm; border-top: 0.75pt solid var(--ink); border-bottom: 0.75pt solid var(--ink); font: 400 9.3pt/1.5 var(--sans); break-inside: avoid; }
+.callout-title { margin: 0 0 1.6mm; font-weight: 700; }
+.callout p, .callout ul, .callout ol { margin-bottom: 2mm; }
+
+/* Figures: boxed steps joined by arrows */
+figure { margin: 4mm 0 5mm; break-inside: avoid; }
+.steps { display: flex; align-items: stretch; gap: 0; }
+.step { flex: 1 1 0; min-width: 0; padding: 3mm 3.2mm; border: 0.6pt solid #8a8a8a; font: 400 8.4pt/1.42 var(--sans); color: #333; }
+.step.optional { border-style: dashed; }
+.step-label { display: block; margin-bottom: 1mm; font-size: 7.4pt; letter-spacing: 0.04em; text-transform: uppercase; color: var(--muted); }
+.step-title { display: block; margin-bottom: 2mm; font-weight: 700; font-size: 8.9pt; color: var(--ink); }
+.arrow { flex: 0 0 auto; align-self: center; padding: 0 1.6mm; font: 400 11pt/1 var(--sans); }
+.steps.vertical { flex-direction: column; align-items: stretch; }
+.steps.vertical .step { flex: 0 0 auto; }
+.steps.vertical .arrow { align-self: flex-start; padding: 0.8mm 0 0.8mm 6mm; }
+figcaption { margin-top: 2.6mm; font: 400 8.2pt/1.4 var(--sans); color: var(--muted); }
+.figure-legend { display: block; margin-bottom: 0.8mm; }
+
+/* Contents */
+.contents-label { margin: 0 0 2mm; font: 700 9pt/1.3 var(--sans); }
+.toc { margin: 0 0 7mm; padding: 0; list-style: none; font: 400 9.2pt/1.45 var(--sans); }
+.toc li { margin: 0; break-inside: avoid; }
+.toc a { display: flex; align-items: baseline; gap: 1.6mm; padding: 0.7mm 0; text-decoration: none; }
+.toc .toc-title { flex: 0 1 auto; }
+.toc .toc-leader { flex: 1 1 auto; min-width: 6mm; border-bottom: 1pt dotted #8a8a8a; transform: translateY(-1mm); }
+.toc .toc-page { flex: 0 0 auto; font-variant-numeric: tabular-nums; }
+.toc .toc-document { margin-top: 2.4mm; font-weight: 700; }
+.toc .toc-document:first-child { margin-top: 0; }
+.toc .toc-section { padding-left: 5mm; }
+.toc .toc-subsection { padding-left: 10mm; color: #333; }
+
+/* Combined edition opening */
+.cover { page: cover; display: flex; flex-direction: column; min-height: 240mm; }
+.cover .eyebrow { margin-top: 30mm; }
+.cover h1.cover-title { font-size: 30pt; margin-bottom: 7mm; }
+.cover .cover-statement { font: 400 11.6pt/1.5 var(--sans); margin-bottom: 6mm; }
+.cover .cover-list { margin: 0 0 6mm; padding: 0; list-style: none; font: 400 10pt/1.6 var(--sans); }
+.cover .cover-meta { margin-top: auto; padding-top: 3mm; border-top: 0.5pt solid var(--rule); font: 400 8.4pt/1.5 var(--sans); color: var(--muted); }
+.contents-page { break-before: page; }
+.contents-page h1 { font-size: 20pt; margin-bottom: 6mm; }
+
+/* Closing notes */
+.closing { margin-top: 8mm; padding-top: 3mm; border-top: 0.5pt solid var(--rule); font: 400 8.8pt/1.5 var(--sans); color: #333; break-inside: avoid-page; }
+.closing h1, .closing h2 { margin: 0 0 2.6mm; font: 700 10.4pt/1.3 var(--sans); }
+.closing ul { padding-left: 5mm; }
+.closing .kind { font-weight: 700; color: var(--ink); }

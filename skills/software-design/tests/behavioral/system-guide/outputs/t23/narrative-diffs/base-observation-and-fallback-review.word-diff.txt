@@ -1,0 +1,21 @@
+--- replace after «…»
+  - Domain Overview
+  + Base Observation And Fallback Review
+--- replace after «…It contains two distinct responsibilities. [Base»
+  - observation
+  + observation, finality,
+--- replace after «…application's view when evidence changes. [The»
+  - independent
+  + evidence-conditioned
+--- insert after «…until the block reaches **Base L1»
+  - 
+  + (layer 1)
+--- insert after «…lender route; one confirmed spend wins.»
+  - 
+  + Whether a loan without a production-activated S commitment has that long-stop is an open question: a build constraint requires every newly constructed escrow to include it and the [long-stop recovery flow] defines it, while the [missing-Y security boundary] says such a loan has no borrower fallback Bitcoin route and the unclaimed-repayment flow lists the remaining routes without it; the records do not settle whether these describe different loans or contradict each other.
+--- replace after «…contracts and the two responsibility records»
+  - below
+  + linked above
+--- insert after «…owners of every rule summarized here.»
+  - 
+  + The [architecture guide] shows where this domain fits in the system, and the [domain record] lists exactly what the domain owns and excludes.

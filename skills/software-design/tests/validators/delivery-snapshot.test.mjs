@@ -15,6 +15,8 @@ function fixture() {
   const sourcePath = path.join(root, "build", "units", "bu-001.md");
   fs.mkdirSync(path.dirname(handoffPath), { recursive: true });
   fs.mkdirSync(path.dirname(sourcePath), { recursive: true });
+  fs.mkdirSync(path.join(root, "system-model"), { recursive: true });
+  fs.writeFileSync(path.join(root, "system-model", "architecture.md"), "---\ntype: system-architecture\ndesign_format: 2\n---\n\n# System Architecture\n");
   fs.writeFileSync(sourcePath, "# BU-001\n\nCurrent responsibility.\n");
   fs.writeFileSync(handoffPath, `# Delivery Planning Handoff
 

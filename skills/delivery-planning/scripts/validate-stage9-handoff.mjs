@@ -1,16 +1,19 @@
 #!/usr/bin/env node
 
 import fs from "node:fs";
+import { validationMode } from "./lib/validation-mode.mjs";
 import path from "node:path";
 import { spawnSync } from "node:child_process";
 
 function parseArgs(argv) {
-  const args = { root: null, handoff: null, softwareDesignSkill: null };
+  const args = { root: null, handoff: null, softwareDesignSkill: null, validationMode: "execution" };
+  let modeSeen = false;
   for (let index = 2; index < argv.length; index += 1) {
     const value = argv[index];
     if (value === "--root") args.root = argv[++index];
     else if (value === "--handoff") args.handoff = argv[++index];
     else if (value === "--software-design-skill") args.softwareDesignSkill = argv[++index];
+    else if (value === "--validation-mode") { if (modeSeen) throw new Error("Duplicate --validation-mode."); modeSeen = true; args.validationMode = validationMode(argv[++index] || ""); }
     else throw new Error("Unknown argument: " + value);
   }
   if (!args.root) throw new Error("Use --root <software-design-dir>.");
@@ -51,8 +54,8 @@ function validate(args) {
   if (!selected.length) throw new Error("The Stage 9 handoff must declare at least one selected Build Unit before readiness reconciliation.");
   const checks = [
     ["report-build-unit-readiness-reconciliation.mjs", ["--root", root, "--units", selected.join(","), "--assert-ready"]],
-    ["validate-handoff-sequence.mjs", ["--root", root, "--handoff", handoffPath, "--assert-plannable"]],
-    ["validate-delivery-readiness.mjs", ["--root", root, "--handoff", handoffPath]],
+    ["validate-handoff-sequence.mjs", ["--root", root, "--handoff", handoffPath, "--assert-plannable", "--validation-mode", args.validationMode]],
+    ["validate-delivery-readiness.mjs", ["--root", root, "--handoff", handoffPath, "--validation-mode", args.validationMode]],
   ];
   // These checks share readable inputs, not successful outcomes. A failed check
   // forbids planning but must not conceal other independent diagnostic failures.

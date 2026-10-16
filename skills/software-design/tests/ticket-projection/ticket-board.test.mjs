@@ -66,14 +66,14 @@ test("all nonactive implementation records clear stale board fields", () => {
 test("extras are informational and repair never deletes/reorders them", () => {
   const state = contractViewState();
   state.views.nodes.splice(1, 0, { id: "EXTRA", number: 99, name: "My custom view" });
-  assert.equal(auditProjectViewContract(state).apiPassed, true);
-  assert.deepEqual(auditProjectViewContract(state).additionalViews, [{ id: "EXTRA", number: 99, name: "My custom view" }]);
+  assert.equal(auditProjectViewContract(state, [], { includedViews: ["Repositories"] }).apiPassed, true);
+  assert.deepEqual(auditProjectViewContract(state, [], { includedViews: ["Repositories"] }).additionalViews, [{ id: "EXTRA", number: 99, name: "My custom view" }]);
   const before = structuredClone(state);
   assert.deepEqual(planProjectViewRepair(state), []);
   assert.deepEqual(state, before);
   [state.views.nodes[2], state.views.nodes[3]] = [state.views.nodes[3], state.views.nodes[2]];
-  assert.equal(auditProjectViewContract(state).apiPassed, true);
-  assert.equal(auditProjectViewContract(state).visibleOrderVerification, "manual-ui-required");
+  assert.equal(auditProjectViewContract(state, [], { includedViews: ["Repositories"] }).apiPassed, true);
+  assert.equal(auditProjectViewContract(state, [], { includedViews: ["Repositories"] }).visibleOrderVerification, "manual-ui-required");
 });
 
 test("Waiting separates blocked todo from Ready without changing canonical statuses", () => {

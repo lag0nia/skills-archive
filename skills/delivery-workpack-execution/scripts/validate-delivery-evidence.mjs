@@ -382,6 +382,10 @@ function validate(workpackPath, repository, refresh = null) {
     if (!meaningful(field(record.body, "Procedure"))) errors.push(record.id + " lacks the executed procedure.");
     if (!meaningful(field(record.body, "Observed result"))) errors.push(record.id + " lacks a concrete observed result.");
     const planned = workpackVe.find((candidate) => candidate.id === record.id);
+    if (normalized(field(planned?.body, "Evidence scope")) === "consumer-fitness"
+        && normalized(field(record.body, "Evidence scope")) !== "consumer-fitness") {
+      errors.push(record.id + " must record completed consumer-fitness evidence; prerequisite/producer/fixture checks do not complete the new consumer.");
+    }
     if (planned && !sameValues(ids(field(planned.body, "Supports"), "AC"), ids(field(record.body, "Supports"), "AC"))) {
       errors.push(record.id + " summary support mapping does not match the workpack.");
     }

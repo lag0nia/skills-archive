@@ -1243,3 +1243,23 @@ for (const [label, projection, valid] of [
     if (!valid) assert.match(result.stderr, /Explicit Exclusions must project exactly|Excluded interactions must link/);
   });
 }
+
+test('planning WAITING is complete-plan review only; strict/default execution rejects it', context=>{
+ const root=fixture();context.after(()=>fs.rmSync(root,{recursive:true,force:true}));
+ const workpack=path.join(root,'delivery-workpacks/example/WORKPACK.md');
+ write(workpack,validWorkpack().replace('**Execution eligibility:** `PASS`','**Execution eligibility:** `WAITING`'));
+ // Instrument both upstream validators to make the exact propagation observable.
+ for(const name of ['validate-delivery-readiness.mjs','validate-handoff-sequence.mjs']) write(path.join(root,'software-design-skill/scripts',name),`const i=process.argv.indexOf('--validation-mode');if(i<0)process.exit(9);process.stdout.write('mode='+process.argv[i+1]+'\\n');`);
+ const args=[validator,'--workpack',workpack,'--software-design-skill',path.join(root,'software-design-skill')];
+ const planned=spawnSync(process.execPath,[...args,'--validation-mode','planning'],{encoding:'utf8'});
+ assert.equal(planned.status,0,planned.stderr);
+ for(const mode of [null,'execution']) {
+   const result=spawnSync(process.execPath,mode ? [...args,'--validation-mode',mode] : args,{encoding:'utf8'});
+   assert.equal(result.status,1);assert.match(result.stderr,/Execution eligibility.*PASS/);
+ }
+});
+test('invalid workpack modes cannot weaken the validation call chain', context=>{
+ const root=fixture();context.after(()=>fs.rmSync(root,{recursive:true,force:true}));const workpack=path.join(root,'delivery-workpacks/example/WORKPACK.md');write(workpack,validWorkpack());
+ const result=spawnSync(process.execPath,[validator,'--workpack',workpack,'--software-design-skill',path.join(root,'software-design-skill'),'--validation-mode','relaxed'],{encoding:'utf8'});
+ assert.equal(result.status,1);assert.match(result.stderr,/Unknown validation mode/);
+});

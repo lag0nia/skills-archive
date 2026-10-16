@@ -1,6 +1,8 @@
 import fs from "node:fs";
+import { validationMode } from "./validation-mode.mjs";
 import path from "node:path";
 import { buildLayout } from "../model/build-layout.mjs";
+import { currentFormatError } from "../model/package-format.mjs";
 import { findBuildUnitRecords } from "../model/build-unit-records.mjs";
 import { parseFrontmatter } from "../model/frontmatter.mjs";
 
@@ -95,8 +97,11 @@ function transitivelyRequires(slug, requiredSlug, bySlug, visited = new Set()) {
   return (bySlug.get(slug)?.requires || []).some((required) => required === requiredSlug || transitivelyRequires(required, requiredSlug, bySlug, visited));
 }
 
-export function validateHandoffSequence(rootPath) {
+export function validateHandoffSequence(rootPath, { validationMode: requestedMode = "execution" } = {}) {
+  validationMode(requestedMode);
   const root = path.resolve(rootPath);
+  const formatError = currentFormatError(root);
+  if (formatError) return { errors: [formatError], skipped: false, rows: [], currentOrderGroup: null };
   const layout = buildLayout(root);
   const errors = [];
 
@@ -313,7 +318,8 @@ export function validateHandoffSequence(rootPath) {
   return { errors, skipped: false, rows, currentOrderGroup: expectedCurrent };
 }
 
-export function validatePlannableHandoff(rootPath, handoffPath) {
+export function validatePlannableHandoff(rootPath, handoffPath, { validationMode: requestedMode = "execution" } = {}) {
+  const mode = validationMode(requestedMode);
   const result = validateHandoffSequence(rootPath);
   const errors = [...result.errors];
   if (errors.length) return { ...result, errors };
@@ -326,6 +332,10 @@ export function validatePlannableHandoff(rootPath, handoffPath) {
   }
 
   const row = matches[0];
+  if (mode === "planning") {
+    if (row.state === "Blocked") errors.push(row.slug + " has an unresolved planning blocker: " + row.reason);
+    return { ...result, errors, selectedRow: row };
+  }
   if (row.state === "Implemented") return { ...result, errors, selectedRow: row };
   if (row.state !== "Ready") {
     errors.push(row.slug + " is not executable while its sequence state is " + row.state + "; use Ready for a current runnable slice or Implemented for a retained completed slice.");
@@ -335,6 +345,6 @@ export function validatePlannableHandoff(rootPath, handoffPath) {
   }
   const bySlug = new Map(result.rows.filter((candidate) => candidate.slug).map((candidate) => [candidate.slug, candidate]));
   const unmet = row.requires.filter((required) => bySlug.get(required)?.state !== "Implemented");
-  if (unmet.length) errors.push(row.slug + " cannot be planned while required slices remain unfinished: " + unmet.join(", ") + ".");
+  if (unmet.length) errors.push(row.slug + " cannot execute while required slices remain unfinished: " + unmet.join(", ") + ".");
   return { ...result, errors, selectedRow: row };
 }

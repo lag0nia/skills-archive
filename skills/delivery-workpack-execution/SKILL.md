@@ -1,15 +1,17 @@
 ---
 name: delivery-workpack-execution
-description: Execute one ready Stage 9 Delivery Planning WORKPACK.md directly in the target repository, and protect workpack lineage when a release or post-implementation change is requested for a workpack-built repository. Use when a user asks an agent to implement a bounded delivery workpack, apply a bounded implementation delta, or prepare/publish a release whose preflight may expose required code or configuration changes, whether invoked directly or under the host environment's native goal or continuation loop. Includes phases, tests, verification evidence, protected boundaries, stop conditions, and release-versus-implementation classification. Do not use for Software Design, workpack creation, plan-workflow execution, execution review, or bug-workflow stages.
+description: Execute authorized Stage 9 Delivery Planning workpacks in dependency order directly in the target repository, and protect workpack lineage when a release or post-implementation change is requested for a workpack-built repository. Use when a user asks an agent to implement a bounded delivery workpack, apply a bounded implementation delta, or prepare/publish a release whose preflight may expose required code or configuration changes, whether invoked directly or under the host environment's native goal or continuation loop. Includes phases, tests, verification evidence, protected boundaries, stop conditions, and release-versus-implementation classification. Do not use for Software Design, workpack creation, plan-workflow execution, execution review, or bug-workflow stages.
 ---
 
 # Delivery Workpack Execution
 
-Execute one approved Delivery Planning workpack as the direct implementation contract. The workpack is the routing and completion truth for the run; linked Software Design and Build Design records remain authoritative for behavior, interfaces, constraints, and rationale.
+Execute only the user-authorized workpack or sequence/cohort of Delivery Planning workpacks in dependency order. The workpack is the routing and completion truth for the run; linked Software Design and Build Design records remain authoritative for behavior, interfaces, constraints, and rationale.
+
+Read [Planning Completeness And Execution Eligibility](references/planning-execution-contract.md) for planning validation, explicit upstream outputs, bounded feasibility, authorization and sequence continuation. Apply it before readiness or lineage decisions.
 
 ## Activate Or Stop
 
-Activate when the user explicitly asks to execute a ready `WORKPACK.md`, normally under `delivery-workpacks/`, and identifies the target implementation repository or current workspace. The request may arrive directly, as a Delivery Planning execution handoff, or inside a goal or continuation loop the user started and pointed at this skill manually; activation does not depend on a particular command, launcher, or automatic skill selection. Also activate in lineage-preflight mode when the user asks to publish, tag, or otherwise release a repository that already has a workpack-backed implementation report. Lineage-preflight mode may perform an authorized release-evidence-only operation, but it must not change implementation-owned files without a current bounded workpack.
+Activate when the user explicitly authorizes a workpack or sequence/cohort under `delivery-workpacks/` and identifies the implementation targets. Start only an execution-eligible workpack; retain future plans and verify their prerequisites before starting them. The request may arrive directly, as a separately authorized Delivery Planning execution handoff, or inside a goal or continuation loop the user started and pointed at this skill manually; activation does not depend on a particular command, launcher, or automatic skill selection. Also activate in lineage-preflight mode when the user asks to publish, tag, or otherwise release a repository that already has a workpack-backed implementation report. Lineage-preflight mode may perform an authorized release-evidence-only operation, but it must not change implementation-owned files without a current bounded workpack.
 
 Before changing code:
 
@@ -18,6 +20,7 @@ Before changing code:
 
    ```sh
    node <delivery-planning-skill-directory>/scripts/validate-workpack.mjs \
+     --validation-mode execution \
      --workpack <delivery-workpack-directory>/WORKPACK.md \
      --software-design-skill <active-software-design-skill-directory>
    ```
@@ -50,11 +53,11 @@ Check the captured workpack content as well as the snapshot when resuming after 
 
 ## Post-Implementation And Release Lineage
 
-Before a release or any change to a previously completed repository, resolve the stable workpack, its snapshot, the implementation report, the current handoff, and the repository changes since the recorded implementation. Require the existing workpack snapshot and report `Implemented snapshot` to match before classifying the complete change. If the historical association is unknown, follow [legacy-lineage recovery](references/legacy-lineage-recovery.md) only with explicit user authorization.
+Before a release or any change to a previously completed repository, resolve the stable workpack, its snapshot, the implementation report, the current handoff, and the repository changes since the recorded implementation. Resolve the report’s recoverable implemented workpack and exact execution basis before classifying the complete change. A known newer unexecuted plan is legitimate; it does not advance the prior implementation receipt. If the historical association is unknown, follow [legacy-lineage recovery](references/legacy-lineage-recovery.md) only with explicit user authorization.
 
 Classify the requested or discovered change:
 
-- `No implementation impact`: handoff or blueprint documentation, publication or tagging of the already-implemented tree, already-approved external registry/repository permissions, exact-version resolution or authorized installation, and evidence-only record updates. No implementation-owned tracked file or canonical implementation requirement may change. If the current handoff has a new Snapshot ID, copy it into the stable workpack, run the current workpack validator, and synchronize the evidence README and report to the same ID while retaining the prior execution summary as the physical implementation basis. Do not execute a no-op workpack, fabricate a snapshot-scoped execution summary or VE record, or leave the three IDs mismatched. Record any required release identity as artifact/version plus source revision, integrity, immutable resolution, and safe access result under the typed receipt path.
+- `No implementation impact`: handoff or blueprint documentation, publication or tagging of the already-implemented tree, already-approved external registry/repository permissions, exact-version resolution or authorized installation, and evidence-only record updates. No implementation-owned tracked file or canonical implementation requirement may change. Only for an explicitly requested implemented-documentation synchronization, if the current handoff has a new Snapshot ID, copy it into the stable workpack, run the current workpack validator, and synchronize the evidence README and report to the same ID while retaining the prior execution summary as the physical implementation basis. Do not execute a no-op workpack, fabricate a snapshot-scoped execution summary or VE record, or leave the three IDs mismatched. Record any required release identity as artifact/version plus source revision, integrity, immutable resolution, and safe access result under the typed receipt path.
 - `Implementation delta`: change source, package manifests, lockfiles, build/runtime/release configuration, workflows, tests, fixtures, or verification scripts, or satisfy a canonical requirement that needs such a change. Package repository metadata is implementation configuration. A mixed change is always an implementation delta.
 
 If release preflight discovers missing package metadata, workflow configuration, tests, or another implementation-owned requirement, stop before publishing and require a current Stage 9 handoff plus bounded delta workpack. Do not make the quick file change under a no-implementation-impact label. After that workpack executes and its evidence names the same snapshot, resume the authorized release. Evidence-only updates after publication may append the immutable receipt; when they also refresh the handoff, synchronize all three IDs through the rule above.
@@ -71,7 +74,7 @@ If release preflight discovers missing package metadata, workflow configuration,
 - Preserve verification evidence named by `VE-xxx` in the one snapshot-scoped execution summary. Keep concise observed results in `SUMMARY.md`; retain separate command output, fixture traces, boundary inspection, package lists, screenshots, or review notes under its optional `artifacts/` directory only when they materially support later verification.
 - Require evidence to exercise the real consumer seam when `consumer-fitness` is claimed. Producer-local tests, mocks, an internal method, a health endpoint, a contract declaration, or file existence alone cannot satisfy that class.
 - Preserve the Stage 9 contract-placement and fan-out classification. Do not reopen a shared producer merely because a consumer can adapt, push shared semantics into one consumer merely to stay in scope, or create a new version, profile, or adapter without canonical authority. If physical evidence contradicts the classification, stop and route the contradiction to Software Design instead of choosing locally.
-- Stay inside the workpack's affected-slice disposition. Do not repair another repository or refresh another slice from this execution run. Preserve the exact producer receipt or canonical contradiction each affected downstream slice needs, so completion can state which slices are ready for Stage 9 refresh, still blocked, or unaffected.
+- Stay inside the workpack's affected-slice disposition. Do not repair another repository under this workpack. For an explicitly authorized sequence/cohort, reconcile affected downstream handoff/workpack references and actual receipts through Software Design/Delivery Planning guidance under unchanged approved behavior, contracts, ownership and scope, then revalidate execution eligibility and continue. A single-workpack authorization stops at that workpack. Preserve the exact producer receipt or canonical contradiction each affected downstream slice needs, so completion can state which slices are ready for Stage 9 refresh, still blocked, or unaffected.
 - When the workpack creates, refreshes, or completes a repository boundary, materialize the approved ignore policy and run its repository-local hygiene check. Confirm representative disposable/local paths are ignored and representative source, configuration, lockfile, workflow, fixture, evidence, and manifest paths remain trackable.
 - Keep changes focused. Preserve unrelated user changes and do not rewrite or clean up unrelated files.
 - Do not delete, disable, weaken, rewrite, or bypass tests, fixtures, thresholds, golden outputs, exact runtime or toolchain pins, or verification procedures to obtain a pass.
@@ -83,7 +86,7 @@ If release preflight discovers missing package metadata, workflow configuration,
 Apply this section only when the workpack contains `UI/UX Delivery Coverage`. A non-UI workpack needs no prototype inspection, screenshots, or UI review evidence.
 
 - Before implementing, open the approved specification and selected candidate the workpack names and inspect the covered journeys and states. The candidate is the presentation and interaction target; the specification owns presentation requirements, and canonical Software Design contracts own behavior.
-- Adapt the candidate's navigation, layout, hierarchy, typography, palette, density, controls, and interactions into the chosen application stack. Deviate only for real content, responsive rendering, accessibility, and details the workpack or specification explicitly permits. For anything the candidate does not illustrate, apply explicit canonical requirements and the candidate's established patterns; route an unresolved material choice or contradiction to its design owner instead of redesigning or inventing behavior.
+- Adapt the candidate's navigation, layout, hierarchy, typography, palette, density, controls, and interactions into the chosen application stack. Deviate only for real content, responsive rendering, accessibility, stack mechanics preserving the observable result, and details the workpack or specification explicitly permits. Minor unillustrated details may follow explicit approved requirements and established candidate patterns. A missing materially different route, screen, state, or interaction makes the selected delivery scope incomplete; route it for design reconciliation before implementing that scope.
 - Connect the interface to the actual system operations and sourced state named by the linked Build Unit `Material Interaction Bindings`. Mocks and prototype data may support component work and bounded tests but cannot satisfy functional evidence or completed integration.
 - For implemented UI/UX evidence, start the built application through the workpack's application entrypoint, open equivalent journeys and states at the representative viewports, execute their interactions, and inspect the resulting state against the candidate. Correct material differences and rerun the affected functional and UI checks before claiming completion.
 - If rendered inspection cannot be performed, the implemented UI/UX VE remains incomplete; source inspection, component tests, or passing functional tests do not substitute for it. Agent inspection needs recorded observations, not human confirmation; obtain human confirmation only when the workpack's review mode requires `human acceptance`.
@@ -95,6 +98,7 @@ Before implementation edits, initialize the existing summary using the active sk
 
 ```sh
 node <delivery-workpack-execution-skill-directory>/scripts/execution-record.mjs \
+  --validation-mode execution \
   --mode start --workpack <WORKPACK.md> --repository <target-repository> \
   --planning-skill <active-delivery-planning-skill-directory> \
   --software-design-skill <active-software-design-skill-directory>
@@ -131,7 +135,7 @@ Create or finalize a `COMPLETE` summary and update the README and implementation
 
 ## Host Goal Or Continuation Loop
 
-This skill supplies the implementation, verification, evidence, and acceptance instructions for one workpack. It is not a scheduler, loop, runner, or acceptance engine. When the host environment provides a native goal or continuation mechanism, that mechanism supplies continuation between turns; use only what the host actually supports and do not invent command names, APIs, or loop state.
+This skill supplies implementation, verification, evidence, and acceptance instructions for each authorized workpack, including routine dependency checkpoints within an authorized sequence. No renewed approval is needed for those unchanged-scope checkpoints. It is not a scheduler, loop, runner, or acceptance engine. When the host environment provides a native goal or continuation mechanism, that mechanism supplies continuation between turns; use only what the host actually supports and do not invent command names, APIs, or loop state.
 
 - Treat every continuation turn of one uninterrupted goal as the same execution run. Continue from the workpack phase, preflight state, and recorded evidence rather than restarting completed work or re-deciding scope.
 - If a continuation turn starts without the prior context, re-read the complete workpack, rerun the workpack validator, and repeat the snapshot comparison as a resume before continuing.
@@ -151,7 +155,7 @@ Stop and report the exact blocker when:
 - a material behavior, public API, canonical encoding, invariant, authority boundary, dependency direction, release rule, or security/custody boundary must change;
 - a required test, fixture, command, boundary check, package list, or external configuration check still cannot run or pass after applicable safe, scope-preserving remediation, required approval is denied or unavailable, or remediation would violate the workpack scope or a protected boundary;
 - implementation requires a provider, persistence, wallet, secret, participant signing, scheduler, broadcaster, lifecycle authority, automatic CPFP, or another excluded capability;
-- a direct dependency is not independently green before integration;
+- a required dependency lacks actual compatible output before consumption; reconcile within the authorized sequence when its producer can provide it, otherwise report the exact wait;
 - a workpack instruction conflicts with its linked Software Design, Build Design, constraint, or selection;
 - the physical ignore configuration hides a must-track path, exposes a prohibited secret/local path, or lacks the required repository-hygiene verification route;
 - the user asks to expand scope or bypass a verification gate; or

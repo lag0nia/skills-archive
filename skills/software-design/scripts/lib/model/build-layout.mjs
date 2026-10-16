@@ -13,7 +13,6 @@ export function buildLayout(rootPath) {
     root,
     buildRoot,
     buildReadmePath: path.join(buildRoot, "README.md"),
-    technicalDecisionsPath: path.join(workflowRoot, "technical-decisions.yaml"),
     ticketsRoot: path.join(workflowRoot, "tickets"),
     constraintsRoot: path.join(recordsRoot, "constraints"),
     unitsRoot: path.join(buildRoot, "units"),

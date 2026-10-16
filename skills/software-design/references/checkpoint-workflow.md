@@ -32,7 +32,7 @@ The first checkpoint happens before any package files are written.
 
 Treat an explicitly approved System Domain, System Responsibility, flow, contract family, or named section as one active write pass. Default to resolving its related sub-decisions conversationally, then write the records as one coherent update. Do not require a fresh approval for each sub-decision, small consistency edit, or file within that approved pass.
 
-An approved Stage 7 human-facing pass includes prototype prerequisites, bounded exploration, rendered walkthroughs, journey-level reconciliation, and completion of agreed coverage. Earlier bounded sketches are allowed inside an authorized pass. Reconcile approved findings at coherent journey boundaries without repeated screen or synchronization approvals. Visual-direction selection approves presentation qualities only; explicit behavior hypotheses may be explored but cannot establish reconciled design while material contradictions remain. Trace material changes through only the affected canonical owners and connected dependencies. After the initial reviewed prototype, later ticket resolutions update canonical requirements and record pending prototype work in the specification; editing and rendering wait for a prototype-change or synchronization request. An explicit prototype-change request already authorizes its affected updates, including required canonical reconciliation; do not demand another sync command or approval. Reopen only the affected UI/UX requirements, prototype states, and Build Unit or handoff routes.
+An approved Stage 7 human-facing pass includes prototype prerequisites, bounded exploration, rendered walkthroughs, journey-level reconciliation, and completion of agreed coverage. Earlier bounded sketches are allowed inside an authorized pass. Stage 7 completion and visual-direction selection do not make the whole application interface final; identify the scope of any selected-prototype completion claim. Reconcile approved findings at coherent journey boundaries without repeated screen or synchronization approvals. Visual-direction selection approves presentation qualities only; explicit behavior hypotheses may be explored but cannot establish reconciled design while material contradictions remain. Trace material changes through only the affected canonical owners and connected dependencies. After the initial reviewed prototype, later ticket resolutions update canonical requirements and record pending prototype work in the specification; editing and rendering wait for a prototype-change or synchronization request. An explicit prototype-change or synchronization request already authorizes affected updates and inspection, including required canonical reconciliation; do not demand another command or approval. Reopen only the affected UI/UX requirements, prototype states, and Build Unit or handoff routes.
 
 If the user explicitly says to record a confirmed detail while continuing the same section, make that narrow in-pass update without resetting the approval cycle. Preserve the active pass and continue the related discussion.
 
@@ -47,6 +47,8 @@ If the user says `yes`, `correct`, or provides corrections, update the checkpoin
 Do not ask the user to approve preparing another checkpoint. Checkpoints are interpretation previews and should be prepared directly when enough context exists. User approval should control file writes, not whether the next checkpoint may be shown.
 
 After a non-writing setup checkpoint is approved or corrected and no blockers remain, immediately show the next write-stage checkpoint in the same response when possible. The next user `approve` should write that stage.
+
+These rules decide when files may be written. Whether the user personally approved a particular choice is read separately, from the exchange and the choice actually presented, and recorded as its attribution under [Interpreting Approval](decision-attribution.md#interpreting-approval). A stage approval approves the consequential choices that checkpoint clearly presented; choices made afterward while writing the stage are Agent-chosen.
 
 ## Correction Handling
 
@@ -72,14 +74,14 @@ Start the user-facing response with a clear stop message:
 
 > Stopping Stage N. Your correction changes Stage X/Y source truth, so the current Stage N checkpoint is superseded. I am going back to repair the affected upstream files before writing Stage N.
 
-Do not write the paused stage. Do not ask whether to repair when the correction is clear. Treat clear corrections such as "cancelling an upload must discard its unfinished file" as source-truth corrections. Ask only if the corrected truth itself is ambiguous.
+Do not write the paused stage. Do not ask whether to repair when the correction is clear. Before a consequential repair, identify the human-approved decisions it touches and their conditions, and prefer a repair that preserves them; follow [Changing A Settled Decision](decision-attribution.md#changing-a-settled-decision). Treat clear corrections such as "cancelling an upload must discard its unfinished file" as source-truth corrections. Ask only if the corrected truth itself is ambiguous.
 
 For an already-authorized, unambiguous repair, perform the affected reconciliation and resume the authorized pass without another approval prompt. If a material decision remains unresolved or the repair exceeds the authorized scope, show a `Repair Checkpoint` for that decision or additional scope instead. It must include:
 
 - paused stage and superseded checkpoint;
 - corrected source truth;
 - earlier files or stages affected;
-- the concrete repair model, including the behavior, contract, invariant, or decision that changes;
+- the concrete repair model, including the behavior, contract, invariant, or decision that changes, and any human-approved decision or condition it would alter;
 - what the repair makes true across the system and what remains unchanged;
 - a short `Route` line and `Expected Recording Plan`, as required below;
 - remaining decisions, or `none`;
@@ -98,6 +100,8 @@ After an authorized repair, resume the affected pass without repeating approval 
 ## Checkpoint Content
 
 For any non-trivial proposed behavior, contract, invariant, decision, or repair, show a `Proposed Change` before asking for approval. It must explain the current gap; the concrete proposed model and material rules, records, identifiers, transitions, or rejection behavior; what becomes true across the system; what remains unchanged; affected System Responsibilities, flows, and correctness obligations; the classification (`Software Design repair`, `Build Design selection`, `Product decision`, or `Reversible local choice`) and why; and any unresolved user decision.
+
+Make that explanation a connected account: establish the relevant system context, then the current problem or gap, concrete proposed change, material consequences, and decision or approval needed. These are reasoning cues, not five mandatory headings or an additional approval step. When several responsibilities are affected, explain their relevant interaction and how the proposed change alters it; a list of IDs alone is insufficient. Introduce concepts before relying on them to justify the proposal. Reuse established context and use an example only when it clarifies a consequence, labeling hypothetical scenarios and keeping them distinct from approved requirements. Preserve exact rules and useful detail rather than shortening to a fixed length.
 
 Do not ask the user to approve headings, themes, or a list of file edits when the actual behavior has not been explained. If the proposal cannot yet be stated concretely, ask the missing design question instead of requesting approval.
 

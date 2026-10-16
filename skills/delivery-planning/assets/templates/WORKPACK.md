@@ -11,7 +11,8 @@ State the bounded, observable outcome for this workpack.
 ### Selected Build Units
 
 - `BUILD_UNIT:BU-xxx` — `Target` — <what this workpack changes and delivers>
-- `BUILD_UNIT:BU-yyy` — `Existing prerequisite` — <what this workpack verifies but must not change>
+- `BUILD_UNIT:BU-yyy` — `Existing prerequisite` — <actually existing capability this workpack verifies without changing>
+- `BUILD_UNIT:BU-zzz` — `Planned prerequisite` — <defined planned upstream output to verify before use, never writable>
 
 ### Repository Disposition
 
@@ -81,6 +82,7 @@ Project every handoff `INPUT-NNN`, `INT-NNN`, `PSEAM-NNN`, and structured Verifi
 ### `INPUT-001` — <required value or artifact>
 
 - **Handoff source:** [INPUT-001](<Stage-9-handoff-path>#input-001--required-value-or-artifact)
+<!-- For planned/reconciled upstream obligations, project Availability, canonical Produced by/Producer, Producer handoff, Expected output, Expected contract, Consumption point, Availability check, Availability evidence scope, Availability evidence and Upstream receipt exactly from Stage 9, rebasing links. -->
 - **Handling:** <concrete acquisition, production, bootstrap, or lifecycle handling>
 - **Coverage:** `AC-xxx`, `VE-xxx`, or `LGATE-NNN`
 
@@ -96,11 +98,12 @@ Project every handoff `INPUT-NNN`, `INT-NNN`, `PSEAM-NNN`, and structured Verifi
 ### `PSEAM-001` — <physical compatibility class>
 
 - **Handoff source:** [PSEAM-001](<Stage-9-handoff-path>#pseam-001--physical-compatibility-class)
-- **Handoff result:** `COMPATIBLE` / `DELTA_OWNED` / `EXCLUDED`
+- **Handoff result:** `COMPATIBLE` / `DELTA_OWNED` / `AWAITING_UPSTREAM` / `EXCLUDED`
 - **Implementation situation:** <copy the exact `new-output`, `existing-unchanged`, or `implemented-evolution` handoff value>
 - **Boundary class:** <copy the exact `protected-machine-interface`, `required-effectful-command`, `change-impact`, or `ordinary` handoff value>
 - **Candidate compatibility proof:** <copy the exact handoff state and detail>
 - **Evidence provenance:** <copy the exact handoff provenance and evidence>
+<!-- For planned/reconciled upstream obligations, project Availability, canonical Produced by/Producer, Producer handoff, Expected output, Expected contract, Consumption point, Availability check, Availability evidence scope, Availability evidence and Upstream receipt exactly from Stage 9, rebasing links. -->
 - **Handling:** <preserve the observed compatibility, implement the selected owner delta, or preserve the canonical exclusion>
 - **Direct change-impact handling:** <map every affected source/import, test/fixture, dependency/manifest/lock, generator/generated output, verifier/exact-identity, and configuration/evidence disposition into writable scope or protected unchanged scope>
 - **Required-command-effect handling:** <map every required build/deploy/regenerate/migrate/cross-repository effect to an allowed workpack procedure and PB-xxx, or preserve the handoff's Not applicable result>
@@ -122,7 +125,7 @@ Project every handoff `INPUT-NNN`, `INT-NNN`, `PSEAM-NNN`, and structured Verifi
 - **Handoff source:** [UI/UX Delivery Review](<Stage-9-handoff-path>#uiux-delivery-review)
 - **Approved UI/UX sources:** <link exactly the handoff's UI/UX specification and selected candidate entrypoint, plus any upstream owner it links>
 - **Application entrypoint:** <how the built application is started and opened for functional and implemented-UI evidence>
-- **Representative viewports and states:** <supported viewports and materially distinct states, including applicable cancellation, failure/recovery, and accessibility checks>
+- **Representative viewports and states:** <sample supported viewports for evidence and cover all materially distinct visible states in the named selected scope, including applicable waiting, success, cancellation, failure/recovery, and accessibility checks; screenshots need not enumerate data permutations>
 - **Implemented UI/UX review mode:** `agent inspection` / `automated` / `human acceptance` — <use human acceptance only when a canonical source requires it>
 
 | Journey | Acceptance | Functional evidence | Implemented UI/UX evidence |
@@ -190,7 +193,9 @@ Define at least one `PB-xxx`; a ready workpack may not replace explicit protecte
 - **Evidence to preserve:** <output, trace, artifact, or human confirmation>
 - **Planning note:** <for example, `Planned — unverified until scaffold exists`, or `None.`>
 
-When the referenced VA is `Planned — unverified`, place capability creation before this procedure or make capability creation the bounded workpack objective. A planned capability is not execution evidence.
+For every prerequisite-scoped INPUT/INT, map Coverage to a final VE with `Evidence scope: consumer-fitness`. Its Procedure runs through the implemented new consumer after construction; completion must record PASS with that same evidence scope. A producer/fixture check proves only the prerequisite.
+
+When the referenced VA is `Planned — unverified`, prove its creation is inside the writable ceiling or name its defined planned upstream provider, then schedule it before this procedure. A planned capability is not execution evidence.
 
 Do not delete, skip, disable, rewrite, or weaken existing tests, checks, fixtures, thresholds, golden outputs, or procedures to obtain a pass. Stop and escalate if evidence conflicts with approved behavior.
 
@@ -236,7 +241,7 @@ Perform this review after the complete draft. Re-read the canonical source closu
 
 **Delivery-evidence contract:** `PASS` / `BLOCKED` — <exact snapshot-scoped SUMMARY.md destination, optional artifacts disposition, receipt classification, and historical-evidence preservation conclusion>
 
-**Execution eligibility:** `PASS` / `BLOCKED` — <current Ready sequence/order-group result, or retained Implemented-slice lineage basis>
+**Execution eligibility:** `PASS` / `WAITING` / `BLOCKED` — <execution-mode current sequence/group and compatible-receipt result, or planning WAITING with exact producer INPUT/INT waits and earlier group>
 
 **Stage 9 compatibility closure:** `PASS` / `BLOCKED` — <link the handoff Delivery Slice Realizability Review and preserve shared-producer surface, placement, fan-out/evolution, and shipped-seam physical preflight in the mapped VE procedures>
 
@@ -285,12 +290,12 @@ For a dedicated scaffold or verification-enablement workpack, define completion 
 
 ## /goal Handoff
 
-Run this handoff through the host environment's supported native goal or continuation mechanism, or start that loop and select the execution skill manually. This section heading is a stable schema identifier; it does not require a `/goal` command.
+This is a conditional handoff for a separately authorized execution. Planning-only requests end with complete plans and exact waits; generated follow-ups must not authorize implementation. After explicit workpack or sequence authorization, use the host’s supported native goal or continuation mechanism. This section heading is a stable schema identifier; it does not require a `/goal` command.
 
-- **Workpack:** `<delivery-workpacks/<delivery-slice>/WORKPACK.md>` — execute only this workpack.
+- **Workpack:** `<delivery-workpacks/<delivery-slice>/WORKPACK.md>` — execute only within the user’s explicit workpack or sequence authorization.
 - **Target repository:** `<REPO-xxx target implementation repository or workspace path>`
 - **Execution skill:** `delivery-workpack-execution`
-- **Scope:** Stay within `Delivery Scope`; change only `Target` Build Units and verify `Existing prerequisite` units without changing them.
+- **Scope:** Stay within `Delivery Scope`; change only `Target` Build Units and verify `Existing prerequisite` and `Planned prerequisite` units without changing them. Planned prerequisites must first be reconciled to actual compatible outputs.
 - **Evidence:** Collect every required `VE-xxx` in `delivery-evidence/executions/sha256-<full-workpack-snapshot-digest>/SUMMARY.md` and pass evidence validation before claiming completion.
 - **Protected boundaries:** Preserve every `PB-xxx` and do not perform or claim an action guarded by an unsatisfied `LGATE-NNN`, when present.
 - **Stop:** Stop and escalate under `Stop and Escalation Conditions`. Do not expand scope or weaken verification to obtain a pass. Treat the goal as complete only when `Definition of Done` is satisfied; otherwise report the consolidated blocker.

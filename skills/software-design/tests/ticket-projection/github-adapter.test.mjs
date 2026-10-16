@@ -4,7 +4,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import { createGitHubAdapter } from "../../scripts/lib/ticket-projection/github/adapter.mjs";
 import { deriveTicketBoard } from "../../scripts/lib/ticket-projection/ticket-board.mjs";
-import { renderSummary, renderIssueBody, kindDisplayName, PROJECT_BOARD_STATUS_OPTIONS } from "../../scripts/lib/ticket-projection/core.mjs";
+import { renderSummary, renderIssueBody, kindDisplayName, projectViewContract, PROJECT_BOARD_STATUS_OPTIONS } from "../../scripts/lib/ticket-projection/core.mjs";
 
 const config = {
   provider: "github", syncBranch: "main",
@@ -25,30 +25,6 @@ const record = {
   buildUnits: ["BU-002", "BU-001"],
   buildUnitDisposition: null,
   repositories: [],
-  parentDecision: null,
-  parentDecisionTitle: null,
-};
-const decision = {
-  id: "TD-001",
-  issueTitle: "TD-001 — Fallback release",
-  decisionStatus: "Deferred For Later Design",
-  domainLabel: "Fallback",
-  responsibilityLabel: "SR-001 — Fallback Authority",
-  decisionTickets: "1 total · 1 out-of-scope",
-  context: "Fallback release remains intentionally outside V1.",
-  whyItMatters: "The child choices must remain interoperable.",
-  established: "The authority boundary is fixed.",
-  howTicketsFit: "The child questions jointly define one fallback contract.",
-  outcome: null,
-  deferReason: "Fallback release is outside V1.",
-  resumeWhen: "Before enabling fallback.",
-  sourcePath: "design/software-design/build/workflow/technical-decisions.yaml",
-  childTickets: [{
-    id: "TICKET-0001",
-    title: "Select retry policy",
-    status: "out-of-scope",
-    question: "Which retry policy preserves the fallback boundary?",
-  }],
 };
 const buildUnitRecord = {
   id: "BU-001",
@@ -92,10 +68,6 @@ function completeProjectFields(repositories = []) {
     { id: "F_DECISION_TICKETS", name: "Decision Tickets", type: "ProjectV2Field" },
     { id: "F_RESUME_WHEN", name: "Resume When", type: "ProjectV2Field" },
   ];
-}
-
-function completeDecisionProjectFields(repositories = []) {
-  return completeProjectFields(repositories);
 }
 
 function runner(routes, calls = []) {
@@ -191,7 +163,8 @@ function matchingTicketItem(ticket, issueNumber, itemId, status = ticket.status)
     { field: { name: "Build Units" }, text: ticket.buildUnits?.length ? [...ticket.buildUnits].sort().join(", ") : ticket.buildUnitDisposition || "Unmapped" },
     { field: { name: "Repository Build Units" }, text: "Unmapped" },
     { field: { name: "Repositories" }, options: [] },
-    { field: { name: "Parent Decision" }, text: ticket.parentDecision ? `${ticket.parentDecision} — ${ticket.parentDecisionTitle}` : "None" },
+    // A retired field value left on existing items; current sync neither reads nor writes it.
+    { field: { name: "Parent Decision" }, text: "None" },
   ];
   return { id: itemId, content: { number: issueNumber }, fieldValues: { nodes } };
 }
@@ -311,24 +284,6 @@ test("sync stops on duplicate identity markers before provider writes", async ()
   assert.equal(calls.filter((call) => call.command === "gh").length, 1);
 });
 
-test("Technical Decision label setup fails before decision projection when the provider is unavailable", async () => {
-  const calls = [];
-  const adapter = createGitHubAdapter({
-    run: runner([
-      { when: ({ command, args }) => command === "gh" && args.join(" ").includes("issues?state=all"), result: () => json([[{ number: 3, url: "https://github.com/owner/repository/issues/3", title: record.issueTitle, body: record.body, labels: [] }]]) },
-      { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("view"), result: () => json({ id: "PVT_1" }) },
-      { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("field-list"), result: () => json({ fields: completeDecisionProjectFields() }) },
-      { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("item-list"), result: () => json({ items: [{ id: "ITEM_TICKET", content: { number: 3 } }] }) },
-      { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("item-edit"), result: () => ({ stdout: "" }) },
-      { when: ({ command, args }) => command === "gh" && args[0] === "label" && args[1] === "list", result: () => { throw new Error("provider unavailable"); } },
-    ], calls),
-  });
-  await assert.rejects(
-    adapter.sync({ config, records: [{ ...record, buildUnits: [], buildUnitDisposition: "Unmapped" }], decisions: [decision], buildUnits: [] }),
-    /provider unavailable/,
-  );
-});
-
 test("sync keeps matching issue state and assignees while converging ticket Project mappings", async () => {
   const calls = [];
   const adapter = createGitHubAdapter({
@@ -368,10 +323,10 @@ test("sync keeps matching issue state and assignees while converging ticket Proj
   assert.deepEqual(await adapter.sync({ config, records: [record], buildUnits }), { completed: [record.id], buildUnitLabelsCompleted: ["BU-001", "BU-002"], failed: [] });
   assert.equal(calls.some((call) => call.args.includes("issue") && call.args.includes("edit")), false);
   const edits = calls.filter((call) => call.args.includes("item-edit"));
-  assert.equal(edits.length, 11);
+  assert.equal(edits.length, 10);
   assert.equal(edits.some((call) => call.args.includes("--single-select-option-id") && call.args.includes("O_TODO")), true);
   assert.equal(edits.some((call) => call.args.includes("--single-select-option-id") && call.args.includes("O_TECHNICAL")), true);
-  assert.equal(edits.filter((call) => call.args.includes("--text")).length, 7);
+  assert.equal(edits.filter((call) => call.args.includes("--text")).length, 6);
   assert.equal(edits.some((call) => call.args.includes("--text") && call.args.includes(record.domainLabel)), true);
   assert.equal(edits.some((call) => call.args.includes("--text") && call.args.includes(record.responsibilityLabel)), true);
   assert.equal(edits.some((call) => call.args.includes("--text") && call.args.includes("BU-001, BU-002")), true);
@@ -413,7 +368,7 @@ test("sync uses the item-add result without reloading the whole Project", async 
   assert.equal(calls.filter((call) => call.args.some((arg) => arg.includes("ProjectProjectionFields"))).length, 1);
   assert.equal(calls.filter((call) => call.args.includes("project") && call.args.includes("item-list")).length, 1);
   assert.equal(calls.filter((call) => call.args.includes("item-add")).length, 1);
-  assert.equal(calls.filter((call) => call.args.includes("item-edit") && call.args.includes("ITEM_NEW")).length, 12);
+  assert.equal(calls.filter((call) => call.args.includes("item-edit") && call.args.includes("ITEM_NEW")).length, 11);
 });
 
 test("ordinary sync leaves presentation configuration untouched", async () => {
@@ -450,35 +405,41 @@ test("ordinary sync leaves presentation configuration untouched", async () => {
   assert.equal(calls.some((call) => call.input?.includes("updateProjectV2View")), false);
 });
 
-test("sync keeps repository-mapped tickets out of the Build Unit label slice", async () => {
-  const calls = [];
-  const repositoryTicket = { ...record, buildUnits: ["BU-001"], buildUnitDisposition: null, repositories: ["REPO-001"] };
-  const adapter = createGitHubAdapter({
-    run: runner([
-      { when: ({ command, args }) => command === "gh" && args.join(" ").includes("issues?state=all"), result: () => json([[
-        { number: 3, url: "https://github.com/owner/repository/issues/3", title: repositoryTicket.issueTitle, body: repositoryTicket.body, labels: [{ name: buildUnitRecord.label }, { name: workflowLabel.name }] },
-      ]]) },
-      { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("view"), result: () => json({ id: "PVT_1" }) },
-      { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("field-list"), result: () => json({ fields: completeProjectFields([repositoryRecord]) }) },
-      { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("item-list"), result: () => json({ items: [{ id: "ITEM_1", content: { number: 3 } }] }) },
-      { when: ({ command, args }) => command === "gh" && args[0] === "label" && args[1] === "list", result: () => json([]) },
-      { when: ({ command, args }) => command === "gh" && args[0] === "label" && args[1] === "create", result: () => ({ stdout: "" }) },
-      { when: ({ command, args }) => command === "gh" && args.includes("issue") && args.includes("edit"), result: () => ({ stdout: "" }) },
-      { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("item-edit"), result: () => ({ stdout: "" }) },
-      multiSelectEditRoute(),
-    ], calls),
+for (const preferences of [{}, { omittedViews: ["Repositories"] }]) {
+  test(`sync preserves repository-scoped tickets and mappings with view omitted: ${JSON.stringify(preferences)}`, async () => {
+    const calls = [];
+    const repositoryTicket = { ...record, buildUnits: ["BU-001"], buildUnitDisposition: null, repositories: ["REPO-001"] };
+    const adapter = createGitHubAdapter({
+      run: runner([
+        { when: ({ command, args }) => command === "gh" && args.join(" ").includes("issues?state=all"), result: () => json([[
+          { number: 3, url: "https://github.com/owner/repository/issues/3", title: repositoryTicket.issueTitle, body: repositoryTicket.body, labels: [{ name: buildUnitRecord.label }, { name: workflowLabel.name }] },
+        ]]) },
+        { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("view"), result: () => json({ id: "PVT_1" }) },
+        { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("field-list"), result: () => json({ fields: completeProjectFields([repositoryRecord]) }) },
+        { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("item-list"), result: () => json({ items: [{ id: "ITEM_1", content: { number: 3 } }] }) },
+        { when: ({ command, args }) => command === "gh" && args[0] === "label" && args[1] === "list", result: () => json([]) },
+        { when: ({ command, args }) => command === "gh" && args[0] === "label" && args[1] === "create", result: () => ({ stdout: "" }) },
+        { when: ({ command, args }) => command === "gh" && args.includes("issue") && args.includes("edit"), result: () => ({ stdout: "" }) },
+        { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("item-edit"), result: () => ({ stdout: "" }) },
+        multiSelectEditRoute(),
+      ], calls),
+    });
+    const selectedConfig = { ...config, ...preferences };
+    assert.equal(projectViewContract(selectedConfig, [repositoryRecord]).some((view) => view.name === "Repositories"), false);
+    const result = await adapter.sync({ config: selectedConfig, records: [repositoryTicket], buildUnits: [buildUnitRecord], repositories: [repositoryRecord] });
+    assert.equal(calls.some((call) => call.input?.includes("ProjectV2View") || call.args.some((arg) => arg.includes("ProjectViewConfiguration"))), false);
+    assert.deepEqual(result, { completed: [repositoryTicket.id], repositoryFieldOptionsCompleted: ["REPO-001"], buildUnitLabelsCompleted: ["BU-001"], failed: [] });
+    assert.equal(calls.some((call) => call.args.includes("label") && call.args.includes("create") && call.args.includes(repositoryRecord.label)), false);
+    assert.equal(calls.some((call) => call.args.includes("--add-label") && call.args.includes(repositoryRecord.label)), false);
+    assert.equal(calls.some((call) => call.args.includes("--remove-label") && call.args.some((arg) => arg.includes(buildUnitRecord.label))), true);
+    assert.equal(calls.some((call) => call.args.includes("--remove-label") && call.args.some((arg) => arg.includes(workflowLabel.name))), false);
+    const repositoryEdit = calls.find((call) => call.args[0] === "api" && call.args[1] === "graphql" && call.args.includes("--input"));
+    assert.deepEqual(JSON.parse(repositoryEdit.input).variables.optionIds, ["O_REPO_001"]);
+    assert.equal(calls.some((call) => call.args.includes("--single-select-option-id") && call.args.includes("O_REPOSITORY_WIDE")), true);
+    assert.equal(calls.some((call) => call.args.includes("--text") && call.args.includes("BU-001")), true);
   });
-  const result = await adapter.sync({ config, records: [repositoryTicket], buildUnits: [buildUnitRecord], repositories: [repositoryRecord] });
-  assert.deepEqual(result, { completed: [repositoryTicket.id], repositoryFieldOptionsCompleted: ["REPO-001"], buildUnitLabelsCompleted: ["BU-001"], failed: [] });
-  assert.equal(calls.some((call) => call.args.includes("label") && call.args.includes("create") && call.args.includes(repositoryRecord.label)), false);
-  assert.equal(calls.some((call) => call.args.includes("--add-label") && call.args.includes(repositoryRecord.label)), false);
-  assert.equal(calls.some((call) => call.args.includes("--remove-label") && call.args.some((arg) => arg.includes(buildUnitRecord.label))), true);
-  assert.equal(calls.some((call) => call.args.includes("--remove-label") && call.args.some((arg) => arg.includes(workflowLabel.name))), true);
-  const repositoryEdit = calls.find((call) => call.args[0] === "api" && call.args[1] === "graphql" && call.args.includes("--input"));
-  assert.deepEqual(JSON.parse(repositoryEdit.input).variables.optionIds, ["O_REPO_001"]);
-  assert.equal(calls.some((call) => call.args.includes("--single-select-option-id") && call.args.includes("O_REPOSITORY_WIDE")), true);
-  assert.equal(calls.some((call) => call.args.includes("--text") && call.args.includes("BU-001")), true);
-});
+
+}
 
 test("sync projects one owned-Build-Unit card when two mapped Build Units share one repository", async () => {
   const calls = [];
@@ -573,8 +534,7 @@ test("reconcile rejects REPO ticket labels while accepting repository field memb
     drifts: [{ ticketId: repositoryTicket.id, kinds: ["unexpected-repository-labels"] }],
     unknownTicketIds: [],
     fixed: false,
-    decisionDrifts: [],
-    unknownDecisionIds: [],
+    historicalDecisionIds: [],
   });
 });
 
@@ -659,12 +619,11 @@ test("reconcile accepts the GraphQL Repositories field when gh project field-lis
     ], calls),
   });
 
-  assert.deepEqual(await adapter.reconcile({ config, records: [], decisions: [], buildUnits: [] }), {
+  assert.deepEqual(await adapter.reconcile({ config, records: [], buildUnits: [] }), {
     drifts: [],
     unknownTicketIds: [],
     fixed: false,
-    decisionDrifts: [],
-    unknownDecisionIds: [],
+    historicalDecisionIds: [],
   });
   assert.equal(calls.some(({ command, args }) => command === "gh" && args.includes("field-list")), false);
 });
@@ -692,7 +651,7 @@ test("reconcile reads Repositories membership through GraphQL when flattened Pro
     ], calls),
   });
 
-  const result = await adapter.reconcile({ config, records: [ticket], decisions: [], buildUnits: [], repositories: [repositoryRecord] });
+  const result = await adapter.reconcile({ config, records: [ticket], buildUnits: [], repositories: [repositoryRecord] });
   assert.deepEqual(result.drifts, []);
   assert.equal(calls.some(({ command, args }) => command === "gh" && args.some((arg) => arg.includes("ProjectProjectionItemMultiSelectValues"))), true);
 });
@@ -707,7 +666,7 @@ test("reconcile rejects an actually missing Repositories field from the GraphQL 
     ]),
   });
 
-  await assert.rejects(adapter.reconcile({ config, records: [], decisions: [], buildUnits: [] }), /missing required Repositories field/);
+  await assert.rejects(adapter.reconcile({ config, records: [], buildUnits: [] }), /missing required Repositories field/);
 });
 
 test("reconcile reports stale issue-backed Project titles without treating them as a missing field or membership", async () => {
@@ -723,7 +682,7 @@ test("reconcile reports stale issue-backed Project titles without treating them 
     ]),
   });
 
-  const result = await adapter.reconcile({ config, records: [ticket], decisions: [], buildUnits: [] });
+  const result = await adapter.reconcile({ config, records: [ticket], buildUnits: [] });
   assert.deepEqual(result.drifts, [{ ticketId: ticket.id, kinds: ["project-title"] }]);
 });
 
@@ -743,14 +702,42 @@ test("normal sync never recreates a Project item solely because its native title
     ], calls),
   });
 
-  assert.deepEqual(await adapter.sync({ config, records: [ticket], decisions: [], buildUnits: [] }), {
+  assert.deepEqual(await adapter.sync({ config, records: [ticket], buildUnits: [] }), {
     completed: [ticket.id],
     buildUnitLabelsCompleted: [],
     failed: [],
   });
   assert.equal(calls.some(({ command, args }) => command === "gh" && args[0] === "project" && args[1] === "item-delete"), false);
   assert.equal(calls.some(({ command, args }) => command === "gh" && args[0] === "project" && args[1] === "item-add"), false);
-  assert.equal(calls.some(({ command, args }) => command === "gh" && args[0] === "issue" && args[1] === "edit" && args.includes("--add-label") && args.some((arg) => arg.includes(workflowLabel.name))), true);
+  assert.equal(calls.some(({ command, args }) => command === "gh" && args[0] === "issue" && args[1] === "edit" && args.includes("--add-label") && args.some((arg) => arg.includes(workflowLabel.name))), false);
+});
+
+test("sync neither creates, adds nor removes the retired Software Design Workflow label", async () => {
+  const active = { ...record, id: "TICKET-0001", buildUnits: [], buildUnitDisposition: "Unmapped" };
+  const outOfScope = { ...record, id: "TICKET-0002", issueTitle: "TICKET-0002 — Later policy", body: "<!-- software-design-ticket TICKET-0002 -->\nbody", status: "out-of-scope", buildUnits: [], buildUnitDisposition: "Unmapped" };
+  for (const existing of [[], [workflowLabel]]) {
+    const calls = [];
+    const adapter = createGitHubAdapter({
+      run: runner([
+        { when: ({ command, args }) => command === "gh" && args.join(" ").includes("issues?state=all"), result: () => json([[
+          { number: 3, url: "https://github.com/owner/repository/issues/3", title: active.issueTitle, body: active.body, labels: [] },
+          { number: 4, url: "https://github.com/owner/repository/issues/4", title: outOfScope.issueTitle, body: outOfScope.body, state: "CLOSED", labels: existing.map(({ name }) => ({ name })) },
+        ]]) },
+        { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("view"), result: () => json({ id: "PVT_1" }) },
+        { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("field-list"), result: () => json({ fields: completeProjectFields() }) },
+        { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("item-list"), result: () => json({ items: [matchingTicketItem(active, 3, "ITEM_1"), matchingTicketItem(outOfScope, 4, "ITEM_2")] }) },
+        { when: ({ command, args }) => command === "gh" && args[0] === "label" && args[1] === "list", result: () => json(existing) },
+        { when: ({ command, args }) => command === "gh" && args[0] === "label", result: () => ({ stdout: "" }) },
+        { when: ({ command, args }) => command === "gh" && args[0] === "issue", result: () => ({ stdout: "" }) },
+        { when: ({ command, args }) => command === "gh" && args.includes("project") && args.includes("item-edit"), result: () => ({ stdout: "" }) },
+      ], calls),
+    });
+
+    const result = await adapter.sync({ config, records: [active, outOfScope], buildUnits: [] });
+    assert.deepEqual(result.failed, []);
+    const touchesWorkflowLabel = calls.some(({ command, args }) => command === "gh" && args.some((arg) => arg.includes(workflowLabel.name)));
+    assert.equal(touchesWorkflowLabel, false, JSON.stringify(calls.map(({ args }) => args)));
+  }
 });
 
 test("sync maintains native Build Unit labels and never creates Project draft items", async () => {
@@ -967,8 +954,7 @@ test("reconcile reports Build Unit label drift without writing or inspecting dra
     drifts: [{ ticketId: "TICKET-0001", kinds: ["build-unit-labels"] }],
     unknownTicketIds: [],
     fixed: false,
-    decisionDrifts: [],
-    unknownDecisionIds: [],
+    historicalDecisionIds: [],
   });
   assert.equal(calls.length, 5);
 });
@@ -1106,7 +1092,7 @@ test("retirement reconciles existing projected records without creating archived
   const calls = [];
   let issue = { number: 3, url: 'https://github.com/owner/repository/issues/3', title: record.issueTitle, body: record.body, state: 'open', labels: [] };
   let items = [{ id: 'ITEM_RETIRED', content: { number: 3 } }];
-  const archived = { id: record.id, title: 'Select retry policy', closed_reason: 'duplicate', status_at_close: 'todo', replaced_by: ['TICKET-0002'], parent_decision: 'TD-001', sourcePath: 'design/software-design/build/workflow/tickets/example/sr-001/sr-001-tickets.yaml' };
+  const archived = { id: record.id, title: 'Select retry policy', closed_reason: 'duplicate', status_at_close: 'todo', replaced_by: ['TICKET-0002'], sourcePath: 'design/software-design/build/workflow/tickets/example/sr-001/sr-001-tickets.yaml' };
   const adapter = createGitHubAdapter({ run: runner([
     { when: ({ args }) => args.join(' ').includes('issues?state=all'), result: () => json([[issue]]) },
     { when: ({ args }) => args[0] === 'project' && args[1] === 'view', result: () => json({ id: 'PVT_1' }) },
@@ -1126,7 +1112,7 @@ test("retirement reconciles existing projected records without creating archived
   assert.equal(issue.state, 'closed');
   assert.match(issue.body, /duplicate/);
   assert.match(issue.body, /TICKET-0002/);
-  assert.match(issue.body, /TD-001/);
+  assert.match(issue.body, /Preserved canonical record:\n```json\n[\s\S]*"status_at_close": "todo"/);
   assert.deepEqual(items, []);
   const mutationCount = () => calls.filter(({ args }) => args.includes('PATCH') || args.includes('item-delete')).length;
   assert.equal(mutationCount(), 2);
@@ -1229,20 +1215,20 @@ for (const invalid of ["missing", "wrong-type", "wrong-order"]) {
 }
 
 
-test("sync and reconcile reuse bulk issue identities for named prerequisite and parent links", async () => {
+test("sync and reconcile reuse bulk issue identities for named prerequisites while preserving historical parent issues", async () => {
   const parentUrl = "https://github.com/owner/repository/issues/8";
   const dependencyUrl = "https://github.com/owner/repository/issues/4";
   const dependency = { ...record, id: "TICKET-0002", issueTitle: "TICKET-0002 — Prevent duplicate delivery", body: "<!-- software-design-ticket TICKET-0002 -->\nDependency body", buildUnits: [] };
-  const main = { ...record, buildUnits: [], sourcePath: "design/software-design/build/workflow/tickets/delivery.yaml", question: "When should we retry?", context: "Retries can duplicate a notification.", options: ["Retry once", "Ask staff"], recommendation: "Retry once if duplicate requests are safe.", dependencies: [dependency.id], dependencyDetails: [{ id: dependency.id, title: "Prevent duplicate delivery", status: "finished" }], parentDecision: decision.id, parentDecisionTitle: decision.issueTitle.split(" — ")[1] };
+  const main = { ...record, buildUnits: [], sourcePath: "design/software-design/build/workflow/tickets/delivery.yaml", question: "When should we retry?", context: "Retries can duplicate a notification.", options: ["Retry once", "Ask staff"], recommendation: "Retry once if duplicate requests are safe.", dependencies: [dependency.id], dependencyDetails: [{ id: dependency.id, title: "Prevent duplicate delivery", status: "finished" }] };
   main.body = renderIssueBody(main);
-  const expectedBody = renderIssueBody({ ...main, parentDecisionUrl: parentUrl, waitingOnDetails: ["TICKET-0002: answer required"], dependencyDetails: [{ ...main.dependencyDetails[0], issueUrl: dependencyUrl }] });
+  const expectedBody = renderIssueBody({ ...main, waitingOnDetails: ["TICKET-0002: answer required"], dependencyDetails: [{ ...main.dependencyDetails[0], issueUrl: dependencyUrl }] });
   const calls = [];
   let mainBody = main.body;
   const adapter = createGitHubAdapter({ run: runner([
     { when: ({ args }) => args.join(" ").includes("issues?state=all"), result: () => json([[
       { number: 3, url: "https://github.com/owner/repository/issues/3", title: main.issueTitle, body: mainBody, labels: [workflowLabel] },
       { number: 4, url: dependencyUrl, title: dependency.issueTitle, body: dependency.body, labels: [workflowLabel] },
-      { number: 8, url: parentUrl, title: decision.issueTitle, body: "<!-- software-design-decision TD-001 -->", labels: [] },
+      { number: 8, url: parentUrl, title: "TD-001 — Fallback release", body: "<!-- software-design-decision TD-001 -->", labels: [] },
     ]]) },
     { when: ({ args }) => args[0] === "project" && args[1] === "view", result: () => json({ id: "PVT_1" }) },
     { when: ({ args }) => args[1] === "field-list", result: () => json({ fields: completeProjectFields() }) },
@@ -1254,14 +1240,92 @@ test("sync and reconcile reuse bulk issue identities for named prerequisite and 
     { when: ({ args }) => args[0] === "project" && args[1] === "item-edit", result: () => json({}) },
     { when: ({ args }) => args[0] === "issue" && args[1] === "edit", result: ({ args }) => { if (args[2] === "3" && args.includes("--body")) mainBody = args[args.indexOf("--body") + 1]; return json({}); } },
   ], calls) });
-  const input = { config, records: [main, dependency], decisions: [decision] };
+  const input = { config, records: [main, dependency] };
   await adapter.sync(input);
   assert.equal(mainBody, expectedBody);
+  assert.equal(calls.some(({args}) => args[0] === "issue" && args[2] === "8"), false);
   const result = await adapter.reconcile(input);
   assert.equal(result.drifts.some((drift) => drift.ticketId === main.id && drift.kinds.includes("body")), false);
   assert.equal(calls.filter(({ args }) => args.join(" ").includes("issues?state=all")).length, 2);
   assert.equal(calls.some(({ args }) => /^repos\/owner\/repository\/issues\/\d+$/.test(args[1] || "") && !args.includes("PATCH")), false);
   assert.equal(main.body.includes(parentUrl), false, "Rendering must not mutate the canonical input");
+});
+
+const retiredDecisionUrl = "https://github.com/owner/repository/issues/8";
+const retiredDecisionTitle = "TD-001 — Fallback release";
+const retiredDecisionMarker = "<!-- software-design-decision TD-001 -->";
+const retiredDecisionComment = `Technical Decision retired; see the current owners. <!-- software-design-ticket TICKET-0001 --> <!-- software-design-decision TD-002 -->`;
+
+function retiredDecisionAdapter({ ticket, decisionIssue, items, calls }) {
+  return createGitHubAdapter({ run: runner([
+    { when: ({ args }) => args.join(" ") === "api user", result: () => json({ login: "bot" }) },
+    { when: ({ args }) => args.join(" ").includes("issues?state=all"), result: () => json([[
+      { number: 3, url: "https://github.com/owner/repository/issues/3", html_url: "https://github.com/owner/repository/issues/3", title: ticket.issueTitle, body: renderIssueBody(ticket), labels: [] },
+      decisionIssue,
+    ]]) },
+    { when: ({ args }) => args.join(" ").includes("issues/3/comments"), result: () => json([]) },
+    { when: ({ args }) => args.join(" ").includes("issues/8/comments"), result: () => json([{ id: 9, html_url: `${retiredDecisionUrl}#issuecomment-9`, body: retiredDecisionComment, user: { login: "bot" } }]) },
+    { when: ({ args }) => args[0] === "project" && args[1] === "view", result: () => json({ id: "PVT_1" }) },
+    { when: ({ args }) => args[1] === "field-list", result: () => json({ fields: completeProjectFields() }) },
+    { when: ({ args }) => args[1] === "item-list", result: () => json({ items }) },
+    { when: ({ args }) => args[0] === "label" && args[1] === "list", result: () => json([{ name: "Technical Decision" }, { name: "Out-of-Scope" }]) },
+    { when: ({ args }) => args[0] === "label", result: () => json({}) },
+    { when: ({ args }) => args[0] === "issue" || args[0] === "project" || args.includes("PATCH") || args.includes("--input"), result: () => json({}) },
+  ], calls) });
+}
+
+const touchesRetiredDecision = ({ args, input }) => args.some((arg) => arg === "8" || arg.includes("issues/8") || arg === retiredDecisionUrl || arg === "ITEM_TD") || String(input || "").includes("ITEM_TD");
+
+test("current sync and reconcile make no Technical Decision call for an open, closed, archived or item-less TD issue", async () => {
+  const ticket = { ...record, buildUnits: [], buildUnitDisposition: "Unmapped" };
+  const cases = [
+    { state: "OPEN", tdItem: true },
+    { state: "CLOSED", tdItem: true },
+    { state: "CLOSED", tdItem: false },
+    { state: "OPEN", tdItem: false },
+  ];
+  for (const { state, tdItem } of cases) {
+    const calls = [];
+    const decisionIssue = { number: 8, url: retiredDecisionUrl, html_url: retiredDecisionUrl, title: retiredDecisionTitle, body: `${retiredDecisionMarker}\nState: Open`, state, comments: 1, labels: [{ name: "Technical Decision" }, { name: "Out-of-Scope" }] };
+    // gh project item-list omits archived items, so an archived TD item and an absent one read alike.
+    const items = [matchingTicketItem(ticket, 3, "ITEM_1"), ...(tdItem ? [{ id: "ITEM_TD", content: { number: 8 }, fieldValues: { nodes: [{ field: { name: "Decision Status" }, text: "Deferred For Later Design" }] } }] : [])];
+    const adapter = retiredDecisionAdapter({ ticket, decisionIssue, items, calls });
+    const input = { config, records: [ticket], buildUnits: [] };
+    assert.deepEqual((await adapter.sync(input)).failed, []);
+    assert.deepEqual((await adapter.sync(input)).failed, []);
+    const reconciled = await adapter.reconcile(input);
+    assert.deepEqual(reconciled.historicalDecisionIds, ["TD-001"]);
+    assert.deepEqual(reconciled.unknownTicketIds, []);
+    assert.deepEqual(reconciled.drifts.map(({ ticketId }) => ticketId).filter((id) => id !== ticket.id), []);
+    assert.deepEqual(calls.filter(touchesRetiredDecision).map(({ args }) => args.join(" ")), [], `${state} TD issue, item ${tdItem ? "present" : "archived or absent"}`);
+  }
+});
+
+test("a Technical Decision closing comment is never read, whatever it contains", async () => {
+  const ticket = { ...record, buildUnits: [], buildUnitDisposition: "Unmapped" };
+  const calls = [];
+  const decisionIssue = { number: 8, url: retiredDecisionUrl, html_url: retiredDecisionUrl, title: retiredDecisionTitle, body: retiredDecisionMarker, state: "CLOSED", comments: 1, labels: [{ name: "Technical Decision" }] };
+  const adapter = retiredDecisionAdapter({ ticket, decisionIssue, items: [matchingTicketItem(ticket, 3, "ITEM_1")], calls });
+  const input = { config, records: [ticket], buildUnits: [] };
+  await adapter.sync(input);
+  assert.deepEqual((await adapter.reconcile(input)).historicalDecisionIds, ["TD-001"]);
+  const pending = await adapter.pendingComments(input);
+  assert.deepEqual(pending.issues.map(({ issue }) => issue.number), [3]);
+  assert.equal(calls.some(({ args }) => args.some((arg) => arg.includes("issues/8/comments"))), false);
+  assert.deepEqual(calls.filter(touchesRetiredDecision).map(({ args }) => args.join(" ")), []);
+});
+
+test("a ticket marker added to a Technical Decision body stops sync and reconcile with a collision before any write", async () => {
+  const ticket = { ...record, buildUnits: [], buildUnitDisposition: "Unmapped" };
+  for (const marker of ["<!-- software-design-ticket TICKET-0001 -->", "<!-- software-design-ticket TICKET-0002 -->", "<!-- technical-design-ticket TICKET-0001 -->"]) {
+    const calls = [];
+    const decisionIssue = { number: 8, url: retiredDecisionUrl, html_url: retiredDecisionUrl, title: retiredDecisionTitle, body: `${retiredDecisionMarker}\n${marker}`, state: "CLOSED", labels: [{ name: "Technical Decision" }] };
+    const adapter = retiredDecisionAdapter({ ticket, decisionIssue, items: [matchingTicketItem(ticket, 3, "ITEM_1")], calls });
+    const input = { config, records: [ticket], buildUnits: [] };
+    await assert.rejects(adapter.sync(input), /Managed marker collision on issue 8/);
+    await assert.rejects(adapter.reconcile(input), /Managed marker collision on issue 8/);
+    assert.deepEqual(calls.filter(({ command }) => command === "gh").map(({ args }) => args.find((arg) => arg.includes("issues?state=all")) ? "issues" : args.join(" ")), ["issues", "issues"], marker);
+  }
 });
 
 test("sync and reconcile refresh unchanged dependent cards, clear inactive fields, and converge", async () => {
@@ -1320,33 +1384,7 @@ test("sync and reconcile refresh unchanged dependent cards, clear inactive field
   assert.deepEqual((await adapter.reconcile(input)).drifts, []);
 });
 
-test("TD records report and clear all stale ticket-board values without native dependency writes", async () => {
-  const item = { id: "ITEM_TD", content: { number: 8 }, fieldValues: { nodes: [
-    { field: { name: "Work area" }, text: "Technical" },
-    { field: { name: "Answering group" }, name: "Ready" },
-    { field: { name: "Waiting on" }, text: "Old prerequisite" },
-  ] } };
-  const calls = [];
-  const adapter = createGitHubAdapter({ run: runner([
-    { when: ({ args }) => args.join(" ").includes("issues?state=all"), result: () => json([[{ number: 8, url: "https://github.com/owner/repository/issues/8", title: decision.issueTitle, body: "<!-- software-design-decision TD-001 -->", labels: [{ name: "Technical Decision" }, { name: "Out-of-Scope" }] }]]) },
-    { when: ({ args }) => args[1] === "view", result: () => json({ id: "PVT_1" }) },
-    { when: ({ args }) => args[1] === "field-list", result: () => json({ fields: completeProjectFields() }) },
-    { when: ({ args }) => args[1] === "item-list", result: () => json({ items: [item] }) },
-    { when: ({ args }) => args[0] === "label" && args[1] === "list", result: () => json([]) },
-    { when: ({ args }) => args[0] === "label", result: () => json({}) },
-    { when: ({ args }) => args[0] === "issue" && args[1] === "edit", result: () => json({}) },
-    { when: ({ args }) => args[1] === "item-edit", result: () => json({}) },
-  ], calls) });
-  const input = { config, records: [], decisions: [decision] };
-  const drift = await adapter.reconcile(input);
-  for (const name of ["Work area", "Answering group", "Waiting on"]) assert.ok(drift.decisionDrifts[0].kinds.includes(`project-${name}`));
-  await adapter.sync(input);
-  for (const id of ["F_WORK_AREA", "F_ANSWERING_GROUP", "F_WAITING_ON"]) assert.ok(calls.some((c) => c.args.includes(id) && c.args.includes("--clear")));
-  assert.equal(calls.some((c) => /blocked_by|dependencies|addBlockedBy/.test(c.input || c.args.join(" "))), false);
-});
-
-
-test("legacy Kind schema blocks every GitHub write until explicitly migrated in place", async () => {
+test("a Kind schema with the retired technical option blocks every GitHub write without renaming it", async () => {
   const fields = completeProjectFields();
   fields.find(({ name }) => name === "Kind").options[0].name = "technical";
   const calls = [];
@@ -1356,7 +1394,11 @@ test("legacy Kind schema blocks every GitHub write until explicitly migrated in 
     { when: ({ args }) => args[1] === "field-list", result: () => json({ fields }) },
     { when: ({ args }) => args[1] === "item-list", result: () => json({ items: [] }) },
   ], calls) });
-  await assert.rejects(adapter.sync({ config, records: [record] }), /Explicit migration required: rename existing Kind option O_TECHNICAL.*F_KIND/);
+  await assert.rejects(adapter.sync({ config, records: [record] }), (error) => {
+    assert.match(error.message, /GitHub Project Kind options must be ordered exactly as: Software, product, operational\. Explicit field setup is required before sync; do not recreate existing options\./);
+    assert.doesNotMatch(error.message, /Explicit migration required|O_TECHNICAL/);
+    return true;
+  });
   assert.equal(calls.some(({ args }) => args.some((arg) => ["create", "item-edit", "item-add", "edit", "PATCH", "--input"].includes(arg))), false);
   assert.equal(fields.find(({ name }) => name === "Kind").options[0].name, "technical");
 });
@@ -1402,12 +1444,12 @@ test("Software display reuses the existing Kind ID and updates Work area without
 });
 
 // Stateful provider fixture: unknown writes fail, including issue/item creation.
-function identityMigrationFixture({ namespace = "technical", aliases = false, interrupted = false } = {}) {
+function identityMigrationFixture({ ticketMarkers = ["software"], decisionMarkers = ["software"], interrupted = false } = {}) {
   const ticket = numberedRecord(1, { question: "Which representation?", context: "Fixed behavior", sourcePath: "tickets.yaml" });
   ticket.body = renderIssueBody(ticket);
   const issues = [
-    { number: 3, url: "https://github.com/owner/repository/issues/3", title: ticket.issueTitle, state: "CLOSED", comments: [{ id: 9, body: "Preserve this discussion" }], labels: [workflowLabel], body: `<!-- ${namespace}-design-ticket TICKET-0001 -->${aliases ? "\n<!-- software-design-ticket TICKET-0001 -->" : ""}\nOld body` },
-    { number: 8, url: "https://github.com/owner/repository/issues/8", title: decision.issueTitle, state: "OPEN", comments: [], labels: [{ name: "Technical Decision" }, { name: "Out-of-Scope" }], body: `<!-- ${namespace}-design-decision TD-001 -->${aliases ? "\n<!-- software-design-decision TD-001 -->" : ""}\nOld TD body` },
+    { number: 3, url: "https://github.com/owner/repository/issues/3", title: ticket.issueTitle, state: "CLOSED", comments: [{ id: 9, body: "Preserve this discussion" }], labels: [workflowLabel], body: `${ticketMarkers.map((namespace) => `<!-- ${namespace}-design-ticket TICKET-0001 -->`).join("\n")}\nOld body` },
+    { number: 8, url: "https://github.com/owner/repository/issues/8", title: "TD-001 — Fallback release", state: "OPEN", comments: [], labels: [{ name: "Technical Decision" }, { name: "Out-of-Scope" }], body: `${decisionMarkers.map((namespace) => `<!-- ${namespace}-design-decision TD-001 -->`).join("\n")}\nOld TD body` },
     { number: 99, title: ticket.issueTitle, body: "<!-- casino-migration-history TICKET-0001 -->", state: "CLOSED", comments: [], labels: [] },
   ];
   const historical = structuredClone(issues[2]);
@@ -1417,6 +1459,7 @@ function identityMigrationFixture({ namespace = "technical", aliases = false, in
   const calls = [];
   let failOnce = interrupted;
   const adapter = createGitHubAdapter({ run: runner([
+    { when: ({ args }) => args.join(" ") === "api user", result: () => json({ login: "bot" }) },
     { when: ({ args }) => args.join(" ").includes("issues?state=all"), result: () => json([issues]) },
     { when: ({ args }) => args[0] === "project" && args[1] === "view", result: () => json({ id: "PVT_1" }) },
     { when: ({ args }) => args[1] === "field-list", result: () => json({ fields }) },
@@ -1441,17 +1484,20 @@ function identityMigrationFixture({ namespace = "technical", aliases = false, in
       return json({});
     } },
   ], calls) });
-  return { adapter, input: { config, records: [ticket], decisions: [decision] }, issues, items, calls, historical, fields };
+  return { adapter, input: { config, records: [ticket] }, issues, items, calls, historical, fields };
 }
 
-for (const options of [{ namespace: "technical" }, { namespace: "software" }, { namespace: "technical", aliases: true }, { namespace: "technical", interrupted: true }]) {
-  test(`stable legacy/current identity adoption preserves history and converges: ${JSON.stringify(options)}`, async () => {
+for (const options of [{}, { decisionMarkers: ["technical"] }, { decisionMarkers: ["technical", "software"] }, { interrupted: true }]) {
+  test(`a current ticket identity preserves history beside historical TD markers and converges: ${JSON.stringify(options)}`, async () => {
     const f = identityMigrationFixture(options);
     const beforeComments = structuredClone(f.issues.map((i) => i.comments));
+    const historicalDecision = structuredClone(f.issues[1]);
+    const historicalItem = structuredClone(f.items[1]);
     if (options.interrupted) await assert.rejects(f.adapter.sync(f.input), /Connection lost/);
     await f.adapter.sync(f.input);
     assert.match(f.issues[0].body, /^<!-- software-design-ticket TICKET-0001 -->/);
-    assert.match(f.issues[1].body, /^<!-- software-design-decision TD-001 -->/);
+    assert.deepEqual(f.issues[1], historicalDecision);
+    assert.deepEqual(f.items[1], historicalItem);
     assert.equal(f.issues[0].state, "CLOSED");
     assert.deepEqual(f.issues.map((i) => i.comments), beforeComments);
     assert.deepEqual(f.issues[2], f.historical);
@@ -1459,7 +1505,7 @@ for (const options of [{ namespace: "technical" }, { namespace: "software" }, { 
     assert.equal(f.items[0].fieldValues.nodes.find((v) => v.field.name === "Unmanaged notes").text, "Preserve");
     const reconciliation = await f.adapter.reconcile(f.input);
     assert.deepEqual(reconciliation.drifts, []);
-    assert.deepEqual(reconciliation.decisionDrifts, []);
+    assert.deepEqual(reconciliation.historicalDecisionIds, ["TD-001"]);
     assert.deepEqual(reconciliation.unknownTicketIds, []);
     const after = f.calls.length;
     await f.adapter.sync(f.input);
@@ -1467,6 +1513,47 @@ for (const options of [{ namespace: "technical" }, { namespace: "software" }, { 
     assert.equal(f.calls.some((c) => c.args.includes("item-add") || c.args.includes("item-delete") || c.args[0] === "issue" && c.args[1] === "create"), false);
   });
 }
+
+const retiredTicketMarker = /GitHub issues 3 \(TICKET-0001\) carry a retired technical-design-ticket marker; migrate them with an earlier Software Design release before using this one\./;
+const providerWrites = (calls) => calls.filter((c) => c.command === "gh" && c.args.join(" ") !== "api user" && !c.args.join(" ").includes("issues?state=all"));
+const noChangeSummary = { ticketId: "TICKET-0001", sourceCommentUrls: [], processedThroughCommentUrl: null, understoodInput: "Already covered.", outcome: "no-change", reason: "The canonical design already says this.", canonicalFiles: [], draftPrUrl: null, clarificationQuestion: null };
+
+for (const ticketMarkers of [["technical"], ["technical", "software"]]) {
+  test(`a canonical ticket whose issue keeps a retired technical-design-ticket marker stops every issue-reading operation before any write: ${ticketMarkers.join("+")}`, async () => {
+    const f = identityMigrationFixture({ ticketMarkers, decisionMarkers: ["technical"] });
+    const before = structuredClone({ issues: f.issues, items: f.items });
+    await assert.rejects(f.adapter.sync(f.input), retiredTicketMarker);
+    await assert.rejects(f.adapter.reconcile(f.input), retiredTicketMarker);
+    await assert.rejects(f.adapter.pendingComments(f.input), retiredTicketMarker);
+    await assert.rejects(f.adapter.postSummaries({ ...f.input, results: [noChangeSummary] }), retiredTicketMarker);
+    assert.deepEqual({ issues: f.issues, items: f.items }, before);
+    assert.deepEqual(providerWrites(f.calls), []);
+  });
+}
+
+test("an archived ticket whose issue keeps a retired technical-design-ticket marker stops sync before any active ticket write", async () => {
+  const f = identityMigrationFixture();
+  f.issues.push({ number: 5, url: "https://github.com/owner/repository/issues/5", title: "TICKET-0002 — Old question", state: "OPEN", comments: [], labels: [], body: "<!-- technical-design-ticket TICKET-0002 -->\nOld body" });
+  const archived = { id: "TICKET-0002", title: "Old question", closed_reason: "duplicate", status_at_close: "todo", replaced_by: ["TICKET-0001"], sourcePath: "tickets.yaml" };
+  const before = structuredClone(f.issues);
+  for (const operation of ["sync", "reconcile"]) {
+    await assert.rejects(f.adapter[operation]({ ...f.input, archivedRecords: [archived] }), /GitHub issues 5 \(TICKET-0002\) carry a retired technical-design-ticket marker/);
+  }
+  assert.deepEqual(f.issues, before);
+  assert.deepEqual(providerWrites(f.calls), []);
+});
+
+test("a retired technical-design-ticket marker that no canonical ticket names stays a recognized identity and is left untouched", async () => {
+  const f = identityMigrationFixture();
+  f.issues.push({ number: 6, url: "https://github.com/owner/repository/issues/6", title: "TICKET-0009 — Removed question", state: "CLOSED", comments: [], labels: [], body: "<!-- technical-design-ticket TICKET-0009 -->\nOld body" });
+  const orphan = structuredClone(f.issues.at(-1));
+  await f.adapter.sync(f.input);
+  assert.deepEqual(f.issues.at(-1), orphan);
+  assert.equal(f.calls.some((c) => c.args.includes("6") || c.args.some((arg) => arg.includes("issues/6"))), false);
+  assert.deepEqual((await f.adapter.reconcile(f.input)).unknownTicketIds, ["TICKET-0009"]);
+  f.issues.push({ number: 7, body: "<!-- software-design-ticket TICKET-0009 -->" });
+  await assert.rejects(f.adapter.sync(f.input), /Duplicate GitHub issue markers for ticket TICKET-0009: 6, 7/);
+});
 
 for (const bodies of [
   ["<!-- technical-design-ticket TICKET-0001 -->", "<!-- software-design-ticket TICKET-0001 -->"],

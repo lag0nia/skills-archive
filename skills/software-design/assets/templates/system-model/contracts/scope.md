@@ -5,7 +5,6 @@ name: Scope boundary name
 status: deferred
 responsibilities: "SR-001"
 flows: "FLOW-001"
-decision: "None."
 ---
 
 # SCOPE-001 — Scope Boundary Name
@@ -24,4 +23,4 @@ State why it is outside the target without inventing a future design.
 
 ## Revisit Condition
 
-State a concrete trigger. Link a defined deferred `TD-xxx` when it owns the future choice.
+State a concrete trigger.

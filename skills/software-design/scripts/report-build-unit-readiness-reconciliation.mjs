@@ -142,4 +142,11 @@ function main() {
   }
 }
 
-if (isEntryPoint(import.meta.url)) main();
+if (isEntryPoint(import.meta.url)) {
+  try {
+    main();
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    process.exitCode = 1;
+  }
+}

@@ -1,0 +1,57 @@
+--- replace after «…»
+  - Domain Overview
+  + Loan Terms And Commitments
+--- replace after «…same label. One Responsibility, Shared Meaning»
+  - **Loan
+  + **[Loan
+--- replace after «…terms, one-loan offer, reservation, and parameter»
+  - binding ([SR-001])**
+  + binding]**
+--- replace after «…before returning public identities or signing.»
+  - [IFACE-001], [IFACE-002],
+  + The [loan terms
+--- replace after «…identities or signing. [IFACE-001], [IFACE-002], and»
+  - [IFACE-003]
+  + canonical binding contract], the [protocol deployment manifest], and the [offer, reservation, and loan binding contract]
+--- delete after «…representations and public boundaries. The detailed»
+  - approved
+  + 
+--- replace after «…expired, or cancelled approvals are rejected.»
+  - [STATE-001], [STATE-002],
+  + The [offer
+--- replace after «…approvals are rejected. [STATE-001], [STATE-002], and»
+  - [FLOW-001]
+  + reservation states], the [canonical loan terms states], and the [origination flow]
+--- replace after «…and [FLOW-001] preserve that ordering. The»
+  - architecture's older standing-approval
+  + architecture record instead states that publication is the lender's standing acceptance of the offer and that reservation creates the canonical loan without a second lender approval. This is an unresolved source conflict: neither
+--- replace after «…ordering. The architecture's older standing-approval wording»
+  - conflicts with these detailed records; this migration records
+  + is chosen until it is answered, so whether
+--- replace after «…detailed records; this migration records the»
+  - discrepancy without deciding new behavior.
+  + lender approves the final candidate separately remains open.
+--- replace after «…protocol Bitcoin public key, Base protocol»
+  - EOA,
+  + externally owned account (EOA),
+--- replace after «…a second authority for agreement meaning.»
+  - [INV-001], [INV-011], [INV-012],
+  + The [canonical loan binding], [selected lender capital control], [authority separation],
+--- replace after «…agreement meaning. [INV-001], [INV-011], [INV-012], and»
+  - [INV-023]
+  + [key, destination, and refund separation] invariants
+--- replace after «…and accepted address spellings remain in»
+  - [IFACE-001];
+  + the [loan terms and canonical binding contract];
+--- insert after «…multi-lender matching, pooled capital, product custody,»
+  - 
+  + and
+--- replace after «…product custody, automatic deployment of lender»
+  - capital, and liquidation
+  + capital
+--- replace after «…capital, and liquidation remain excluded under»
+  - [SCOPE-011].
+  + the [matching, pooling, custody, and automatic capital exclusion], and liquidation under the [liquidation, surplus, and shortfall exclusion].
+--- insert after «…diagram cannot supply a missing approval.»
+  - 
+  + The [architecture guide] shows where this domain fits in the system, and the [domain record] lists exactly what the domain owns and excludes.

@@ -1,5 +1,6 @@
 #!/usr/bin/env node
 import fs from 'node:fs';
+import { validationMode } from './lib/validation-mode.mjs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
@@ -28,11 +29,12 @@ export function checkExecutionRecord(workpackPath, repository, summary = fs.read
 }
 export function validateReady(workpack, planningSkill, softwareDesignSkill) {
   if (!planningSkill || !softwareDesignSkill) throw new Error('Explicit --planning-skill and --software-design-skill paths are required.');
-  const result = spawnSync(process.execPath, [path.join(planningSkill, 'scripts/validate-workpack.mjs'), '--workpack', workpack, '--software-design-skill', softwareDesignSkill], { encoding: 'utf8' });
+  const result = spawnSync(process.execPath, [path.join(planningSkill, 'scripts/validate-workpack.mjs'), '--validation-mode', 'execution', '--workpack', workpack, '--software-design-skill', softwareDesignSkill], { encoding: 'utf8' });
   if (result.status !== 0) throw new Error('Execution readiness failed:\n' + (result.stderr || result.error || result.stdout));
   return result.stdout;
 }
-export function startExecution({ workpack, repository, planningSkill, softwareDesignSkill }) {
+export function startExecution({ workpack, repository, planningSkill, softwareDesignSkill, validationMode: requestedMode = "execution" }) {
+  if (validationMode(requestedMode) !== "execution") throw new Error("Execution start supports only execution validation.");
   const before = executionIdentity(workpack);
   validateReady(workpack, planningSkill, softwareDesignSkill);
   const after = executionIdentity(workpack);
@@ -53,10 +55,12 @@ if (process.argv[1] && fs.realpathSync(process.argv[1]) === fileURLToPath(import
     const args = {};
     for (let i = 2; i < process.argv.length; i++) {
       const key = process.argv[i];
-      if (!['--workpack', '--repository', '--planning-skill', '--software-design-skill', '--mode'].includes(key) || args[key]) throw new Error('Unknown or duplicate argument: ' + key);
+      if (!['--workpack', '--repository', '--planning-skill', '--software-design-skill', '--mode', '--validation-mode'].includes(key) || args[key]) throw new Error('Unknown or duplicate argument: ' + key);
       args[key] = process.argv[++i];
     }
     if (!args['--workpack'] || !args['--repository'] || !['start', 'check'].includes(args['--mode'])) throw new Error('Use --mode start|check --workpack <file> --repository <directory>; start also requires --planning-skill and --software-design-skill.');
+    if (Object.hasOwn(args, '--validation-mode') && !args['--validation-mode']) throw new Error('Missing --validation-mode value.');
+    if (validationMode(args['--validation-mode']) !== 'execution') throw new Error('Execution records support only --validation-mode execution.');
     if (args['--mode'] === 'start') console.log(startExecution({ workpack: args['--workpack'], repository: args['--repository'], planningSkill: args['--planning-skill'], softwareDesignSkill: args['--software-design-skill'] }));
     else { checkExecutionRecord(args['--workpack'], args['--repository']); console.log('Execution-start workpack content and snapshot match.'); }
   } catch (error) { console.error(error.message); process.exitCode = 1; }

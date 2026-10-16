@@ -1,5 +1,7 @@
 # Workpack Rules
 
+Apply [Planning Completeness And Execution Eligibility](planning-execution-contract.md) to validation mode selection, future producers, feasibility and authorized continuation.
+
 ## Stable Slice Path
 
 Write the current workpack to `delivery-workpacks/<delivery-slice>/WORKPACK.md`, where `<delivery-slice>` exactly matches the selected Stage 9 handoff filename without `.md`. Do not add a sequence number, date, Snapshot ID, or revision suffix. The stable path identifies what is being delivered; `Software Design snapshot` identifies which handoff revision the workpack plans; version control preserves prior workpack revisions.
@@ -20,11 +22,11 @@ Include every routed Repository Build Design's linked `agent-guidance.md` in `Ca
 
 ## Post-Implementation Delta Classification
 
-Before changing the stable workpack for a slice with prior completion evidence, resolve the stable workpack, its exact snapshot, the implementation report, and the physical repository changes since that receipt. Require the existing workpack snapshot and report `Implemented snapshot` to match before classifying the complete change.
+Before changing the stable workpack for a slice with prior completion evidence, resolve the stable workpack, its exact snapshot, the implementation report, and the physical repository changes since that receipt. Require the prior report to match its recoverable implemented workpack and exact execution basis, allowing a known newer unexecuted plan before classifying the complete change.
 
 Classify the complete post-implementation change:
 
-- `No implementation impact`: handoff or blueprint documentation, publication, tag creation, registry/repository permissions, exact-version resolution, authorized installation, or evidence-only record updates. This class is valid only when no implementation-owned tracked file changed and no canonical requirement calls for one. Append any required immutable version/source/integrity/resolution/access receipt to the typed receipt path or consuming handoff. If the refreshed handoff has a new Snapshot ID, copy it into `Software Design snapshot`, run the current workpack validator, and synchronize the evidence README and implementation report to the same ID while retaining the prior execution summary as the physical implementation basis. Do not create or execute a no-op workpack, fabricate a snapshot-scoped summary or VE record, or leave the three IDs mismatched.
+- `No implementation impact`: handoff or blueprint documentation, publication, tag creation, registry/repository permissions, exact-version resolution, authorized installation, or evidence-only record updates. This class is valid only when no implementation-owned tracked file changed and no canonical requirement calls for one. Append any required immutable version/source/integrity/resolution/access receipt to the typed receipt path or consuming handoff. During planning, preserve the prior report. Only for an explicitly requested implemented-documentation synchronization, if the refreshed handoff has a new Snapshot ID, copy it into `Software Design snapshot`, run the current workpack validator, and synchronize the evidence README and implementation report to the same ID while retaining the prior execution summary as the physical implementation basis. Do not create or execute a no-op workpack, fabricate a snapshot-scoped summary or VE record, or leave the three IDs mismatched.
 - `Implementation delta`: any change to source, package manifests, lockfiles, build/runtime/release configuration, workflows, tests, fixtures, or verification scripts, or any canonical change that requires one. Package repository metadata is implementation configuration. Treat a mixed release-and-implementation change as an implementation delta.
 
 For an implementation delta, update the stable `WORKPACK.md` in place to the current handoff snapshot and plan only the bounded delta plus the regression needed to preserve existing responsibilities. In `Readiness Decision`, cite the valid starting implementation report, its implemented snapshot, and its implementation commit when recorded; state the exact changed implementation-owned requirements and the truthful chronology when work was discovered or performed before planning. The new implementation report may name the current snapshot only after this workpack is successfully executed. If current evidence already claims an unexecuted snapshot, stop for lineage repair rather than building on the false claim.
@@ -34,10 +36,11 @@ For an implementation delta, update the stable `WORKPACK.md` in place to the cur
 Before authoring Acceptance Criteria, enumerate every material responsibility from each selected Build Unit's source-responsibility and module-architecture sections. Give each `RCOV-xxx` one canonical local link and classify it as:
 
 - `Deliver`: the workpack realizes it and maps it to one or more `AC-xxx`;
-- `Existing prerequisite`: the workpack consumes it and maps it to one or more `VE-xxx` procedures that prove availability; or
+- `Existing prerequisite`: the workpack consumes an actually existing capability and maps it to availability verification;
+- `Planned prerequisite`: it consumes a defined planned upstream output and maps it to pre-use acquisition and compatibility VE checks; or
 - `Excluded by Stage 9`: the handoff explicitly excludes it and the coverage entry cites that canonical exclusion.
 
-Classify every selected Build Unit once in Delivery Scope as `Target` or `Existing prerequisite`, and require at least one target. Every selected Build Unit needs at least one coverage entry, every material responsibility needs a disposition, and every AC must trace back to at least one delivered responsibility. Every target needs at least one `Deliver` entry. An existing prerequisite is verification-only: it needs `Existing prerequisite` coverage and cannot carry a `Deliver` entry. Stop if the workpack objective would silently contract a selected Build Unit or if its stated target disagrees with its RCOV dispositions.
+Classify every selected Build Unit once in Delivery Scope as `Target`, `Existing prerequisite`, or `Planned prerequisite`, and require at least one target. Every selected Build Unit needs at least one coverage entry, every material responsibility needs a disposition, and every AC must trace back to at least one delivered responsibility. Every target needs at least one `Deliver` entry. Both prerequisite roles are verification-only: use matching `Existing prerequisite` or `Planned prerequisite` coverage, never `Deliver`. Planned prerequisites require explicit INPUT/INT producer contracts. Stop if the workpack objective would silently contract a selected Build Unit or if its stated target disagrees with its RCOV dispositions.
 
 ## Acceptance Criteria
 
@@ -76,7 +79,7 @@ Add one `### UI/UX Delivery Coverage` block inside `Stage 9 Obligation Coverage`
 - `Handoff source`: link the handoff's `UI/UX Delivery Review`.
 - `Approved UI/UX sources`: link exactly the handoff's approved sources, including the specification and its selected candidate entrypoint. Never substitute another candidate or a copied screenshot.
 - `Application entrypoint`: the intended built application entrypoint through which both functional and implemented-UI evidence run.
-- `Representative viewports and states`: the supported viewports and materially distinct states to review, including applicable cancellation, failure/recovery, and accessibility checks. Choose a representative set, not an exhaustive screenshot matrix, and do not impose a pixel-difference threshold or browser vendor the canonical sources do not require.
+- `Representative viewports and states`: the supported viewports and materially distinct states to review, including applicable cancellation, failure/recovery, and accessibility checks. Sample viewports and screenshots without an exhaustive matrix; this evidence sampling does not permit omission of a material state from the completed selected delivery scope. Do not impose a pixel-difference threshold or browser vendor the canonical sources do not require.
 - `Implemented UI/UX review mode`: `automated`, `agent inspection`, and/or `human acceptance`. Use `human acceptance` only when the handoff review owner or another canonical source explicitly requires a human; a visual review that is not automated is agent inspection, not a reason to require human confirmation.
 - One compact table with a row for every journey anchor in the handoff's `Covered prototype states`, mapping it to `AC-xxx`, functional `VE-xxx`, and implemented-UI `VE-xxx`. One criterion or procedure may cover several related journeys. Keep the functional and implemented-UI procedures distinct; neither substitutes for the other.
 
@@ -124,7 +127,7 @@ Delivery Planning must not write target-repository evidence. Historical evidence
 
 ## Workpack Integrity Review
 
-After drafting the complete workpack, re-read it independently from the Stage 9 handoff and canonical source closure. Record `PASS` or `BLOCKED` conclusions for:
+After drafting the complete workpack, re-read it independently from the Stage 9 handoff and canonical source closure. Record planning `PASS` or `BLOCKED` conclusions for the common axes; execution eligibility may explicitly be `WAITING` under planning validation. See [planning-execution-contract.md](planning-execution-contract.md). Review the essential capability and writable ceiling in the existing bounded review, including adapters and command effects. Assess:
 
 - canonical-source consistency;
 - required-input, temporal-consumption, producer, and later-lifecycle-gate closure;
@@ -138,7 +141,7 @@ After drafting the complete workpack, re-read it independently from the Stage 9 
 
 Always record execution eligibility, Stage 9 compatibility-closure preservation, diagnostic and known-consumer coverage preservation, and affected-slice isolation. These remain bounded conclusions inside the existing integrity review, not a second review artifact.
 
-When phases exist, every AC and VE must appear in at least one phase exit criterion, every referenced ID must exist, and a planned VA must be created before a dependent VE runs. For an unphased workpack, state why no ordering boundary is required. Do not declare the review `PASS` by copying the Stage 9 receipt or merely satisfying the validator; resolve the concrete source and sequence questions first.
+When phases exist, every AC and VE must appear in at least one phase exit criterion, every referenced ID must exist, and a planned VA must be created within permitted scope or supplied by its defined upstream producer before a dependent VE runs. For an unphased workpack, state why no ordering boundary is required. Do not declare the review `PASS` by copying the Stage 9 receipt or merely satisfying the validator; resolve the concrete source and sequence questions first.
 
 ## Protected Boundaries And Stops
 
@@ -171,7 +174,7 @@ Keep the handoff to:
 - the evidence obligation, including the snapshot-scoped `SUMMARY.md` and evidence validation; and
 - protected boundaries and the stop/escalation rule, with completion defined only by `Definition of Done`.
 
-Do not repeat the full workpack. Write the handoff for any agent host: tell the caller to run it through the host environment's supported native goal or continuation mechanism, or to start that loop and select the execution skill manually. Do not name a host-specific command, API, launcher, or automatic skill activation. The execution skill supplies implementation, verification, evidence, and acceptance instructions; the host supplies continuation. Neither Delivery Planning nor the execution skill is a scheduler or loop.
+Do not repeat the full workpack. Write the handoff for any agent host: state that it may be run only after separate explicit execution authorization, through the host’s supported native goal or continuation mechanism. Planning-only reports and follow-ups must end at planning. Do not name a host-specific command, API, launcher, or automatic skill activation. The execution skill supplies implementation, verification, evidence, and acceptance instructions; the host supplies continuation. Neither Delivery Planning nor the execution skill is a scheduler or loop.
 
 The workpack section that carries this handoff keeps the stable validator heading `## /goal Handoff`. That heading is a legacy schema identifier, not a requirement to use a `/goal` command.
 
@@ -180,3 +183,5 @@ When the historical workpack/receipt association cannot be established, the only
 ### Interaction scope exclusions
 
 When the selected Stage 9 handoff declares `Interaction Scope Exclusions`, preserve its exact action identities under Delivery Scope → Explicit Exclusions with `**Excluded interactions:**` followed by backticked `IFACE-xxx.ACT-NNN` IDs and a link to that handoff's dispositions. Do not project excluded runtime outputs as implementation or required-interaction obligations. Preserve any affected public-contract compatibility and shared-code regression checks in their retained PSEAM obligations, ACs and verification steps: excluding runtime output does not exclude the safety of changing shared code. For a writable-bound exclusion, carry the upstream Bounded Delta Scope assessment and its evidence limits through those PSEAM references; do not reinterpret unchanged actions as missing producers. The upstream Software Design validator checks the reviewed target/changed actions, dependency closure, pinned evidence, retained checks and required inputs; Delivery Planning checks exact projection. Missing prerequisites and future work are not grounds for exclusion. If the handoff has no interaction exclusions, omit this optional field.
+
+For a genuinely new consumer against an available producer, preserve the explicit prerequisite evidence scope and `selected-slice consumer` INT from [planning-execution-contract.md](planning-execution-contract.md). Project final consumer-fitness proof to owned post-implementation VEs; eligibility does not require that new final behavior already exist, and completion cannot substitute producer-only checks. Existing implemented-consumer compatibility remains a prerequisite.

@@ -5,16 +5,13 @@ import test from "node:test";
 import {
   auditProjectViewContract,
   branchName,
-  decisionIdentityMarker,
   issueIdentityMarker,
   normalizeBuildUnitRecords,
-  normalizeDecisionRecords,
   normalizeRepositoryRecords,
   normalizeTicketDocuments,
   parseProcessedThroughMarker,
   PROJECT_KIND_OPTIONS,
   kindDisplayName,
-  kindLabelMigration,
   PROJECT_ANSWERING_OPTIONS,
   PROJECT_COMPLEXITY_OPTIONS,
   PROJECT_MANUAL_UI_CHECKS,
@@ -70,20 +67,20 @@ function matchingProjectSnapshot() {
 
 test("Project presentation contract preserves the approved visible order and reports configuration drift", () => {
   assert.deepEqual(PROJECT_VIEW_CONTRACT.map((view) => view.name), [
-    "Tickets", "Software", "Product & Operations", "All Tickets", "Decision Areas", "Out-of-Scope", "Repositories",
+    "Tickets", "Product & Operations", "Software", "All Tickets", "Out-of-Scope", "Repositories",
   ]);
   assert.deepEqual(PROJECT_STATUS_OPTIONS, ["todo", "deferred", "decided", "finished", "out-of-scope"]);
   assert.equal(PROJECT_REPOSITORIES_FIELD, "Repositories");
   assert.deepEqual(PROJECT_REPOSITORY_TICKET_LAYER_OPTIONS, ["Repository-wide tickets", "Owned Build Unit tickets"]);
   assert.equal(PROJECT_VIEW_CONTRACT.find((view) => view.name === "Tickets").filter, "status:todo,deferred -label:\"Technical Decision\"");
-  assert.equal(PROJECT_VIEW_CONTRACT.find((view) => view.name === "Decision Areas").filter, "label:\"Technical Decision\"");
+  assert.equal(PROJECT_VIEW_CONTRACT.find((view) => view.name === "Out-of-Scope").filter, "status:out-of-scope -label:\"Technical Decision\"");
   assert.equal(PROJECT_VIEW_CONTRACT.find((view) => view.name === "All Tickets").filter, "status:todo,deferred,decided,finished,out-of-scope -label:\"Technical Decision\"");
   const tickets = PROJECT_VIEW_CONTRACT[0];
   assert.deepEqual(tickets.groupBy, ["Work area"]);
   assert.deepEqual(tickets.verticalGroupBy, ["Answering group"]);
   assert.deepEqual(tickets.visibleFields, ["Title", "Status", "Domain", "Waiting on"]);
   assert.deepEqual(PROJECT_MANUAL_UI_CHECKS.map((check) => check.id), ["visible-tab-order", "tickets-answering-board", "kind-status-boards", "repositories-repo-slice", "out-of-scope-view", "all-tickets-decision-separation"]);
-  const clean = auditProjectViewContract(matchingProjectSnapshot());
+  const clean = auditProjectViewContract(matchingProjectSnapshot(), [], { includedViews: ["Repositories"] });
   assert.deepEqual(clean.drifts, []);
   assert.equal(clean.visibleOrderVerification, "manual-ui-required");
   assert.deepEqual(clean.manualUiChecks.map((check) => [check.id, check.status]), [
@@ -130,7 +127,7 @@ test("Repositories preserves membership, sections and canonical status columns",
   assert.deepEqual(repositories.verticalGroupBy, ["Status"]);
   assert.deepEqual(repositories.visibleFields, ["Title", "Build Units", "Repository Build Units"]);
   const outOfScope = PROJECT_VIEW_CONTRACT.find((view) => view.name === "Out-of-Scope");
-  assert.equal(outOfScope.filter, "label:\"Out-of-Scope\"");
+  assert.equal(outOfScope.filter, "status:out-of-scope -label:\"Technical Decision\"");
   assert.equal(outOfScope.sliceBy, null);
   assert.equal(PROJECT_VIEW_CONTRACT.some((view) => view.name === "Product"), false);
   assert.equal(PROJECT_VIEW_CONTRACT.some((view) => view.name === "Operational"), false);
@@ -262,8 +259,9 @@ test("normalization projects every canonical ticket status", () => {
   assert.match(records[0].body, /- Durable outcomes: SEL-001, VA-001/);
   assert.match(records[0].body, /- Build units: BU-001, BU-002/);
   assert.match(records[0].body, /## Before answering\n- Finished — finished/);
-  assert.match(records[1].body, /## Approved decision\n\nR/);
-  assert.match(records[2].body, /## Approved final outcome\n\nR/);
+  assert.match(records[1].body, /## Recorded decision\n\nR/);
+  assert.match(records[2].body, /## Final outcome\n\nR/);
+  for (const settled of [records[1], records[2]]) assert.match(settled.body, /## Decision origin\n- \*\*Unknown origin\*\*/);
   assert.match(records[3].body, /## Decision still needed\nQ/);
   assert.match(records[3].body, /## Why this is deferred\n\nThe provider choice is required for V1 but the review is temporarily postponed\./);
   assert.match(records[3].body, /still required for the target version/);
@@ -300,104 +298,6 @@ test("Repository normalization creates explicit repository metadata records", ()
   assert.equal(Object.hasOwn(records[0], "issueTitle"), false);
 });
 
-test("decision normalization projects every TD and derives its readable child table", () => {
-  const ticketRecords = [{
-    id: "TICKET-0001",
-    title: "Select evidence model",
-    status: "out-of-scope",
-    question: "Which evidence model preserves compatibility?",
-    parentDecision: "TD-001",
-    domainLabel: "Fallback",
-  }, {
-    id: "TICKET-0002",
-    title: "Standalone recovery",
-    status: "out-of-scope",
-    question: "Which recovery model should be added later?",
-    parentDecision: null,
-    domainLabel: "Recovery",
-  }];
-  const decisions = normalizeDecisionRecords(new Map([["TD-001", {
-    id: "TD-001",
-    title: "Fallback release",
-    state: "Deferred For Later Design",
-    primaryDomain: "fallback",
-    affectedResponsibilities: ["SR-001"],
-    context: "Fallback release remains intentionally outside V1.",
-    whyItMatters: "The evidence choices must remain interoperable.",
-    established: "The authority boundary is already fixed.",
-    howTicketsFit: "The tickets jointly define one fallback contract.",
-    currentShape: { type: "logic", title: "Current release gate", source_refs: ["system-model/contracts/invariants/inv-001.md"], lines: ["flowchart TD", "A[Verified fact] --> B[Release]"] },
-    blocker: null,
-    outcome: null,
-    deferReason: "Outside V1.",
-    resumeWhen: "Before enabling fallback.",
-    filePath: "/tmp/software-design/build/workflow/technical-decisions.yaml",
-  }]]), ticketRecords, "/tmp/software-design", new Map([["fallback", { name: "Fallback" }]]), new Map([["SR-001", { name: "Fallback Authority" }]]));
-
-  assert.deepEqual(decisions.map((decision) => decision.id), ["TD-001"]);
-  const decision = decisions[0];
-  assert.equal(decision.decisionTickets, "1 total · 1 out-of-scope");
-  assert.match(decision.body, /^<!-- software-design-decision TD-001 -->/);
-  assert.match(decision.body, /## Why this matters/);
-  assert.equal(decision.body.indexOf("## Current shape") < decision.body.indexOf("## Why this matters"), true);
-  assert.ok(decision.body.includes(String.fromCharCode(96).repeat(3) + "mermaid\nflowchart TD\nA[Verified fact] --> B[Release]"));
-  assert.match(decision.body, /Current-shape sources: .*inv-001\.md/);
-  assert.match(decision.body, /## How the tickets fit together/);
-  assert.match(decision.body, /TICKET-0001 — Select evidence model \| out-of-scope/);
-  assert.doesNotMatch(decision.body, /TICKET-0002/);
-  assert.match(decision.body, /Why deferred: Outside V1\./);
-});
-
-test("decision normalization summarizes child-ticket progress without repeating ticket identities", () => {
-  const ticketRecords = [
-    { id: "TICKET-0001", title: "First", status: "finished", question: "Q1", parentDecision: "TD-001", domainLabel: "Fallback" },
-    { id: "TICKET-0002", title: "Second", status: "todo", question: "Q2", parentDecision: "TD-001", domainLabel: "Fallback" },
-    { id: "TICKET-0003", title: "Third", status: "todo", question: "Q3", parentDecision: "TD-001", domainLabel: "Fallback" },
-    { id: "TICKET-0004", title: "Fourth", status: "out-of-scope", question: "Q4", parentDecision: "TD-001", domainLabel: "Fallback" },
-  ];
-  const decisions = normalizeDecisionRecords(new Map([["TD-001", {
-    id: "TD-001",
-    title: "Fallback release",
-    state: "Open",
-    primaryDomain: "fallback",
-    affectedResponsibilities: ["SR-001"],
-    context: "Context.",
-    whyItMatters: "Why.",
-    established: "Established.",
-    howTicketsFit: "Fit.",
-    blocker: null,
-    outcome: null,
-    deferReason: null,
-    resumeWhen: null,
-    filePath: "/tmp/software-design/build/workflow/technical-decisions.yaml",
-  }]]), ticketRecords, "/tmp/software-design", new Map([["fallback", { name: "Fallback" }]]), new Map([["SR-001", { name: "Fallback Authority" }]]));
-
-  assert.equal(decisions[0].decisionTickets, "4 total · 2 todo · 1 finished · 1 out-of-scope");
-  assert.doesNotMatch(decisions[0].decisionTickets, /TICKET-/);
-});
-
-test("blocked decision rendering names the canonical unavailable prerequisite", () => {
-  const decisions = normalizeDecisionRecords(new Map([["TD-002", {
-    id: "TD-002",
-    title: "External signer availability",
-    state: "Blocked",
-    primaryDomain: "authorization",
-    affectedResponsibilities: ["SR-002"],
-    context: "The signer boundary is fixed, but the required provider contract is unavailable.",
-    whyItMatters: "Signing cannot be implemented safely without that contract.",
-    established: "The application never owns signing authority.",
-    howTicketsFit: "The child questions must preserve the same signer boundary.",
-    blocker: "The external signer provider has not supplied its authenticated request contract.",
-    outcome: null,
-    deferReason: null,
-    resumeWhen: null,
-    filePath: "/tmp/software-design/build/workflow/technical-decisions.yaml",
-  }]]), [], "/tmp/software-design", new Map([["authorization", { name: "Authorization" }]]), new Map([["SR-002", { name: "Signing Authority" }]]));
-
-  assert.match(decisions[0].body, /Current blocker: The external signer provider has not supplied its authenticated request contract\./);
-  assert.doesNotMatch(decisions[0].body, /prerequisite described in the canonical context/);
-});
-
 test("normalization routes domain-shared and cross-domain tickets without inventing responsibility ownership", () => {
   const domains = new Map([
     ["access-control-and-recovery", { name: "Access Control And Recovery" }],
@@ -426,7 +326,6 @@ test("normalization routes domain-shared and cross-domain tickets without invent
 
 test("identity and processed-through markers are stable and constrained", () => {
   assert.equal(issueIdentityMarker("TICKET-0123"), "<!-- software-design-ticket TICKET-0123 -->");
-  assert.equal(decisionIdentityMarker("TD-012"), "<!-- software-design-decision TD-012 -->");
   const marker = processedThroughMarker("TICKET-0123", "https://github.com/owner/repository/issues/4#issuecomment-92");
   assert.equal(marker, "<!-- software-design-processed-through {\"ticket\":\"TICKET-0123\",\"comment_url\":\"https://github.com/owner/repository/issues/4#issuecomment-92\"} -->");
   assert.deepEqual(parseProcessedThroughMarker(marker), {
@@ -524,21 +423,21 @@ for (const [viewName, property, badValues] of [
   ["Tickets", "sortByFields", [[], [{ field: { name: "Title" }, direction: "DESC" }]]],
   ["Tickets", "groupByFields", [[], [{ name: "Kind" }]]],
   ["Repositories", "groupByFields", [[], [{ name: "Status" }]]],
-  ["Decision Areas", "sortByFields", [[], [{ field: { name: "Status" }, direction: "ASC" }]]],
-  ["Decision Areas", "groupByFields", [[], [{ name: "Status" }]]],
+  ["Out-of-Scope", "sortByFields", [[], [{ field: { name: "Status" }, direction: "ASC" }]]],
+  ["Out-of-Scope", "groupByFields", [[{ name: "Status" }]]],
 ]) {
   test(`missing or wrong ${viewName} ${property} fails the API audit`, () => {
     for (const nodes of badValues) {
       const snapshot = matchingProjectSnapshot();
       snapshot.views.nodes.find((view) => view.name === viewName)[property] = { nodes };
-      const result = auditProjectViewContract(snapshot);
+      const result = auditProjectViewContract(snapshot, [], { includedViews: ["Repositories"] });
       assert.equal(result.apiPassed, false);
       assert.ok(result.drifts.some((drift) => drift.name === viewName));
     }
   });
 }
 
-test("API order is diagnostic only and the current saved Decision Areas name is required", () => {
+test("API order is diagnostic only and the current saved Out-of-Scope name is required", () => {
   const snapshot = matchingProjectSnapshot();
   assert.equal(auditProjectViewContract(snapshot).apiPassed, true);
   snapshot.views.nodes.reverse();
@@ -547,12 +446,12 @@ test("API order is diagnostic only and the current saved Decision Areas name is 
   assert.equal(reordered.apiViewOrderAuthoritative, false);
   assert.equal(reordered.visibleOrderVerification, "manual-ui-required");
   snapshot.views.nodes.reverse();
-  snapshot.views.nodes.find((view) => view.name === "Decision Areas").name = "Technical Decisions";
+  snapshot.views.nodes.find((view) => view.name === "Out-of-Scope").name = "Technical Decisions";
   assert.equal(auditProjectViewContract(snapshot).apiPassed, false);
 });
 
 
-test("Software is presentation only and legacy Kind migration advice preserves option identities", () => {
+test("Software is presentation only and the audit reports a retired Kind option as plain drift", () => {
   assert.deepEqual(PROJECT_KIND_OPTIONS, ["Software", "product", "operational"]);
   assert.equal(kindDisplayName("technical"), "Software");
   assert.equal(kindDisplayName("product"), "product");
@@ -565,25 +464,10 @@ test("Software is presentation only and legacy Kind migration advice preserves o
     { id: "O_OPERATIONAL", name: "operational", color: "GRAY", description: "" },
   ] };
   const before = structuredClone(field);
-  const plan = kindLabelMigration([field]);
-  assert.equal(plan.fieldId, field.id);
-  assert.equal(plan.optionId, "O_TECHNICAL");
-  assert.equal(plan.from, "technical");
-  assert.equal(plan.to, "Software");
-  assert.deepEqual(plan.preserveOptionIds, field.options.map(({ id }) => id));
-  assert.deepEqual(field, before, "audit never mutates the supplied schema");
   const audit = auditProjectViewContract({ fields: [field] });
-  assert.deepEqual(audit.requiredKindLabelMigration, plan);
+  assert.equal("requiredKindLabelMigration" in audit, false);
   assert.ok(audit.drifts.some(({ name, property }) => name === "Kind" && property === "options"));
-  for (const invalid of [
-    [field, structuredClone(field)],
-    [{ ...field, id: null }],
-    [{ ...field, dataType: "TEXT" }],
-    [{ ...field, options: [...field.options].reverse() }],
-    [{ ...field, options: field.options.map((o) => ({ ...o, id: "same" })) }],
-    [{ ...field, options: field.options.map((o, i) => ({ ...o, name: i === 0 ? "unrecognized" : o.name })) }],
-  ]) assert.equal(kindLabelMigration(invalid), null, "never guess an ambiguous or unknown identity");
-  field.options[0].name = "Software"; // Simulate an explicitly reviewed external rename.
-  assert.equal(kindLabelMigration([field]), null);
+  assert.deepEqual(field, before, "audit never mutates the supplied schema");
+  field.options[0].name = "Software";
   assert.equal(auditProjectViewContract({ fields: [field] }).drifts.some(({ name }) => name === "Kind"), false);
 });

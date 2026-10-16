@@ -1,0 +1,126 @@
+--- replace after «…»
+  - Domain Overview
+  + Bitcoin Authorization And Recovery
+--- insert after «…later confirmed collateral output. A **PSBT**»
+  - 
+  + (partially signed Bitcoin transaction)
+--- replace after «…key. Construction And The Two Participants»
+  - **Bitcoin
+  + **[Bitcoin
+--- replace after «…Participants **Bitcoin prefund, escrow, and package»
+  - construction ([SR-002])**
+  + construction]**
+--- replace after «…around a separately funded fee-bump child.»
+  - **Borrower
+  + **[Borrower Bitcoin
+--- replace after «…funded fee-bump child. **Borrower authorization and»
+  - recovery ([SR-004])**
+  + recovery]**
+--- replace after «…cannot recreate a forgotten Vault password.»
+  - **Lender
+  + **[Lender Bitcoin
+--- replace after «…forgotten Vault password. **Lender authorization and»
+  - recovery ([SR-009])**
+  + recovery]**
+--- replace after «…never exposes either participant's plaintext authority.»
+  - [IFACE-004], [IFACE-014],
+  + The [Vault envelope
+--- replace after «…participant's plaintext authority. [IFACE-004], [IFACE-014], and»
+  - [IFACE-019]
+  + local handoff], the [participant-local Base calls], and the [cooperative settlement package] contracts
+--- replace after «…20, 50, 100, 150, and 200»
+  - sat/vB.
+  + sat/vB (satoshis per virtual byte).
+--- delete after «…activation winner after six confirmations. The»
+  - current
+  + 
+--- replace after «…lender recovery, and six borrower long-stop»
+  - variants. A stale SR-002
+  + variants, while the construction responsibility's archive-readiness rule and the [durable signed exit package
+--- replace after «…long-stop variants. A stale SR-002 archive»
+  - sentence still says twelve
+  + constraint] describe a twelve-package signed
+--- replace after «…archive sentence still says twelve terminal»
+  - packages; this documented
+  + phase. This
+--- insert after «…terminal packages; this documented source conflict»
+  - 
+  + is unresolved and
+--- replace after «…source conflict remains for a separate»
+  - repair. [STATE-008], [STATE-009], [IFACE-005],
+  + repair; neither count is chosen until it is answered. The [prefund
+--- replace after «…separate repair. [STATE-008], [STATE-009], [IFACE-005], and»
+  - [INV-015]
+  + origination attempt states], the [package graph states], the [origination binding and package manifest contract], and the [zero-confirmation boundary]
+--- insert after «…signing, Core cryptographic validation and complete»
+  - 
+  + writes to the
+--- replace after «…Core cryptographic validation and complete R2»
+  - writes,
+  + package archive,
+--- insert after «…and complete R2 writes, then the»
+  - 
+  + receipt committed in the
+--- replace after «…complete R2 writes, then the D1»
+  - receipt.
+  + workspace database.
+--- replace after «…or valid independently published `S` for»
+  - an activated
+  + a production-activated
+--- delete after «…activated commitment, fills the same borrower-signed»
+  - route-code-3
+  + 
+--- insert after «…the same borrower-signed route-code-3 recovery transaction»
+  - 
+  + (route code 3)
+--- insert after «…valid; only one confirmed spend wins.»
+  - 
+  + Whether every loan has the borrower long-stop route is an open question: a build constraint requires every newly constructed escrow to include long-stop candidates that need neither `Y` nor `S`, and the [default timing invariant] and [long-stop recovery flow] define it, while the [missing-`Y` security boundary] says a loan without the production-activated `S` commitment has no borrower fallback Bitcoin route; the records do not settle whether these describe different loans or contradict each other.
+--- replace after «…its complete product/accounting operation remains deferred.»
+  - [IFACE-020], [STATE-015], [INV-009],
+  + The [finalized secret to fixed Bitcoin action contract], the [escrow
+--- replace after «…remains deferred. [IFACE-020], [STATE-015], [INV-009], and»
+  - [INV-025]
+  + terminal outcome states], the [one terminal escrow outcome invariant], and the [missing-`Y` residual lender risk]
+--- replace after «…before use. Provider-neutral integer units, actual»
+  - vsize,
+  + virtual size,
+--- replace after «…case where no signed tier qualifies:»
+  - an earlier ticket/payload selects
+  + the payload description and two ticket resolutions select
+--- replace after «…an alert, while the action contract»
+  - and
+  + says fail closed, as an earlier explanation says a
+--- replace after «…the action contract and former decision»
+  - say fail closed. This migration preserves
+  + did; the records could not locate that decision. The records preserve
+--- replace after «…This migration preserves both statements and»
+  - identifies
+  + identify
+--- insert after «…both statements and identifies the conflict;»
+  - 
+  + neither interpretation is authorized until
+--- replace after «…statements and identifies the conflict; it»
+  - does not authorize either interpretation. [IFACE-007]
+  + is answered. The [fee estimate and signed tier selection contract]
+--- replace after «…holds the exact source text. A»
+  - P2A anchor
+  + pay-to-anchor (P2A) output
+--- replace after «…P2A anchor permits a separately funded»
+  - CPFP
+  + child-pays-for-parent (CPFP)
+--- replace after «…fee wallet gains no participant authority.»
+  - [IFACE-016]
+  + The [CPFP request, local helper, and Bitcoin Core contract]
+--- replace after «…or authorize the wrong party. Fixed»
+  - envelope/KDF
+  + envelope and key derivation function (KDF)
+--- replace after «…complete cooperative operations remain excluded under»
+  - [SCOPE-001], [SCOPE-002], [SCOPE-003], [SCOPE-006],
+  + the [automatic lender-default broadcast], [institutional last-resort collateral recovery], [borrower-nonresponse activation recovery], [stronger participant-Vault recovery],
+--- replace after «…under [SCOPE-001], [SCOPE-002], [SCOPE-003], [SCOPE-006], and»
+  - [SCOPE-005],
+  + [cooperative settlement operations] exclusions,
+--- insert after «…each with its own revisit condition.»
+  - 
+  + The [architecture guide] shows where this domain fits in the system, and the [domain record] lists exactly what the domain owns and excludes.

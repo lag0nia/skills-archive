@@ -9,7 +9,7 @@ Read this reference when the user asks in ordinary language to find missing or r
 - Ticket Candidate Test
 - Required Discovery Lenses
 - Working Coverage Ledger
-- Separate Parent Synchronization From Discovery
+- Separate Owner Synchronization From Discovery
 - Prospective Inventory
 - Reverse Challenge Pass
 - Fixed-Point Completion
@@ -73,7 +73,7 @@ Apply every lens to every System Responsibility in the selected scope. Do not st
 9. **Verification:** fixtures, invariants, negative cases, integration boundaries, evidence, and acceptance conditions needed to prove the behavior.
 10. **Operability and composition:** intended actor or consumer, public entrypoint, startup and shutdown, configuration, dependency provisioning, bootstrap/seed/migration behavior, identity and resource discovery, persistence/resume/reset, external substitutes, and the minimum target outcome in each required runtime profile.
 
-For each responsibility handoff, run the relevant lenses from both producer and consumer perspectives, then deduplicate. After resolving any ticket cluster, run a delta inventory on the changed boundary and its dependents: an answer may expose a new downstream choice that was not concrete before. Link already-visible dependent questions with `depends_on` only when the earlier answer determines the later scope, alternatives, or final decision, explaining that consequence in existing prose; shared topics, sources, implementation needs, or TD membership alone are insufficient. Use optional `blocked_by` only for outstanding external facts/actions under [implementation-detail-tickets.md](implementation-detail-tickets.md); do not create speculative tickets for branches that may never be selected.
+For each responsibility handoff, run the relevant lenses from both producer and consumer perspectives, then deduplicate. After resolving any ticket cluster, run a delta inventory on the changed boundary and its dependents: an answer may expose a new downstream choice that was not concrete before. Link already-visible dependent questions with `depends_on` only when the earlier answer determines the later scope, alternatives, or final decision, explaining that consequence in existing prose; shared topics, sources, implementation needs, or shared subject matter alone are insufficient. Use optional `blocked_by` only for outstanding external facts/actions under [implementation-detail-tickets.md](implementation-detail-tickets.md); do not create speculative tickets for branches that may never be selected.
 
 ## Working Coverage Ledger
 
@@ -98,13 +98,13 @@ For every proposed ticket, record its candidate proof in the working ledger and 
 
 If the proof is vague, names the whole responsibility, or cannot name a bounded behavior and missing choice, do not create the ticket.
 
-## Separate Parent Synchronization From Discovery
+## Separate Owner Synchronization From Discovery
 
-Treat ticket-to-TD parent synchronization as inventory setup only. It proves that known relationships resolve; it does not discover implementation questions or missing consequential decision groupings and must never be reported as prospective-inventory completeness.
+Treat ticket-to-canonical-owner synchronization as inventory setup only. It proves that known relationships resolve; it does not discover implementation questions  and must never be reported as prospective-inventory completeness.
 
 After synchronization, start a separate System Responsibility review without using the existing ticket list as the candidate source. For every responsibility, ask:
 
-> Assuming every active TD and current ticket were resolved now, what material choices would an implementer still need to make to finish or verify this System Responsibility's realization?
+> Assuming every current ticket were resolved now, what material choices would an implementer still need to make to finish or verify this System Responsibility's realization?
 
 Apply all ten lenses to that counterfactual. Review zero-owned-ticket responsibilities explicitly; zero may be correct only when every lens has a concrete `answered:`, `excluded:`, `paused:`, or truthfully cross-owned `ticket:` disposition. Treat phrases such as `responsibility-level implementation details`, `implementation-detail work`, `later interface work`, and `exact ... remains` as unresolved-language leads that require disposition, not as permission to postpone discovery.
 
@@ -114,18 +114,18 @@ Before the semantic review, run the read-only lead report:
 node <software-design-skill-directory>/scripts/report-ticket-inventory-leads.mjs --root <software-design-package>
 ```
 
-The report enumerates System Responsibilities, owned-ticket counts, TD-linked versus standalone tickets, zero-owned-ticket responsibilities, and explicit unresolved-language leads. It neither creates tickets nor proves semantic completeness.
+The report enumerates System Responsibilities, owned-ticket counts, zero-owned-ticket responsibilities, and explicit unresolved-language leads. It neither creates tickets nor proves semantic completeness.
 
 ## Prospective Inventory
 
 Use the approved Software Design package as the default source. Respect any explicit package-only or source restriction. Read repository implementation context only when the user permits it and a question cannot be characterized accurately from the package alone.
 
-For a whole-package inventory, first read the complete canonical package surface: architecture, every Domain and System Responsibility record, lifecycle data and every flow, every atomic contract, every TD record, and every ticket file. Do not substitute a keyword search or only directly relevant files. For a narrower inventory, read the same record types wherever they define or consume the selected boundary.
+For a whole-package inventory, first read the complete canonical package surface: architecture, every Domain and System Responsibility record, lifecycle data and every flow, every atomic contract, every ticket file. Do not substitute a keyword search or only directly relevant files. For a narrower inventory, read the same record types wherever they define or consume the selected boundary.
 
 Then:
 
-1. Inventory the existing Domains, System Responsibility assignments, direct handoffs, ticket IDs, TD parent links, and explicit scope boundaries.
-2. Report the TD-linked and standalone counts, then run the separate counterfactual discovery pass above. Do not begin that pass from the existing tickets or decisions.
+1. Inventory the existing Domains, System Responsibility assignments, direct handoffs, ticket IDs, genuine dependencies, and explicit scope boundaries.
+2. Report counts by owner and status, then run the separate counterfactual discovery pass above. Do not begin that pass from the existing tickets or decisions.
 3. Complete the responsibility-by-lens and handoff ledgers. Treat implicit missing contracts as candidates; do not look only for `TBD`, `TODO`, `later`, or other unresolved wording.
 4. Identify material independently answerable implementation questions. Exclude explanatory follow-ups, facts already derivable from canonical truth, formatting choices, implementation order, and trivial local discretion.
 5. Deduplicate questions across responsibilities. Assign one primary `SR-xxx` owner when truthful, list all affected responsibilities, and use cross-domain ownership only when no responsibility is a truthful owner. For each candidate, apply [Assigning Ticket Kind](implementation-detail-tickets.md#assigning-ticket-kind) independently of its candidate proof. Record the specific decision and classification rationale in the working ledger; the canonical schema is unchanged.
@@ -133,11 +133,11 @@ Then:
 7. Create `deferred` tickets only when a target-version question is intentionally postponed, and give each a concrete `resume_when`. It remains a readiness blocker for that version.
 8. Create `out-of-scope` tickets only when an approved canonical scope boundary already excludes the capability from the target version. Record why it is excluded and when that decision may resume; never infer exclusion merely because the user postponed an answer or because implementation is scheduled later.
 9. Do not create `finished` tickets for already settled facts during prospective inventory. That belongs to decision-history backfill.
-10. Run a read-only decision-cluster audit after ticket discovery. Propose TD candidates only when several tickets collectively resolve one consequential choice; explain why they belong, which compatibility boundary they share, and why repository/Build Unit/topic grouping alone is insufficient. Materialize only approved candidates.
+10. Audit related questions for compatible outcomes, duplicate questions, and genuine prerequisites; keep context/rationale in canonical owners, without a parent registry.
 11. Run the Reverse Challenge Pass and semantic-overlap comparison below. During the final semantic review, challenge product, technical and operational assignments in both directions: do not treat every interface/data field as software engineering, every customer business operation as service operation, or every visible consequence as product. Reuse approved sources to distinguish an open contract from its implementation, following the common kind procedure.
-12. Write or update canonical ticket YAML and approved TD records, rerun the lead report and ticket validator, then apply the Fixed-Point Completion rule.
+12. Write or update canonical ticket YAML, rerun the lead report and ticket validator, then apply the Fixed-Point Completion rule.
 
-Prospective inventory changes workflow records only. It must not modify canonical System Responsibility behavior, resolve a question, select a TD outcome, or create a different Domain grouping. Creating an approved TD parent records grouping and rationale without answering its children.
+Prospective inventory changes workflow records only. It must not modify canonical System Responsibility behavior, resolve a question, select an unapproved outcome, or create a different Domain grouping.
 
 ## Reverse Challenge Pass
 
@@ -162,7 +162,7 @@ Keep the initial independent discovery, complete Reverse Challenge Pass, and ini
 2. Trace their effects across the whole system through producers, consumers, shared artifacts, and verification owners, including transitive effects while a changed contract propagates. Challenge mappings against the canonical flows and interface behavior; a missing mapping is not evidence that a consumer is unaffected.
 3. Rebuild affected lens and handoff dispositions, independently challenge the affected boundaries, and compare changed tickets with potentially overlapping active tickets across the package. Verify all outstanding findings together. Retain completed dispositions for boundaries whose relevant truth has not changed.
 4. If another material finding appears, reconcile it and repeat the affected review. Expand the set only for a concrete changed contract, dependency, uncovered consumer, or outstanding finding; state the reason in working notes. Repeat the full selected-scope review only when concrete findings show systemic omissions or unreliable coverage, including a destabilized responsibility or handoff map that invalidates prior coverage. Name that reason rather than automatically restarting the whole review.
-5. Declare completion only when the initial full coverage and subsequent impact review together leave zero unowned material questions, unresolved overlaps, unreviewed TD candidates, or blank/generic dispositions, and the final affected challenge produces no additional finding. If affected coverage or repairs remain incomplete, return `TICKET_INVENTORY_PARTIAL`; do not claim completion merely to end a pass. Stop once outstanding findings are reconciled and relevant checks pass. If missing information or an unresolved decision prevents reconciliation, report partial completion and the exact blocker rather than repeating unchanged checks. Do not claim completion while material inventory findings remain unresolved. A material question with a valid ticket owner is not an unanswered inventory finding, though it may still block the affected delivery.
+5. Declare completion only when the initial full coverage and subsequent impact review together leave zero unowned material questions, unresolved overlaps, or blank/generic dispositions, and the final affected challenge produces no additional finding. If affected coverage or repairs remain incomplete, return `TICKET_INVENTORY_PARTIAL`; do not claim completion merely to end a pass. Stop once outstanding findings are reconciled and relevant checks pass. If missing information or an unresolved decision prevents reconciliation, report partial completion and the exact blocker rather than repeating unchanged checks. Do not claim completion while material inventory findings remain unresolved. A material question with a valid ticket owner is not an unanswered inventory finding, though it may still block the affected delivery.
 
 Call this final verification the **zero-delta challenge pass**. Report its affected scope, retained earlier coverage, and any reason for whole-scope revalidation. It is bounded to the approved design snapshot and evidence reviewed; it does not mean that all future questions are knowable. A validator pass checks structure and relationships, not semantic completeness. Keep the working review set in the existing temporary ledger, not a new maintained artifact.
 
@@ -172,7 +172,7 @@ After snapshot completion, an approved answer, source change, prototype, impleme
 
 Use decision-history backfill only when the user explicitly asks to record already-settled implementation work.
 
-Create `finished` tickets only when the resolution already exists in every named canonical write target and current validation passes. Create `decided` tickets when the answer is established but one or more canonical targets still need an approved coherent write pass. Preserve unresolved current-version matters as `todo` or `deferred`, and approved target-version exclusions as `out-of-scope`; do not make the history look more complete than the package.
+Create `finished` tickets only when the resolution already exists in every named canonical write target and current validation passes. Attribute each backfilled answer from the evidence that settled it, treating prose such as “approved” or “user answer” as a claim to inspect; record Unknown origin when the evidence cannot establish who chose it ([Decision Attribution](decision-attribution.md#existing-packages-and-other-routes)). Create `decided` tickets when the answer is established but one or more canonical targets still need an approved coherent write pass. Preserve unresolved current-version matters as `todo` or `deferred`, and approved target-version exclusions as `out-of-scope`; do not make the history look more complete than the package.
 
 Decision-history backfill is not a substitute for prospective inventory. After backfill, say whether remaining-ticket discovery has or has not been performed for the same scope.
 
@@ -181,7 +181,7 @@ Decision-history backfill is not a substitute for prospective inventory. After b
 Do not call an inventory complete merely because every existing ticket validates. Completeness is always stated for the named approved snapshot and reviewed scope, never for all future design or implementation learning. A whole-package prospective inventory is complete for that snapshot only when:
 
 - every existing System Responsibility has ten concrete working-ledger dispositions;
-- TD parent synchronization, independent ticket discovery, and the decision-cluster audit were completed and reported separately;
+- canonical owner synchronization, independent ticket discovery, and compatibility/overlap review were completed and reported separately;
 - every direct handoff and every applicable material-interaction challenge has a producer-side and consumer-side disposition;
 - every discovered material question has one ticket owner;
 - every unresolved-language lead has a ticket, canonical-answer source, exclusion, or paused-boundary disposition;
@@ -195,16 +195,16 @@ Do not create a board or maintained coverage index. In the completion response, 
 
 - every inspected System Responsibility and whether it gained tickets, retained sufficient tickets, had no material remaining question, or was paused at a named boundary;
 - confirmation that all ten lens dispositions, all target-outcome/runtime-profile dispositions, all direct handoffs, and all applicable material-interaction consumer challenges were completed;
-- separate counts for TD-linked and standalone tickets;
+- counts by canonical owner and genuine dependency disposition;
 - ticket counts by status and cluster;
-- deferred items, out-of-scope items, approved/rejected/pending TD candidates, and paused boundaries;
+- deferred items, out-of-scope items, paused boundaries;
 - semantic overlaps merged, linked, or justified;
 - the zero-delta challenge-pass result; and
 - the validator result, explicitly labeled structural rather than semantic completeness proof.
 
 Do not use a package-wide total or broad cluster summary as a substitute for the per-responsibility receipt.
 
-Return `TICKET_INVENTORY_PARTIAL` for a current inventory operation when the independent pass, decision-cluster audit, any responsibility disposition, any direct-handoff disposition, or the coverage receipt is missing, even when parent synchronization and the structural ticket validator pass. When an existing package is assessed only for Stage 8 Build Design, absence of a historical completion response or temporary ledger does not alone block truthful Build Unit mapping; perform the bounded current-state check in [build-design-and-delivery-readiness.md](build-design-and-delivery-readiness.md).
+Return `TICKET_INVENTORY_PARTIAL` for a current inventory operation when the independent pass, compatibility review, any responsibility disposition, any direct-handoff disposition, or the coverage receipt is missing, even when owner synchronization and the structural ticket validator pass. When an existing package is assessed only for Stage 8 Build Design, absence of a historical completion response or temporary ledger does not alone block truthful Build Unit mapping; perform the bounded current-state check in [build-design-and-delivery-readiness.md](build-design-and-delivery-readiness.md).
 
 Use one result:
 
@@ -217,4 +217,4 @@ These are operation results, not ticket statuses.
 
 ## Prototype Findings And Backlog Refinement
 
-Preserve initial ticket visibility and the independent whole-scope inventory timing. Prototype discovery can expose new questions; reconcile approved findings at coherent journey boundaries and refine only the affected backlog and connected dependencies. Reuse existing questions before adding records. Retire duplicate or obsolete questions through the existing archive fields described in [implementation-detail-tickets.md](implementation-detail-tickets.md), redirect affected active references, and recompute TD state. Later prototype work may remain pending only under that reference’s narrow completion exception; it does not waive other ticket completion requirements or relevant UI readiness.
+Preserve initial ticket visibility and the independent whole-scope inventory timing. Prototype discovery can expose new questions; reconcile approved findings at coherent journey boundaries and refine only the affected backlog and connected dependencies. Reuse existing questions before adding records. Retire duplicate or obsolete questions through the existing archive fields described in [implementation-detail-tickets.md](implementation-detail-tickets.md), redirect affected active references, and reconcile affected canonical summaries. Later prototype work may remain pending only under that reference’s narrow completion exception; it does not waive other ticket completion requirements or relevant UI readiness.

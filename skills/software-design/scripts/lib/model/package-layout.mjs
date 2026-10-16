@@ -30,15 +30,21 @@ function unexpectedChildren(root, relativePath, allowed) {
     .map((name) => path.join(relativePath, name).split(path.sep).join("/"));
 }
 
+// Entries left by retired formats get a specific explanation instead of the generic layout error.
+export const RETIRED_LAYOUT_ENTRIES = new Map([
+  ["diagrams", "diagrams/ is the retired Canvas lane; current views are generated HTML under visuals/. Move any still-useful content to its canonical owner and remove the directory."],
+  ["build/workflow/technical-decisions.yaml", "build/workflow/technical-decisions.yaml is a retired Technical Decision registry; its information belongs to domains, responsibilities, contracts, tickets and scope records. Move it to those owners and remove the file."],
+]);
+
 export function noncanonicalLayoutEntries(rootPath) {
   const root = path.resolve(rootPath);
   return [
-    ...unexpectedChildren(root, ".", new Set(["README.md", "system-model", "build", "ui-ux", "diagrams"])),
+    ...unexpectedChildren(root, ".", new Set(["README.md", "guide", "system-model", "build", "ui-ux", "visuals"])),
     ...unexpectedChildren(root, "system-model", new Set(["architecture.md", "domains", "behavior", "contracts"])),
     ...unexpectedChildren(root, "system-model/behavior", new Set(["lifecycle.yaml", "flows"])),
     ...unexpectedChildren(root, "system-model/contracts", new Set(["interfaces", "states", "invariants", "security", "scope"])),
     ...unexpectedChildren(root, "build", new Set(["README.md", "units", "repositories", "records", "workflow"])),
     ...unexpectedChildren(root, "build/records", new Set(["constraints", "selections", "verification"])),
-    ...unexpectedChildren(root, "build/workflow", new Set(["technical-decisions.yaml", "tickets", "handoffs"])),
+    ...unexpectedChildren(root, "build/workflow", new Set(["tickets", "handoffs", "decision-overview.md"])),
   ];
 }

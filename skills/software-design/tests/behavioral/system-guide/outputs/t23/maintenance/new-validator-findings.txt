@@ -1,0 +1,31 @@
+Build Unit Dependency Map validation failed:
+- Graph source changed; review graph meaning before updating fingerprint: system-model/contracts/states/state-013-repayment-refund-recipient-and-claim-cutoff.md
+exit=1
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-001 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-009-base-transition-api-events-and-errors.md
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-001 must pin its canonical interface source.
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-002 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-009-base-transition-api-events-and-errors.md
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-002 must pin its canonical interface source.
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-003 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-009-base-transition-api-events-and-errors.md
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-003 must pin its canonical interface source.
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-004 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-009-base-transition-api-events-and-errors.md
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-004 must pin its canonical interface source.
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-005 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-009-base-transition-api-events-and-errors.md
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-005 must pin its canonical interface source.
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-006 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-009-base-transition-api-events-and-errors.md
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-006 must pin its canonical interface source.
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-007 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-009-base-transition-api-events-and-errors.md
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-007 must pin its canonical interface source.
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-008 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-009-base-transition-api-events-and-errors.md
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-008 must pin its canonical interface source.
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-009 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-009-base-transition-api-events-and-errors.md
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-009 must pin its canonical interface source.
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-010 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-009-base-transition-api-events-and-errors.md
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-010 must pin its canonical interface source.
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-011 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-009-base-transition-api-events-and-errors.md
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-011 must pin its canonical interface source.
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-012 dependency assessment has stale or invalid evidence: ../../../system-model/contracts/interfaces/iface-009-base-transition-api-events-and-errors.md
+- repo-002-core-coordination.md: Bounded delta scope: IFACE-009.ACT-012 must pin its canonical interface source.
+Graph source changed; review graph meaning before updating fingerprint: system-model/contracts/states/state-013-repayment-refund-recipient-and-claim-cutoff.md
+exit=1
+Graph source changed; review graph meaning before updating fingerprint: system-model/contracts/states/state-013-repayment-refund-recipient-and-claim-cutoff.md
+exit=1

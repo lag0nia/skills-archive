@@ -5,8 +5,8 @@ import { planProjectViewCreation, projectViewsRestRoute, createdViewDrifts } fro
 import { validateConfig, projectViewContract, auditProjectViewContract, planProjectViewRepair } from "../../scripts/lib/ticket-projection/core.mjs";
 import { contractViewState, savedView } from "../support/project-view-state.mjs";
 
-const config = { provider: "github", syncBranch: "main", ticketRoot: "design/software-design", repository: "owner/repository", project: "owner/7" };
-const omitted = { ...config, omittedViews: ["Repositories"] };
+const config = { includedViews: ["Repositories"], provider: "github", syncBranch: "main", ticketRoot: "design/software-design", repository: "owner/repository", project: "owner/7" };
+const omitted = { ...config, includedViews: [], omittedViews: ["Repositories"] };
 function stateWithout(names = []) {
   const state = contractViewState();
   state.fields.nodes.forEach((field, index) => { field.databaseId = 1001 + index * 17; });
@@ -124,7 +124,7 @@ const posts = (calls) => calls.filter((call) => call.args.includes("POST"));
 const graphqlMutations = (calls, operation) => calls.filter((call) => call.args[1] === "graphql" && call.input && JSON.parse(call.input).query.includes(operation));
 
 test("confirmed REST 404 falls back once per missing view and verifies GraphQL settings plus observed defaults", async () => {
-  const selectedViews = ["Software", "Product & Operations"];
+  const selectedViews = ["Product & Operations", "Software"];
   const state = stateWithout(selectedViews);
   savedView(state, "Tickets").filter = "unrelated drift";
   const existing = structuredClone(state.views.nodes);
@@ -175,35 +175,35 @@ test("uncertain or non-404 REST failures never trigger a second creation mechani
     { restFailure: "HTTP 404", restPersist: true }, { restFailure: "HTTP 404", restNearMatch: true },
     { restFailure: "HTTP 404", failVerification: true },
   ]) {
-    const state = stateWithout(["Software", "Product & Operations"]);
+    const state = stateWithout(["Product & Operations", "Software"]);
     const p = fakeGitHub(state, options);
-    const result = await createGitHubAdapter({ run: p.run }).createViews({ config, selectedViews: ["Software", "Product & Operations"] });
+    const result = await createGitHubAdapter({ run: p.run }).createViews({ config, selectedViews: ["Product & Operations", "Software"] });
     assert.equal(result.outcome, "api-failure", JSON.stringify(options));
     assert.equal(posts(p.calls).length, 1);
     assert.equal(graphqlMutations(p.calls, "CreateProjectViewFallback").length, 0);
-    assert.deepEqual(result.notAttempted, ["Product & Operations"]);
+    assert.deepEqual(result.notAttempted, ["Software"]);
   }
 });
 
 test("uncertain GraphQL creation is read back without update or another create; rerun preserves the identity", async () => {
   for (const options of [{ graphqlFailure: "connection lost", graphqlPersist: true }, { graphqlErrors: true }]) {
-    const state = stateWithout(["Software", "Product & Operations"]);
+    const state = stateWithout(["Product & Operations", "Software"]);
     const p = fakeGitHub(state, { restFailure: "HTTP 404", ...options });
-    const result = await createGitHubAdapter({ run: p.run }).createViews({ config, selectedViews: ["Software", "Product & Operations"] });
+    const result = await createGitHubAdapter({ run: p.run }).createViews({ config, selectedViews: ["Product & Operations", "Software"] });
     assert.equal(result.outcome, "api-failure");
     assert.equal(result.created[0].observedAfterFailure, true);
     assert.equal(graphqlMutations(p.calls, "CreateProjectViewFallback").length, 1);
     assert.equal(graphqlMutations(p.calls, "ConfigureCreatedProjectView").length, 0);
     assert.ok(result.unverified.some((item) => item.property === "filter"));
-    assert.deepEqual(result.notAttempted, ["Product & Operations"]);
+    assert.deepEqual(result.notAttempted, ["Software"]);
     const next = fakeGitHub(state);
-    const before = structuredClone(savedView(state, "Software"));
-    const repeat = await createGitHubAdapter({ run: next.run }).createViews({ config, selectedViews: ["Software"] });
+    const before = structuredClone(savedView(state, "Product & Operations"));
+    const repeat = await createGitHubAdapter({ run: next.run }).createViews({ config, selectedViews: ["Product & Operations"] });
     assert.deepEqual(repeat.created, []);
     assert.equal(repeat.existing[0].id, before.id);
     assert.equal(posts(next.calls).length, 0);
     assert.equal(graphqlMutations(next.calls, "CreateProjectViewFallback").length, 0);
-    assert.deepEqual(savedView(state, "Software"), before);
+    assert.deepEqual(savedView(state, "Product & Operations"), before);
   }
 });
 
@@ -212,19 +212,19 @@ test("GraphQL fallback failures stop later creates and do not report unwritten s
     { graphqlFailure: "HTTP 404" }, { failGraphqlIdentityRead: true },
     { ignoreGraphqlFilter: true }, { graphqlUpdateFailure: true },
   ]) {
-    const p = fakeGitHub(stateWithout(["Software", "Product & Operations"]), { restFailure: "HTTP 404", ...options });
-    const result = await createGitHubAdapter({ run: p.run }).createViews({ config, selectedViews: ["Software", "Product & Operations"] });
+    const p = fakeGitHub(stateWithout(["Product & Operations", "Software"]), { restFailure: "HTTP 404", ...options });
+    const result = await createGitHubAdapter({ run: p.run }).createViews({ config, selectedViews: ["Product & Operations", "Software"] });
     assert.equal(result.outcome, "api-failure", JSON.stringify(options));
     assert.deepEqual(result.verified, []);
     assert.equal(graphqlMutations(p.calls, "CreateProjectViewFallback").length, 1);
     if (options.failGraphqlIdentityRead) assert.equal(graphqlMutations(p.calls, "ConfigureCreatedProjectView").length, 0);
     assert.equal(posts(p.calls).length, 1);
-    assert.deepEqual(result.notAttempted, ["Product & Operations"]);
+    assert.deepEqual(result.notAttempted, ["Software"]);
   }
 });
 
 test("status boards create exact REST settings, preserve unrelated drift and skip existing names on rerun", async () => {
-  const selectedViews = ["Product & Operations", "Software"];
+  const selectedViews = ["Software", "Product & Operations"];
   const state = stateWithout(selectedViews);
   savedView(state, "Tickets").filter = "saved custom filter";
   savedView(state, "All Tickets").sortByFields.nodes = [];
@@ -233,7 +233,7 @@ test("status boards create exact REST settings, preserve unrelated drift and ski
   const databaseId = (name) => state.fields.nodes.find((field) => field.name === name).databaseId;
   const { plans } = planProjectViewCreation(state, selectedViews);
   assert.deepEqual(plans.map((plan) => plan.body), [
-    ["Software", "kind:Software"], ["Product & Operations", "kind:product,operational"],
+    ["Product & Operations", "kind:product,operational"], ["Software", "kind:Software"],
   ].map(([name, kindFilter]) => ({
     name, layout: "board",
     filter: `${kindFilter} status:todo,deferred,decided,finished -label:"Technical Decision"`,
@@ -245,21 +245,21 @@ test("status boards create exact REST settings, preserve unrelated drift and ski
   const adapter = createGitHubAdapter({ run: p.run });
   const result = await adapter.createViews({ config, selectedViews });
   assert.equal(result.outcome, "view-setup-api-verified-browser-pending");
-  assert.deepEqual(result.verified.map((view) => view.name), ["Software", "Product & Operations"]);
+  assert.deepEqual(result.verified.map((view) => view.name), ["Product & Operations", "Software"]);
   assert.deepEqual(posts(p.calls).map((call) => JSON.parse(call.input)), plans.map((plan) => plan.body));
   assert.deepEqual(state.views.nodes.slice(0, existing.length), existing);
   assert.ok(result.audit.drifts.some((drift) => drift.name === "Tickets" && drift.property === "filter"));
   assert.ok(result.audit.drifts.some((drift) => drift.name === "All Tickets" && drift.property === "sortBy"));
   assert.deepEqual(result.remainingGitHubUi.map(({ property, expected }) => ({ property, expected })), [
     { property: "sliceBy", expected: null }, { property: "sliceBy", expected: null },
-    { property: "order", expected: ["Tickets", "Software", "Product & Operations", "All Tickets", "Decision Areas", "Out-of-Scope", "Repositories"] },
+    { property: "order", expected: ["Tickets", "Product & Operations", "Software", "All Tickets", "Out-of-Scope", "Repositories"] },
   ]);
   // Even drift on an existing selected name must not turn creation into repair.
   savedView(state, "Software").filter = "previously saved settings";
   const beforeRerun = structuredClone(state.views.nodes);
   const repeated = await adapter.createViews({ config, selectedViews });
   assert.deepEqual(repeated.created, []);
-  assert.deepEqual(repeated.existing.map((view) => view.name), ["Software", "Product & Operations"]);
+  assert.deepEqual(repeated.existing.map((view) => view.name), ["Product & Operations", "Software"]);
   assert.equal(posts(p.calls).length, 2);
   assert.deepEqual(state.views.nodes, beforeRerun);
   assert.equal(p.calls.some((call) => call.args.includes("DELETE") || call.args.includes("PATCH") || call.args.includes("item-edit")), false);
@@ -319,17 +319,17 @@ test("duplicate and near-matching saved names block creation; unrelated extras a
 });
 
 test("partial failures stop later creates and reruns create only still-missing views", async () => {
-  const selectedViews = ["Tickets", "All Tickets", "Decision Areas"];
+  const selectedViews = ["Tickets", "All Tickets", "Out-of-Scope"];
   const state = stateWithout(selectedViews);
   const first = fakeGitHub(state, { failName: "All Tickets" });
   const result = await createGitHubAdapter({ run: first.run }).createViews({ config, selectedViews });
   assert.equal(result.outcome, "api-failure");
   assert.deepEqual(result.verified.map((view) => view.name), ["Tickets"]);
   assert.deepEqual(result.failed.map((view) => view.view), ["All Tickets"]);
-  assert.deepEqual(result.notAttempted, ["Decision Areas"]);
+  assert.deepEqual(result.notAttempted, ["Out-of-Scope"]);
   const second = fakeGitHub(state);
   await createGitHubAdapter({ run: second.run }).createViews({ config, selectedViews });
-  assert.deepEqual(posts(second.calls).map((call) => JSON.parse(call.input).name), ["All Tickets", "Decision Areas"]);
+  assert.deepEqual(posts(second.calls).map((call) => JSON.parse(call.input).name), ["All Tickets", "Out-of-Scope"]);
   assert.equal(state.views.nodes.filter((view) => view.name === "Tickets").length, 1);
 });
 
@@ -356,7 +356,7 @@ test("ignored grouping or unreadable saved state remains unverified and stops fu
     assert.equal(result.unverified.length, 1);
     assert.equal(posts(p.calls).length, 1);
     assert.deepEqual(result.notAttempted, ["All Tickets"]);
-    assert.deepEqual(result.remainingGitHubUi.at(-1).expected, projectViewContract().map((view) => view.name));
+    assert.deepEqual(result.remainingGitHubUi.at(-1).expected, projectViewContract(config).map((view) => view.name));
   }
 });
 
@@ -382,10 +382,10 @@ test("Repositories omission is explicit, validated, and affects every presentati
   assert.deepEqual(validateConfig(omitted), omitted);
   for (const value of [null, "Repositories", ["Tickets"], ["repositories"], ["Repositories", "Repositories"], ["Unknown"]]) assert.throws(() => validateConfig({ ...config, omittedViews: value }), /omittedViews/);
   const state = stateWithout(["Repositories"]);
-  assert.equal(auditProjectViewContract(state).apiPassed, false, "missing does not imply omitted");
+  assert.equal(auditProjectViewContract(state, [], config).apiPassed, false, "missing does not imply omitted");
   const audit = auditProjectViewContract(state, [], omitted);
   assert.equal(audit.apiPassed, true);
-  assert.deepEqual(audit.requiredVisibleOrder, ["Tickets", "Software", "Product & Operations", "All Tickets", "Decision Areas", "Out-of-Scope"]);
+  assert.deepEqual(audit.requiredVisibleOrder, ["Tickets", "Product & Operations", "Software", "All Tickets", "Out-of-Scope"]);
   assert.equal(audit.requiredSlices.some((slice) => slice.view === "Repositories"), false);
   assert.equal(audit.manualUiChecks.some((check) => check.id === "repositories-repo-slice"), false);
   assert.deepEqual(planProjectViewRepair(state, { config: omitted }), []);
@@ -422,12 +422,12 @@ test("read-back compares exact field identities, not merely names", () => {
 });
 
 test("an omitted Project creates only its selected enabled defaults and keeps repository schema", async () => {
-  const state = stateWithout(projectViewContract().map((view) => view.name));
+  const state = stateWithout(projectViewContract(config).map((view) => view.name));
   const beforeFields = structuredClone(state.fields.nodes);
   const p = fakeGitHub(state);
   const selectedViews = projectViewContract(omitted).map((view) => view.name);
   const result = await createGitHubAdapter({ run: p.run }).createViews({ config: omitted, selectedViews });
-  assert.equal(result.verified.length, 6);
+  assert.equal(result.verified.length, 5);
   assert.equal(result.audit.apiPassed, true);
   assert.deepEqual(state.views.nodes.map((view) => view.name), selectedViews);
   assert.deepEqual(state.fields.nodes, beforeFields);
@@ -456,5 +456,75 @@ test("incomplete saved view listing cannot establish a genuinely missing view", 
   state.views.pageInfo.hasNextPage = true;
   const p = fakeGitHub(state);
   await assert.rejects(createGitHubAdapter({ run: p.run }).createViews({ config, selectedViews: ["Tickets"] }), /50-view limit/);
+  assert.equal(posts(p.calls).length, 0);
+});
+
+
+const automaticConfig = { ...config };
+delete automaticConfig.includedViews;
+const canonicalRepositories = [
+  { id: "REPO-001", label: "REPO-001 — Main", memberBuildUnits: ["BU-001", "BU-002"] },
+  { id: "REPO-002", label: "REPO-002 — Library", memberBuildUnits: ["BU-003"] },
+];
+for (const [name, preferences, repositories, enabled] of [
+  ["zero repositories", {}, [], false],
+  ["one repository with multiple units", {}, canonicalRepositories.slice(0, 1), false],
+  ["multiple repositories without tickets", {}, canonicalRepositories, true],
+  ["repeated identity is one repository", {}, [canonicalRepositories[0], canonicalRepositories[0]], false],
+  ["explicit show with one", { includedViews: ["Repositories"] }, canonicalRepositories.slice(0, 1), true],
+  ["explicit show with zero", { includedViews: ["Repositories"] }, [], true],
+  ["explicit hide with multiple", { omittedViews: ["Repositories"] }, canonicalRepositories, false],
+  ["legacy empty omission with one", { omittedViews: [] }, canonicalRepositories.slice(0, 1), false],
+  ["legacy empty omission with multiple", { omittedViews: [] }, canonicalRepositories, true],
+  ["empty inclusion is automatic", { includedViews: [] }, [], false],
+]) {
+  test(`effective policy agrees across creation, repair and audit: ${name}`, async () => {
+    const selectedConfig = validateConfig({ ...automaticConfig, ...preferences });
+    const expected = ["Tickets", "Product & Operations", "Software", "All Tickets", "Out-of-Scope", ...(enabled ? ["Repositories"] : [])];
+    assert.deepEqual(projectViewContract(selectedConfig, repositories).map((view) => view.name), expected);
+    const state = stateWithout(projectViewContract(config).map((view) => view.name));
+    // Canonical field options are independent of whether any tickets exist.
+    state.fields.nodes.find((field) => field.name === "Repositories").options = [...new Map(repositories.map((repo) => [repo.id, { name: repo.label }])).values()];
+    const uniqueRepositories = [...new Map(repositories.map((repo) => [repo.id, repo])).values()];
+    const p = fakeGitHub(state);
+    const adapter = createGitHubAdapter({ run: p.run });
+    const result = await adapter.createViews({ config: selectedConfig, repositories: uniqueRepositories, selectedViews: expected });
+    assert.deepEqual(result.created.map((view) => view.name), expected);
+    assert.equal(result.audit.apiPassed, true);
+    assert.deepEqual(result.audit.requiredVisibleOrder, expected);
+    assert.deepEqual(result.remainingGitHubUi.at(-1).expected, expected);
+    const before = structuredClone(state);
+    assert.deepEqual(await adapter.projectViewAudit({ config: selectedConfig, repositories: uniqueRepositories }), { project: result.project, ...result.audit });
+    assert.equal((await adapter.syncViews({ config: selectedConfig, repositories: uniqueRepositories })).plannedUpdates, 0);
+    assert.deepEqual(state, before);
+    if (!enabled) await assert.rejects(adapter.createViews({ config: selectedConfig, repositories: uniqueRepositories, selectedViews: ["Repositories"] }), /enabled/);
+  });
+}
+
+test("view preferences preserve old configuration and reject invalid or conflicting choices", () => {
+  for (const preferences of [{}, { omittedViews: [] }, { omittedViews: ["Repositories"] }, { includedViews: ["Repositories"] }]) {
+    const input = { ...automaticConfig, ...preferences };
+    assert.deepEqual(validateConfig(input), input);
+  }
+  for (const includedViews of [null, "Repositories", ["Tickets"], ["Repositories", "Repositories"]]) {
+    assert.throws(() => validateConfig({ ...automaticConfig, includedViews }), /includedViews/);
+  }
+  assert.throws(() => validateConfig({ ...automaticConfig, includedViews: ["Repositories"], omittedViews: ["Repositories"] }), /both/);
+});
+
+test("automatic omission reports cleanup candidates and preserves every existing custom view identity", async () => {
+  const state = stateWithout();
+  savedView(state, "Repositories").filter = "custom repository filter";
+  state.views.nodes.splice(1, 0, { id: "CUSTOM", number: 51, name: "Personal" }, { id: "BUILD_UNITS", number: 14, name: "Build Units" });
+  const before = structuredClone(state);
+  const p = fakeGitHub(state);
+  const adapter = createGitHubAdapter({ run: p.run });
+  const audit = await adapter.projectViewAudit({ config: automaticConfig });
+  assert.deepEqual(audit.additionalViews.map(({ name }) => name), ["Personal", "Build Units", "Repositories"]);
+  const { id, number, name } = savedView(state, "Repositories");
+  assert.deepEqual(audit.presentationCleanupCandidates.map(({ reason, ...identity }) => identity), [{ id, number, name }]);
+  await adapter.syncViews({ config: automaticConfig });
+  await adapter.createViews({ config: automaticConfig, selectedViews: ["Tickets"] });
+  assert.deepEqual(state, before);
   assert.equal(posts(p.calls).length, 0);
 });

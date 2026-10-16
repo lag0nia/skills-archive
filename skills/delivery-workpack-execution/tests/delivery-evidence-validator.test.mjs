@@ -414,3 +414,45 @@ test("documentation-only refresh retains old execution; requirement changes cann
   assert.equal(result.status, 1);
   assert.match(result.stderr, /beyond snapshot propagation/);
 });
+
+test('execution start explicitly requests execution and cannot accept planning-only upstream readiness', context=>{
+ const target=fixture();context.after(()=>fs.rmSync(target.root,{recursive:true,force:true}));fs.rmSync(target.summary);
+ const planningSkill=planningStub(target,`const i=process.argv.indexOf('--validation-mode');if(i<0 || process.argv[i+1]!=='execution')process.exit(8);process.stderr.write('INPUT-001 awaits compatible upstream output');process.exit(1);`);
+ const options={...target,planningSkill,softwareDesignSkill:target.root};
+ assert.throws(()=>startExecution(options),/awaits compatible upstream output/);assert.ok(!fs.existsSync(target.summary));
+ assert.throws(()=>startExecution({...options,validationMode:'planning'}),/only execution validation/);assert.ok(!fs.existsSync(target.summary));
+});
+test('execution CLI rejects planning/unknown modes through real path and symlink without writing records', context=>{
+ const target=fixture();context.after(()=>fs.rmSync(target.root,{recursive:true,force:true}));fs.rmSync(target.summary);
+ const command=path.resolve(path.dirname(new URL(import.meta.url).pathname),'../scripts/execution-record.mjs');const link=path.join(target.root,'claude-execution-record.mjs');fs.symlinkSync(command,link);
+ for(const script of [command,link]) for(const mode of ['planning','invalid']) {
+  const result=spawnSync(process.execPath,[script,'--mode','start','--workpack',target.workpack,'--repository',target.repository,'--validation-mode',mode],{encoding:'utf8'});
+  assert.equal(result.status,1);assert.match(result.stderr,/only.*execution|Unknown validation mode/);assert.ok(!fs.existsSync(target.summary));
+ }
+});
+test('known newer unexecuted plan leaves prior receipt and exact execution history unchanged',context=>{
+ const target=fixture();context.after(()=>fs.rmSync(target.root,{recursive:true,force:true}));
+ const summary=fs.readFileSync(target.summary),report=fs.readFileSync(path.join(target.repository,'delivery-evidence/IMPLEMENTATION-DELIVERY-REPORT.md'));
+ const prior=path.join(target.root,'implemented-basis.md');fs.copyFileSync(target.workpack,prior);
+ write(target.workpack,fs.readFileSync(target.workpack,'utf8').replaceAll(SNAPSHOT,'sha256:'+'c'.repeat(64))+'\nA planned new requirement.\n');
+ assert.doesNotThrow(()=>checkExecutionRecord(prior,target.repository));
+ assert.deepEqual(fs.readFileSync(target.summary),summary);
+ assert.deepEqual(fs.readFileSync(path.join(target.repository,'delivery-evidence/IMPLEMENTATION-DELIVERY-REPORT.md')),report);
+ assert.throws(()=>checkExecutionRecord(target.workpack,target.repository),/ENOENT/);
+});
+
+
+test('completed consumer-fitness VE cannot be replaced by prerequisite-only or planned evidence', context => {
+  const target = fixture(); context.after(() => fs.rmSync(target.root, { recursive: true, force: true }));
+  write(target.workpack, fs.readFileSync(target.workpack, 'utf8').replace('- **Procedure:** `npm test`', '- **Evidence scope:** `consumer-fitness`\n- **Procedure:** `npm test`'));
+  stampFixture(target);
+  const original = fs.readFileSync(target.summary, 'utf8');
+  for (const scope of ['', '- **Evidence scope:** `prerequisite`\n', '- **Evidence scope:** `producer-publication`\n']) {
+    write(target.summary, original.replace('- **Procedure:** `npm test`', scope + '- **Procedure:** `npm test`'));
+    const result = run(target); assert.equal(result.status, 1); assert.match(result.stderr, /completed consumer-fitness evidence/);
+  }
+  const final = original.replace('- **Procedure:** `npm test`', '- **Evidence scope:** `consumer-fitness`\n- **Procedure:** `npm test`');
+  write(target.summary, final.replace(/\*\*Status:\*\* `PASS`/g, '**Status:** `Planned`'));
+  assert.equal(run(target).status, 1);
+  write(target.summary, final); const accepted = run(target); assert.equal(accepted.status, 0, accepted.stderr);
+});

@@ -1,0 +1,105 @@
+--- replace after «…»
+  - Domain Overview
+  + Participant Access And Loan Operations
+--- replace after «…spend. Access, Coordination, And Local Composition»
+  - **Participant
+  + **[Participant
+--- replace after «…Local Composition **Participant identity and role»
+  - access ([SR-010])**
+  + access]**
+--- replace after «…owns accounts, role membership, sessions, recovery,»
+  - reauthentication/MFA,
+  + reauthentication and multi-factor authentication (MFA),
+--- replace after «…or make a chain action valid.»
+  - [STATE-003]
+  + The [identity, session, and fresh access states]
+--- replace after «…retain exact denial and recovery behavior.»
+  - **Loan
+  + **[Loan
+--- replace after «…recovery behavior. **Loan workspace and application»
+  - coordination ([SR-011])**
+  + coordination]**
+--- replace after «…not prove that public consumer path.»
+  - [IFACE-013]
+  + The [workspace command, revision, outbox,
+--- replace after «…that public consumer path. [IFACE-013] and»
+  - [STATE-016]
+  + result contract] and the [workspace command, outbox, and projection states]
+--- replace after «…preserve the exact routes and failures.»
+  - **Local
+  + **[Local
+--- replace after «…failures. **Local runtime composition and controlled»
+  - demonstration ([SR-012])**
+  + demonstration]**
+--- replace after «…reset invokes each producer's reset contract.»
+  - [IFACE-021]
+  + The [local demo runtime control contract]
+--- replace after «…each producer's reset contract. [IFACE-021] and»
+  - [STATE-020]
+  + the [local demo runtime states]
+--- insert after «…acknowledged public identity and preparation material;»
+  - 
+  + under the terms domain's detailed rules
+--- replace after «…both roles approve the same final»
+  - candidate under
+  + candidate, which is one side of an unresolved source conflict over whether
+--- insert after «…the same final candidate under the»
+  - 
+  + lender approves again after reservation, explained in the [loan
+--- replace after «…same final candidate under the terms»
+  - domain's exact rules.
+  + guide].
+--- replace after «…contract outcomes and confirmed Bitcoin recovery.»
+  - [FLOW-001], [FLOW-002],
+  + The [origination flow], the [activation flow],
+--- replace after «…confirmed Bitcoin recovery. [FLOW-001], [FLOW-002], and»
+  - [FLOW-004]
+  + the [normal repayment flow]
+--- insert after «…state change and its job commit»
+  - 
+  + together
+--- insert after «…change and its job commit in»
+  - 
+  + the
+--- replace after «…and its job commit in D1»
+  - together.
+  + workspace database.
+--- replace after «…to the declared visible block/recovery route.»
+  - [IFACE-022]
+  + The [Vault-owned payment account
+--- replace after «…declared visible block/recovery route. [IFACE-022] and»
+  - [STATE-021]
+  + exact transfer contract] and the [payment account and intent states]
+--- replace after «…account is independent of its protocol»
+  - EOA
+  + externally owned account (EOA)
+--- replace after «…not a running-service fallback or promised»
+  - RTO/RPO.
+  + recovery time or recovery point objective (RTO/RPO).
+--- replace after «…production operation remain distinct claims under»
+  - [SCOPE-013].
+  + the [runtime profile claims and activation gates].
+--- insert after «…remain distinct claims under [SCOPE-013]. The»
+  - 
+  + records disagree about the
+--- insert after «…claims under [SCOPE-013]. The current payment»
+  - 
+  + capability's status: the [payment account selection] says its implementation and execution evidence remain gated, and the [browser acceptance verification] calls it planned and unverified, while the core coordination handoff records historical payment implementation and the handoff sequence records a correction that now passes focused checks without finalized completion receipts. Which status holds is undecided; the most limited reading is that the
+--- replace after «…[SCOPE-013]. The current payment capability is»
+  - still an implementation target with no execution evidence established by this migration.
+  + selected but planned and unverified.
+--- replace after «…complete cooperative-settlement operation remain deferred under»
+  - [SCOPE-006]
+  + the [stronger participant-Vault recovery]
+--- replace after «…operation remain deferred under [SCOPE-006] and»
+  - [SCOPE-005].
+  + [cooperative settlement operations] exclusions.
+--- replace after «…parity, cutover, rollback and adapter conformance»
+  - ([SCOPE-015]).
+  + ([application-owned authentication replacement]).
+--- replace after «…plus participant signing and direct submission»
+  - ([SCOPE-014]).
+  + ([platform-paid Base reveal execution]).
+--- insert after «…existing exclusions, not newly selected capabilities.»
+  - 
+  + The [architecture guide] shows where this domain fits in the system, and the [domain record] lists exactly what the domain owns and excludes.

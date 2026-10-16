@@ -1,11 +1,13 @@
+import { assertCurrentFormat } from "../model/package-format.mjs";
 import fs from "node:fs";
 import path from "node:path";
 import { validateImplementationDetailTickets } from "../../validate-implementation-detail-tickets.mjs";
+import { conditionDisplay, originLabel } from "../model/decision-attribution.mjs";
 
 const ACTIVE_STATUSES = new Set(["todo", "deferred", "decided", "finished", "out-of-scope"]);
 const TICKET_KINDS = new Set(["technical", "product", "operational"]);
 const OUTCOMES = new Set(["changed", "no-change", "clarification"]);
-const CONFIG_KEYS = new Set(["provider", "ticketRoot", "repository", "project", "syncBranch", "omittedViews"]);
+const CONFIG_KEYS = new Set(["provider", "ticketRoot", "repository", "project", "syncBranch", "omittedViews", "includedViews"]);
 
 export const PROJECT_STATUS_OPTIONS = Object.freeze(["todo", "deferred", "decided", "finished", "out-of-scope"]);
 export const PROJECT_BOARD_STATUS_OPTIONS = Object.freeze(["todo", "Waiting", "deferred", "decided", "finished"]);
@@ -20,59 +22,44 @@ export function kindDisplayName(kind) {
 }
 export const PROJECT_KIND_OPTIONS = Object.freeze([...TICKET_KINDS].map(kindDisplayName));
 
-// Read-only migration advice. A later explicit field edit must preserve all IDs.
-export function kindLabelMigration(fields) {
-  const matches = fields.filter((field) => field?.name === "Kind");
-  if (matches.length !== 1) return null;
-  const field = matches[0];
-  const type = String(field.dataType || field.type || "").toUpperCase().replace(/[_-]/g, "").replace(/^PROJECTV2/, "").replace(/FIELD$/, "");
-  const options = field.options || [];
-  if (type !== "SINGLESELECT" || !field.id || options.length !== 3
-    || options.some((option, index) => option.name !== [...TICKET_KINDS][index] || !option.id)
-    || new Set(options.map((option) => option.id)).size !== 3) return null;
-  return {
-    fieldId: field.id,
-    optionId: options[0].id,
-    from: "technical", to: "Software",
-    preserveOptionIds: options.map((option) => option.id),
-    action: "Explicitly rename the existing Kind option in place after reviewing its ID; preserve field/option IDs, colors, descriptions, order and item selections. Ordinary sync and sync --fields-only do not perform this migration.",
-  };
-}
 export const PROJECT_REPOSITORY_TICKET_LAYER_OPTIONS = Object.freeze(["Repository-wide tickets", "Owned Build Unit tickets"]);
 export const PROJECT_REPOSITORIES_FIELD = "Repositories";
-export const PROJECT_WORKFLOW_LABEL = "Software Design Workflow";
 
-const STANDARD_VISIBLE_FIELDS = Object.freeze(["Title", "Status", "Kind", "Complexity", "Responsibility", "Category", "Parent Decision"]);
+const STANDARD_VISIBLE_FIELDS = Object.freeze(["Title", "Status", "Kind", "Complexity", "Responsibility", "Category"]);
 const STATUS_BOARD_VISIBLE_FIELDS = Object.freeze(["Title", "Domain", "Complexity"]);
 const REPOSITORY_VISIBLE_FIELDS = Object.freeze(["Title", "Build Units", "Repository Build Units"]);
-const DECISION_VISIBLE_FIELDS = Object.freeze(["Title", "Decision Status", "Domain", "Responsibility", "Decision Tickets", "Resume When"]);
-const OUT_OF_SCOPE_VISIBLE_FIELDS = Object.freeze(["Title", "Status", "Decision Status", "Domain", "Responsibility", "Decision Tickets", "Resume When"]);
+const OUT_OF_SCOPE_VISIBLE_FIELDS = Object.freeze(["Title", "Status", "Domain", "Responsibility", "Resume When"]);
 const STATUS_SORT = Object.freeze([{ field: "Status", direction: "ASC" }]);
 const TITLE_SORT = Object.freeze([{ field: "Title", direction: "ASC" }]);
 
 export const PROJECT_VIEW_CONTRACT = Object.freeze([
   { name: "Tickets", layout: "BOARD_LAYOUT", filter: "status:todo,deferred -label:\"Technical Decision\"", sliceBy: null, groupBy: ["Work area"], verticalGroupBy: ["Answering group"], sortBy: TITLE_SORT, visibleFields: ["Title", "Status", "Domain", "Waiting on"] },
-  { name: "Software", layout: "BOARD_LAYOUT", filter: "kind:Software status:todo,deferred,decided,finished -label:\"Technical Decision\"", sliceBy: null, groupBy: [], verticalGroupBy: ["Board status"], sortBy: TITLE_SORT, visibleFields: STATUS_BOARD_VISIBLE_FIELDS },
   { name: "Product & Operations", layout: "BOARD_LAYOUT", filter: "kind:product,operational status:todo,deferred,decided,finished -label:\"Technical Decision\"", sliceBy: null, groupBy: [], verticalGroupBy: ["Board status"], sortBy: TITLE_SORT, visibleFields: STATUS_BOARD_VISIBLE_FIELDS },
+  { name: "Software", layout: "BOARD_LAYOUT", filter: "kind:Software status:todo,deferred,decided,finished -label:\"Technical Decision\"", sliceBy: null, groupBy: [], verticalGroupBy: ["Board status"], sortBy: TITLE_SORT, visibleFields: STATUS_BOARD_VISIBLE_FIELDS },
   { name: "All Tickets", layout: "TABLE_LAYOUT", filter: "status:todo,deferred,decided,finished,out-of-scope -label:\"Technical Decision\"", sliceBy: null, groupBy: [], verticalGroupBy: [], sortBy: STATUS_SORT, visibleFields: STANDARD_VISIBLE_FIELDS },
-  { name: "Decision Areas", layout: "TABLE_LAYOUT", filter: "label:\"Technical Decision\"", sliceBy: null, groupBy: ["Decision Status"], verticalGroupBy: [], sortBy: TITLE_SORT, visibleFields: DECISION_VISIBLE_FIELDS },
-  { name: "Out-of-Scope", layout: "TABLE_LAYOUT", filter: "label:\"Out-of-Scope\"", sliceBy: null, groupBy: [], verticalGroupBy: [], sortBy: TITLE_SORT, visibleFields: OUT_OF_SCOPE_VISIBLE_FIELDS },
+  { name: "Out-of-Scope", layout: "TABLE_LAYOUT", filter: "status:out-of-scope -label:\"Technical Decision\"", sliceBy: null, groupBy: [], verticalGroupBy: [], sortBy: TITLE_SORT, visibleFields: OUT_OF_SCOPE_VISIBLE_FIELDS },
   { name: "Repositories", layout: "BOARD_LAYOUT", filter: "has:repositories status:todo,deferred,decided,finished -label:\"Technical Decision\"", sliceBy: PROJECT_REPOSITORIES_FIELD, groupBy: ["Repository Ticket Layer"], verticalGroupBy: ["Status"], sortBy: TITLE_SORT, visibleFields: REPOSITORY_VISIBLE_FIELDS },
 ]);
 
-// Only Repositories is optional; this changes presentation, never data projection.
-export function projectViewContract(config = {}) {
-  const omitted = Object.hasOwn(config, "omittedViews") ? config.omittedViews : [];
-  if (!Array.isArray(omitted) || omitted.some((name) => name !== "Repositories") || new Set(omitted).size !== omitted.length) {
-    throw new Error('omittedViews must be an array of unique optional view names; only "Repositories" may be omitted.');
+// Only Repositories is optional; preferences change presentation, never projection.
+export function projectViewContract(config = {}, repositories = []) {
+  for (const key of ["omittedViews", "includedViews"]) {
+    const names = Object.hasOwn(config, key) ? config[key] : [];
+    if (!Array.isArray(names) || names.some((name) => name !== "Repositories") || new Set(names).size !== names.length) {
+      throw new Error(`${key} must be an array of unique optional view names; only "Repositories" is supported.`);
+    }
   }
-  return PROJECT_VIEW_CONTRACT.filter((view) => !omitted.includes(view.name));
+  const hidden = config.omittedViews?.includes("Repositories") || false;
+  const shown = config.includedViews?.includes("Repositories") || false;
+  if (hidden && shown) throw new Error("Repositories cannot appear in both includedViews and omittedViews.");
+  const enabled = !hidden && (shown || new Set(repositories.map((repository) => repository.id)).size > 1);
+  return PROJECT_VIEW_CONTRACT.filter((view) => view.name !== "Repositories" || enabled);
 }
 
 export const PROJECT_MANUAL_UI_CHECKS = Object.freeze([
   {
     id: "visible-tab-order",
-    requirement: "The enabled required saved Project tabs appear in requiredVisibleOrder relative to one another. Additional user views keep their positions. Verify requiredSlices for every saved view after reload.",
+    requirement: "The enabled required saved Project tabs appear in requiredVisibleOrder relative to one another. Additional user views keep their identities and relative positions. Verify requiredSlices for every saved view after reload.",
   },
   {
     id: "tickets-answering-board",
@@ -80,7 +67,7 @@ export const PROJECT_MANUAL_UI_CHECKS = Object.freeze([
   },
   {
     id: "kind-status-boards",
-    requirement: "Software shows Kind Software; Product & Operations shows Kind product or operational. Both include ordinary and repository-scoped implementation tickets, exclude Technical Decision records and out-of-scope tickets, and show todo, Waiting, deferred, decided, finished Board status columns; only ready canonical todo tickets appear in todo, blocked todo tickets appear in Waiting, and deferred tickets stay deferred. There is no horizontal grouping or slicing. Cards show Title, Domain, Complexity; Title sorts ascending. Save shared defaults and reload; verify no hidden Board status column, filter warning or No Board status metadata row. Position both tabs immediately after Tickets, preserving existing view identities and the relative order of other tabs.",
+    requirement: "Software shows Kind Software; Product & Operations shows Kind product or operational. Both include ordinary and repository-scoped implementation tickets, exclude Technical Decision records and out-of-scope tickets, and show todo, Waiting, deferred, decided, finished Board status columns; only ready canonical todo tickets appear in todo, blocked todo tickets appear in Waiting, and deferred tickets stay deferred. There is no horizontal grouping or slicing. Cards show Title, Domain, Complexity; Title sorts ascending. Save shared defaults and reload; verify no hidden Board status column, filter warning or No Board status metadata row. Position Product & Operations, then Software, immediately after Tickets, preserving existing view identities and the relative order of other tabs.",
   },
   {
     id: "repositories-repo-slice",
@@ -89,11 +76,11 @@ export const PROJECT_MANUAL_UI_CHECKS = Object.freeze([
   },
   {
     id: "out-of-scope-view",
-    requirement: "Out-of-Scope shows each deferred Technical Decision once as the readable parent group plus each standalone out-of-scope ticket. Out-of-scope child tickets remain real issues but are omitted from this top-level view.",
+    requirement: "Out-of-Scope shows every canonical out-of-scope ticket once, with its exclusion reason, revisit condition, and canonical scope links. Legacy Technical Decision issues remain historical and are excluded.",
   },
   {
     id: "all-tickets-decision-separation",
-    requirement: "All Tickets shows every canonical TICKET issue, including TD-linked and standalone out-of-scope tickets, while excluding stable Technical Decision issues. Tickets with parent_decision null remain ordinary first-class rows.",
+    requirement: "All Tickets shows every canonical TICKET issue, including every out-of-scope ticket, while excluding historical Technical Decision issues.",
   },
 ]);
 
@@ -105,17 +92,8 @@ function sameOrderedValues(left, right) {
   return left.length === right.length && left.every((value, index) => JSON.stringify(value) === JSON.stringify(right[index]));
 }
 
-function decisionTicketProgress(tickets) {
-  const counts = new Map(PROJECT_STATUS_OPTIONS.map((status) => [status, 0]));
-  for (const ticket of tickets) counts.set(ticket.status, (counts.get(ticket.status) || 0) + 1);
-  const breakdown = PROJECT_STATUS_OPTIONS
-    .filter((status) => counts.get(status))
-    .map((status) => `${counts.get(status)} ${status}`);
-  return [`${tickets.length} total`, ...breakdown].join(" · ");
-}
-
-export function auditProjectViewContract(snapshot, repositoryOptions = [], config = {}) {
-  const contract = projectViewContract(config);
+export function auditProjectViewContract(snapshot, repositoryOptions = [], config = {}, repositories = []) {
+  const contract = projectViewContract(config, repositories);
   const drifts = [];
   const fields = snapshot?.fields?.nodes || snapshot?.fields || [];
   const fieldByName = new Map(fields.filter(Boolean).map((field) => [field.name, field]));
@@ -151,7 +129,7 @@ export function auditProjectViewContract(snapshot, repositoryOptions = [], confi
     if (matches.length !== 1 || matches[0]?.dataType !== "TEXT") drifts.push({ scope: "field", name, property: "schema", expected: "one TEXT field", actual: matches });
   }
 
-  for (const name of ["Domain", "Responsibility", "Category", "Build Units", "Repository Build Units", "Parent Decision", "Decision Status", "Decision Tickets", "Resume When"]) {
+  for (const name of ["Domain", "Responsibility", "Category", "Build Units", "Repository Build Units", "Resume When"]) {
     if (!fieldByName.has(name)) drifts.push({ scope: "field", name, property: "presence", expected: true, actual: false });
   }
 
@@ -193,8 +171,8 @@ export function auditProjectViewContract(snapshot, repositoryOptions = [], confi
   // connection sequence cannot establish saved browser tab order in either direction.
   return {
     apiPassed: drifts.length === 0,
-    requiredKindLabelMigration: kindLabelMigration(fields),
     additionalViews,
+    presentationCleanupCandidates: additionalViews.filter((view) => view.name === "Repositories").map((view) => ({ ...view, reason: "Repositories is disabled by the effective presentation policy; retain it until the user authorizes removal." })),
     drifts,
     requiredVisibleOrder: contract.map((view) => view.name),
     visibleOrderVerification: "manual-ui-required",
@@ -258,8 +236,8 @@ export function parseViewRenameArguments(values = []) {
 }
 
 // Plans only supported in-place settings for unambiguous views; any unresolved target blocks every write.
-export function planProjectViewRepair(snapshot, { renames = [], config = {} } = {}) {
-  const contract = projectViewContract(config);
+export function planProjectViewRepair(snapshot, { renames = [], config = {}, repositories = [] } = {}) {
+  const contract = projectViewContract(config, repositories);
   const views = (snapshot?.views?.nodes || snapshot?.views || []).filter(Boolean);
   const fields = (snapshot?.fields?.nodes || snapshot?.fields || []).filter((field) => field?.id && field?.name);
   const problems = [];
@@ -328,7 +306,7 @@ export function planProjectViewRepair(snapshot, { renames = [], config = {} } = 
 }
 
 // Verifies applied updates by view ID against the re-read saved state, then classifies the single audit.
-export function summarizeProjectViewRepair({ project, updates, applied, failed, notAttempted, snapshot, verificationError = null, repositoryOptions = [], config = {} }) {
+export function summarizeProjectViewRepair({ project, updates, applied, failed, notAttempted, snapshot, verificationError = null, repositoryOptions = [], config = {}, repositories = [] }) {
   const savedViews = new Map((snapshot?.views?.nodes || snapshot?.views || []).filter(Boolean).map((view) => [view.id, view]));
   const verified = [];
   const unverified = [];
@@ -349,7 +327,7 @@ export function summarizeProjectViewRepair({ project, updates, applied, failed, 
       }
     }
   }
-  const audit = snapshot ? auditProjectViewContract(snapshot, repositoryOptions, config) : null;
+  const audit = snapshot ? auditProjectViewContract(snapshot, repositoryOptions, config, repositories) : null;
   // A rename that did not land leaves name-based findings that belong to the API failure, not to UI work.
   const unresolvedRenames = updates.filter((update) => update.properties.includes("name")
     && !verified.some((entry) => entry.view === update.view && entry.property === "name"));
@@ -365,7 +343,7 @@ export function summarizeProjectViewRepair({ project, updates, applied, failed, 
   const remainingFieldSetup = [];
   for (const drift of audit?.drifts || []) {
     if (drift.scope === "field") {
-      remainingFieldSetup.push({ ...drift, reason: "Explicit field setup required; sync --fields-only handles existing Status/Answering group options with preserved IDs. Kind display-label migration and missing or incompatible fields require separate explicit setup." });
+      remainingFieldSetup.push({ ...drift, reason: "Explicit field setup required; sync --fields-only handles existing Status/Answering group options with preserved IDs. A retired Kind option name and missing or incompatible fields require separate explicit setup." });
     } else if (drift.scope === "view" && VIEW_API_WRITABLE_PROPERTIES.has(drift.property)) {
       const explained = [...failed, ...notAttempted].some((entry) => entry.view === drift.name)
         || unverified.some((entry) => entry.view === drift.name && entry.property === drift.property);
@@ -429,7 +407,7 @@ function sortedUnique(values, name) {
 export function validateConfig(rawConfig, cwd = process.cwd()) {
   if (!rawConfig || typeof rawConfig !== "object" || Array.isArray(rawConfig)) throw new Error("Projection config must be a JSON object.");
   for (const key of Object.keys(rawConfig)) if (!CONFIG_KEYS.has(key)) throw new Error(`Unknown config key: ${key}.`);
-  for (const key of CONFIG_KEYS) if (key !== "omittedViews" && !Object.hasOwn(rawConfig, key)) throw new Error(`Missing required config key: ${key}.`);
+  for (const key of CONFIG_KEYS) if (!["omittedViews", "includedViews"].includes(key) && !Object.hasOwn(rawConfig, key)) throw new Error(`Missing required config key: ${key}.`);
 
   const provider = requireString(rawConfig.provider, "provider");
   const ticketRoot = normalizedRelativePath(rawConfig.ticketRoot, "ticketRoot");
@@ -446,7 +424,7 @@ export function validateConfig(rawConfig, cwd = process.cwd()) {
     throw new Error("ticketRoot must stay inside the consumer repository.");
   }
   projectViewContract(rawConfig);
-  return { provider, ticketRoot, repository, project, syncBranch, ...(Object.hasOwn(rawConfig, "omittedViews") ? { omittedViews: [...rawConfig.omittedViews] } : {}) };
+  return { provider, ticketRoot, repository, project, syncBranch, ...(Object.hasOwn(rawConfig, "omittedViews") ? { omittedViews: [...rawConfig.omittedViews] } : {}), ...(Object.hasOwn(rawConfig, "includedViews") ? { includedViews: [...rawConfig.includedViews] } : {}) };
 }
 
 export function loadConfig(cwd = process.cwd()) {
@@ -463,11 +441,6 @@ export function loadConfig(cwd = process.cwd()) {
 export function issueIdentityMarker(ticketId) {
   if (!/^TICKET-\d{4}$/.test(ticketId || "")) throw new Error("Ticket identity must use TICKET-NNNN format.");
   return `<!-- software-design-ticket ${ticketId} -->`;
-}
-
-export function decisionIdentityMarker(decisionId) {
-  if (!/^TD-\d{3}$/.test(decisionId || "")) throw new Error("Technical Decision identity must use TD-NNN format.");
-  return `<!-- software-design-decision ${decisionId} -->`;
 }
 
 function appendSection(lines, heading, content) {
@@ -521,7 +494,6 @@ function appendCanonicalReference(lines, record) {
     `- Ticket: ${record.id}`,
     `- Source: \`${record.sourcePath}\``,
     ...(record.owner ? [`- Owner: ${record.owner}`] : []),
-    ...(record.parentDecision ? [`- Parent decision: ${record.parentDecision}`] : []),
     ...[
       ["Dependencies", record.dependencies],
       ["Durable outcomes", record.resultRefs],
@@ -535,78 +507,32 @@ function appendCanonicalReference(lines, record) {
   );
 }
 
-function decisionTicketTable(ticketRecords) {
-  const lines = [
-    "| Ticket | Status | Specific question |",
-    "| --- | --- | --- |",
-  ];
-  for (const record of ticketRecords) {
-    const ticket = record.issueUrl
-      ? `[${record.id} — ${record.title}](${record.issueUrl})`
-      : `${record.id} — ${record.title}`;
-    lines.push(`| ${ticket} | ${record.status} | ${record.question} |`);
+function appendAttributionEntries(lines, attribution) {
+  const continued = (text) => String(text).replace(/\n/g, "\n  ");
+  for (const entry of attribution) {
+    lines.push(`- **${originLabel(entry.origin)}** — ${continued(entry.decision)}`);
+    for (const condition of entry.conditions || []) lines.push(`  - ${continued(conditionDisplay(condition))}`);
+    lines.push(`  - Evidence: ${continued(entry.evidence)}`);
   }
-  if (!ticketRecords.length) lines.push("| None yet | — | The decision subject is established; specific implementation questions have not yet been created. |");
-  return lines.join("\n");
 }
 
-export function renderTechnicalDecisionBody(decision, ticketRecords) {
-  const unfinished = ticketRecords.filter((record) => record.status !== "finished");
-  const finished = ticketRecords.filter((record) => record.status === "finished");
-  const lines = [
-    decisionIdentityMarker(decision.id),
-    "",
-    decision.context,
-  ];
-  appendCurrentShape(lines, decision.currentShape);
-  lines.push(
-    "",
-    "## Why this matters",
-    decision.whyItMatters,
-    "",
-    "## What is already established",
-    decision.established,
-    "",
-    "## How the tickets fit together",
-    decision.howTicketsFit,
-    "",
-    "## Linked ticket status",
-    decisionTicketTable(ticketRecords),
-    "",
-    "## Decision state",
-    `- State: ${decision.decisionStatus}`,
-    `- Domain: ${decision.domainLabel}`,
-    `- Affected System Responsibilities: ${decision.responsibilityLabel}`,
-  );
-  if (decision.decisionStatus === "Deferred For Later Design") {
-    lines.push(`- Why deferred: ${decision.deferReason}`, `- Resume when: ${decision.resumeWhen}`);
-  } else if (decision.decisionStatus === "Resolved") {
-    lines.push(`- Combined outcome: ${decision.outcome}`);
-  } else if (decision.decisionStatus === "Partially Resolved") {
-    lines.push(
-      `- Finished tickets: ${finished.map((record) => record.id).join(", ") || "None"}`,
-      `- Remaining tickets: ${unfinished.map((record) => record.id).join(", ") || "None"}`,
-    );
-  } else if (decision.decisionStatus === "Blocked") {
-    lines.push(`- Current blocker: ${decision.blocker}`);
-  } else {
-    lines.push(`- Remaining tickets: ${unfinished.map((record) => record.id).join(", ") || "Specific child tickets have not been created yet"}`);
+// A settled status says only that an answer is recorded; who chose it comes
+// from attribution, so a missing record is shown rather than read as approval.
+function appendDecisionOrigin(lines, attribution) {
+  lines.push("", "## Decision origin");
+  if (!attribution?.length) {
+    lines.push("- **Unknown origin** — no attribution is recorded for this answer. Its status shows that it is settled, not who chose it.");
+    return;
   }
-  lines.push(
-    "",
-    "<details>",
-    "<summary>Canonical reference</summary>",
-    "",
-    `- Technical Decision: ${decision.id}`,
-    `- Source: \`${decision.sourcePath}\``,
-    `- Child tickets: ${ticketRecords.length ? ticketRecords.map((record) => record.id).join(", ") : "None yet"}`,
-    ...(decision.currentShape?.source_refs?.length
-      ? ["- Current-shape sources: " + decision.currentShape.source_refs.map((source) => "`" + source + "`").join(", ")]
-      : []),
-    "",
-    "</details>",
-  );
-  return lines.join("\n");
+  appendAttributionEntries(lines, attribution);
+}
+
+// Parts already settled within an open question are kept apart from the
+// options and recommendation, which cover only what remains open.
+function appendAlreadyDecided(lines, attribution) {
+  if (!attribution?.length) return;
+  lines.push("", "## Already decided", "These parts are recorded; the rest of the question above is still open.");
+  appendAttributionEntries(lines, attribution);
 }
 
 function appendOptions(lines, options) {
@@ -623,12 +549,14 @@ export function renderIssueBody(record) {
   const lines = [issueIdentityMarker(record.id), ""];
   if (record.status === "todo") {
     lines.push(`## ${record.question}`, "", record.context);
+    appendAlreadyDecided(lines, record.attribution);
   } else if (record.status === "deferred") {
     lines.push("## Why this is deferred", "", record.deferReason);
     appendSection(lines, "Resume when", record.resumeWhen);
     lines.push("", "The answer is still required for the target version.");
     appendSection(lines, "Decision still needed", record.question);
     if (record.context && record.context !== record.deferReason) lines.push("", record.context);
+    appendAlreadyDecided(lines, record.attribution);
   } else if (record.status === "out-of-scope") {
     lines.push("## Why this is out of scope", "", record.scopeReason);
     appendSection(lines, "Reopen when", record.resumeWhen);
@@ -636,8 +564,9 @@ export function renderIssueBody(record) {
     appendSection(lines, "Future question", record.question);
     if (record.context && record.context !== record.scopeReason) lines.push("", record.context);
   } else if (record.status === "decided" || record.status === "finished") {
-    lines.push(record.status === "decided" ? "## Approved decision" : "## Approved final outcome", "", record.resolution);
+    lines.push(record.status === "decided" ? "## Recorded decision" : "## Final outcome", "", record.resolution);
     if (record.status === "decided") lines.push("", "Affected canonical updates and checks remain before completion.");
+    appendDecisionOrigin(lines, record.attribution);
     appendSection(lines, "Original question", record.question);
     if (record.context) lines.push("", record.context);
   } else {
@@ -648,7 +577,6 @@ export function renderIssueBody(record) {
     appendOptions(lines, record.options);
     appendSection(lines, "Recommendation", record.recommendation);
   }
-  if (record.parentDecision) appendSection(lines, "Related decision", relationshipLabel(record.parentDecision, record.parentDecisionTitle, record.parentDecisionUrl));
   appendListSection(lines, ["todo", "deferred"].includes(record.status) ? "Before answering" : "Related prerequisites", dependencyLabels(record));
   if (["todo", "deferred"].includes(record.status)) appendListSection(lines, "Waiting on", record.waitingOnDetails || []);
   if (record.status === "todo") lines.push("", "Reply in a comment with your choice, adjustment, alternative, or clarification. Comments are discussion input; approval and canonical updates follow the existing design workflow.");
@@ -718,7 +646,6 @@ export function normalizeTicketDocuments(
   repositoryRoot = process.cwd(),
   responsibilities = new Map(),
   domains = new Map(),
-  decisions = new Map(),
   repositories = new Map(),
 ) {
   const ticketDetails = new Map();
@@ -734,7 +661,6 @@ export function normalizeTicketDocuments(
       if (!ACTIVE_STATUSES.has(ticket.status)) continue;
       const sourcePath = path.relative(repositoryRoot, document.filePath).split(path.sep).join("/");
       const responsibility = responsibilities.get(ticket.owner);
-      const parentDecision = ticket.parent_decision ? decisions.get(ticket.parent_decision) : null;
       const domainScope = /^domain:(.+)$/.exec(document.scope || "")?.[1];
       const domainLabel = responsibility?.domainName
         || (domainScope ? domains.get(domainScope)?.name : null)
@@ -747,8 +673,6 @@ export function normalizeTicketDocuments(
         kind: ticket.kind,
         complexity: ticket.complexity,
         owner: ticket.owner,
-        parentDecision: ticket.parent_decision || null,
-        parentDecisionTitle: parentDecision?.title || null,
         domainLabel,
         responsibilityLabel: responsibility?.name ? `${ticket.owner} — ${responsibility.name}` : ticket.owner === "shared" ? "Shared" : ticket.owner,
         concern: ticket.concern,
@@ -761,13 +685,14 @@ export function normalizeTicketDocuments(
         blockedBy: ticket.blocked_by,
         dependencyDetails: dependencies.map((id) => ({ id, ...ticketDetails.get(id) })),
         resolution: ticket.resolution,
+        attribution: Array.isArray(ticket.attribution) ? ticket.attribution : [],
         resultRefs: ticket.result_refs || [],
         buildUnits: [...(ticket.build_units || [])].sort(),
         buildUnitDisposition: ticket.build_unit_disposition || null,
         repositories: [...(ticket.repositories || [])].sort(),
         deferReason: ticket.defer_reason || (ticket.status === "deferred" ? ticket.context : null),
-        scopeReason: ticket.scope_reason || parentDecision?.deferReason || (ticket.status === "out-of-scope" ? ticket.context : null),
-        resumeWhen: ticket.resume_when || (ticket.status === "out-of-scope" ? parentDecision?.resumeWhen : null) || null,
+        scopeReason: ticket.scope_reason || (ticket.status === "out-of-scope" ? ticket.context : null),
+        resumeWhen: ticket.resume_when || null,
         sourcePath,
       };
       if (!/^TICKET-\d{4}$/.test(record.id || "")) throw new Error(`Invalid ticket identity: ${record.id}.`);
@@ -794,64 +719,6 @@ export function normalizeTicketDocuments(
   return records;
 }
 
-export function normalizeDecisionRecords(
-  decisions = new Map(),
-  ticketRecords = [],
-  repositoryRoot = process.cwd(),
-  domains = new Map(),
-  responsibilities = new Map(),
-) {
-  const records = [];
-  for (const decision of [...decisions.values()].sort((left, right) => left.id.localeCompare(right.id))) {
-    const linked = ticketRecords.filter((record) => record.parentDecision === decision.id).sort((left, right) => left.id.localeCompare(right.id));
-    const domainLabel = domains.get(decision.primaryDomain)?.name
-      || [...new Set(linked.map((record) => record.domainLabel).filter(Boolean))].sort().join(", ")
-      || "Cross-domain";
-    const responsibilityLabel = (decision.affectedResponsibilities || [])
-      .map((responsibilityId) => responsibilities.get(responsibilityId)?.name ? `${responsibilityId} — ${responsibilities.get(responsibilityId).name}` : responsibilityId)
-      .join(", ") || "Not specified";
-    const record = {
-      id: decision.id,
-      title: decision.title,
-      decisionStatus: decision.state,
-      decisionTickets: decisionTicketProgress(linked),
-      domainLabel,
-      responsibilityLabel,
-      context: decision.context,
-      whyItMatters: decision.whyItMatters,
-      established: decision.established,
-      howTicketsFit: decision.howTicketsFit,
-      currentShape: decision.currentShape || null,
-      blocker: decision.blocker || null,
-      outcome: decision.outcome,
-      deferReason: decision.deferReason,
-      resumeWhen: decision.resumeWhen || "Not deferred",
-      sourcePath: path.relative(repositoryRoot, decision.filePath).split(path.sep).join("/"),
-      ticketIds: linked.map((record) => record.id),
-      childTickets: linked.map((record) => ({
-        id: record.id,
-        title: record.title,
-        status: record.status,
-        question: record.question,
-      })),
-      issueTitle: `${decision.id} — ${decision.title}`,
-    };
-    record.body = renderTechnicalDecisionBody(record, linked);
-    records.push(record);
-  }
-  return records;
-}
-
-export function loadProjectionRecords(config, cwd = process.cwd()) {
-  const ticketRoot = path.resolve(cwd, config.ticketRoot);
-  const result = validateImplementationDetailTickets(ticketRoot);
-  if (result.errors.length) throw new Error(result.errors.join("\n"));
-  const buildUnits = normalizeBuildUnitRecords(result.buildUnits || new Map());
-  const repositories = normalizeRepositoryRecords(result.repositories || new Map(), new Map(buildUnits.map((buildUnit) => [buildUnit.id, buildUnit])), cwd);
-  const repositoryIndex = new Map(repositories.map((repository) => [repository.id, repository]));
-  return normalizeTicketDocuments(result.documents || [], cwd, result.responsibilities, result.domains, result.decisions, repositoryIndex);
-}
-
 export function loadProjectionBundle(config, cwd = process.cwd()) {
   const ticketRoot = path.resolve(cwd, config.ticketRoot);
   const result = validateImplementationDetailTickets(ticketRoot);
@@ -859,12 +726,11 @@ export function loadProjectionBundle(config, cwd = process.cwd()) {
   const buildUnits = normalizeBuildUnitRecords(result.buildUnits || new Map());
   const repositories = normalizeRepositoryRecords(result.repositories || new Map(), new Map(buildUnits.map((buildUnit) => [buildUnit.id, buildUnit])), cwd);
   const repositoryIndex = new Map(repositories.map((repository) => [repository.id, repository]));
-  const records = normalizeTicketDocuments(result.documents || [], cwd, result.responsibilities, result.domains, result.decisions, repositoryIndex);
-  const decisions = normalizeDecisionRecords(result.decisions, records, cwd, result.domains, result.responsibilities);
+  const records = normalizeTicketDocuments(result.documents || [], cwd, result.responsibilities, result.domains, repositoryIndex);
   const archivedRecords = (result.documents || []).flatMap((document) => document.archivedRecords.map((ticket) => ({
     ...ticket, sourcePath: path.relative(cwd, document.filePath).split(path.sep).join("/"),
   })));
-  return { records, decisions, buildUnits, repositories, archivedRecords };
+  return { records, buildUnits, repositories, archivedRecords };
 }
 
 export function processedThroughMarker(ticketId, commentUrl) {
@@ -1006,15 +872,16 @@ export function normalizePublishFiles(files, config) {
 }
 
 export async function dispatchProjection({ operation, config, cwd = process.cwd(), options = {}, adapter }) {
-  const { records, decisions, buildUnits, repositories, archivedRecords } = loadProjectionBundle(config, cwd);
+  assertCurrentFormat(path.resolve(cwd, config.ticketRoot), operation);
+  const { records, buildUnits, repositories, archivedRecords } = loadProjectionBundle(config, cwd);
   if (operation === "project-view-audit") return adapter.projectViewAudit({ config, repositories });
   if (operation === "sync" && options.createViews) return adapter.createViews({ config, repositories, selectedViews: options.selectedViews, publishingLock: options.publishingLock });
   if (operation === "sync" && options.fieldsOnly) return adapter.setupFields({ config, answeringOptionNames: options.answeringOptionNames, publishingLock: options.publishingLock });
   if (operation === "sync" && options.viewsOnly) {
     return adapter.syncViews({ config, repositories, renames: options.renames || [], publishingLock: options.publishingLock });
   }
-  if (operation === "sync") return adapter.sync({ config, records, decisions, buildUnits, repositories, archivedRecords, publishingLock: options.publishingLock });
-  if (operation === "reconcile") return adapter.reconcile({ config, records, decisions, buildUnits, repositories, archivedRecords });
+  if (operation === "sync") return adapter.sync({ config, records, buildUnits, repositories, archivedRecords, publishingLock: options.publishingLock });
+  if (operation === "reconcile") return adapter.reconcile({ config, records, buildUnits, repositories, archivedRecords });
   if (operation === "pending-comments") return adapter.pendingComments({ config, records });
   if (operation === "publish-draft") {
     const files = normalizePublishFiles(options.files, config);

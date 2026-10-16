@@ -30,29 +30,12 @@ responsibilities: "SR-001, SR-002"
     "---\ntype: system-responsibility\nid: SR-002\nname: Second Responsibility\ndomain: sample\n---\n\n# SR-002 — Second Responsibility\n\nExact queue retry behavior remains responsibility-level implementation detail.\n",
   );
   writeText(
-    path.join(root, "build", "workflow", "technical-decisions.yaml"),
-    `technical_decision_file_version: 1
-
-decisions:
-  - id: "TD-001"
-    title: "Authenticated boundary"
-    state: "Open"
-    primary_domain: "sample"
-    affected_responsibilities: ["SR-001"]
-    context: "The responsibility requires one coherent authenticated boundary."
-    why_it_matters: "The boundary controls authority and interoperability."
-    established: "The logical responsibility and denial semantics are fixed."
-    how_tickets_fit: "The child ticket selects the one compatible authenticated seam."
-    current_shape: null
-    blocker: null
-    outcome: null
-    defer_reason: null
-    resume_when: null
-`,
+    path.join(root, "system-model", "architecture.md"),
+    "---\ntype: system-architecture\ndesign_format: 2\n---\n\n# System Architecture\n",
   );
   writeText(
     path.join(root, "build", "workflow", "tickets", "sample", "sr-001", "sr-001-tickets.yaml"),
-    `ticket_file_version: 3
+    `ticket_file_version: 4
 scope: "responsibility:SR-001"
 
 tickets:
@@ -69,7 +52,6 @@ tickets:
     repositories: []
     repository_contract_area: null
     cluster: "authentication"
-    parent_decision: "TD-001"
     question: "Which authenticated boundary will the component use?"
     context: "The component requires one bounded authenticated interface."
     candidate_proof: "An implementer cannot finish or verify authenticated requests without choosing the authenticated interface boundary, and the current package does not already choose it."
@@ -94,7 +76,6 @@ tickets:
     repositories: []
     repository_contract_area: null
     cluster: "storage"
-    parent_decision: null
     question: "Which storage representation will preserve the record?"
     context: "The record needs a durable representation."
     candidate_proof: "An implementer cannot finish or verify durable records without choosing the storage representation and constraints, and the current package does not already choose it."
@@ -111,14 +92,13 @@ tickets:
   return root;
 }
 
-test("lead report separates TD-linked and independent tickets and exposes zero-owner responsibilities", () => {
+test("lead report counts owned tickets and exposes zero-owner responsibilities", () => {
   const root = createFixture();
   try {
     const report = buildTicketInventoryLeadReport(root);
     assert.equal(report.responsibilityCount, 2);
     assert.equal(report.ticketCount, 2);
-    assert.equal(report.linkedTicketCount, 1);
-    assert.equal(report.independentTicketCount, 1);
+    assert.equal("linkedTicketCount" in report, false);
     assert.deepEqual(report.zeroOwnedResponsibilities, ["SR-002"]);
     assert.equal(report.unresolvedLanguageLeads.length, 1);
     assert.equal(report.unresolvedLanguageLeads[0].file, "system-model/domains/sample/responsibilities/sr-002-second-responsibility.md");

@@ -2,6 +2,8 @@
 
 **Current order group:** `3`
 
+Planning may produce linked complete handoffs/workpacks in every requested group, including Waiting rows. Planning completion and exact execution waits live in each existing handoff/workpack review; this table remains execution navigation.
+
 Finish every slice in group `N` before starting group `N+1`. Slices inside one group may proceed in parallel. Keep every slice in this table and schedule runnable independent work before unrelated blockers.
 
 | Order group | Delivery slice | Repository | Build Units | Requires | State |

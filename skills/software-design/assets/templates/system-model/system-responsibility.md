@@ -10,9 +10,15 @@ realized_by: "None."
 
 # SR-001 — Responsibility Name
 
+## Responsibility Overview
+
+Introduce the practical job, collaborators, inputs and outcomes in ordinary language. Explain a useful success/exception path and necessary concepts before the precise contract. This opening adds understandable precision to the domain guide; do not copy the technical Purpose paragraph. Use meaningful names and descriptive source links. Preserve all exact sections below.
+
+## Agent-First Canonical Reference
+
 ## Purpose
 
-State the one logical behavior, authority, state, or artifact boundary this record owns.
+State the one logical behavior, authority, state, or artifact boundary this record owns. Where needed, explain its immediate relationship to callers, consumers, or external actors and introduce concepts needed to understand the rules below; link shared definitions rather than repeating their specifications.
 
 ## Owns
 
