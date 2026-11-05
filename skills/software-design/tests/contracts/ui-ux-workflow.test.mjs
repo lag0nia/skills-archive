@@ -129,6 +129,45 @@ test("instruction contract: alternatives compare bounded journeys before selecte
   assert.match(workflow, /explicitly identify any proposed behavioral differences while preserving canonical constraints; selecting a visual direction does not approve changed behavior/);
 });
 
+test("instruction contract: active alternatives stay comparable while retained snapshots do not", () => {
+  const workflow = read("references/ui-ux/design-workflow.md");
+  const integration = read("references/ui-ux-design.md");
+  const specification = read("references/ui-ux/templates/specification.md");
+  const parity = workflow.split("### Keep Active Alternatives Comparable\n")[1]?.split("\n## ")[0] || "";
+  assert.match(workflow, /an \*\*active alternative\*\* is a candidate the user is still comparing/);
+  assert.match(workflow, /a \*\*retained snapshot\*\* is an unselected candidate kept for reference and no longer compared/);
+  assert.match(workflow, /The newest or most complete file, or a recommendation the user has not accepted, selects nothing/);
+  assert.match(workflow, /A historical selection whose origin cannot be established keeps its record but is never treated as the user's choice/);
+  assert.match(parity, /An authorized feature update or synchronization pass covers every active alternative within the agreed comparison scope/);
+  assert.match(parity, /A request that names particular alternatives covers only those; while a standing parity instruction applies, a request narrows the pass only when it explicitly limits this pass/);
+  assert.match(parity, /carry the affected functionality into it;/);
+  assert.match(parity, /express it through that alternative's own layout, navigation, and interaction treatment/);
+  assert.match(parity, /exercise the affected paths in it/);
+  assert.match(parity, /The pass is complete when every alternative it covers is updated and verified; otherwise report it incomplete, naming each covered alternative left unfinished or unverified/);
+  assert.match(parity, /Record a parity gap in an unselected active alternative in that alternative's own table row, not as a pending journey row, so it never holds the selected target's readiness/);
+  assert.match(parity, /Report gaps in active alternatives outside a narrowed pass as information; the request already set the pass's scope/);
+  assert.match(parity, /Narrowing a pass to named alternatives selects none of them, leaves every other candidate's role and pending work unchanged, and leaves any standing parity instruction in force for later passes/);
+  assert.doesNotMatch(parity, /keeps the others active/);
+  assert.doesNotMatch(parity, /while any active alternative remains unfinished|already covers every active alternative/);
+  assert.match(parity, /Sharing prototype logic across alternatives is an implementation option, not a required architecture/);
+  assert.match(parity, /comparing an initial bounded journey never requires full-application coverage, and recording pending work edits no candidate/);
+  assert.match(parity, /A \*\*standing parity instruction\*\* is the user's instruction, given before or after a selection, to keep several alternatives maintained; it keeps them active after a selection until the user changes it/);
+  assert.match(parity, /unless a standing parity instruction keeps them active\. Move each parity gap recorded in the selected candidate's own row into a pending journey row, so it holds that target's readiness until synchronized/);
+  assert.match(parity, /Reuse the recorded set of active alternatives instead of asking again how many to maintain/);
+  assert.match(parity, /When the record cannot establish a candidate's role, such as a selection of unknown origin or a candidate labelled retained with no evidence that the user set it aside, and the answer changes which alternatives the current pass updates, ask the user once, record the answer/);
+  assert.doesNotMatch(parity, /\bStage\s+\d|\btickets?\b|\bBuild Unit\b/i);
+  assert.match(integration, /design-workflow\.md#keep-active-alternatives-comparable/);
+  assert.match(integration, /historical selection whose origin cannot be established stays Unknown origin and is never reported as the user's choice/);
+  assert.match(integration, /Unselected candidates, active or retained, do not block readiness for a selected target/);
+  assert.match(integration, /and each active alternative the pass covers, against current approved/);
+  assert.match(integration, /in each active alternative the pass covers, at coherent journey boundaries/);
+  assert.match(workflow, /and each \[active alternative the pass covers\]\(#keep-active-alternatives-comparable\)/);
+  assert.match(specification, /\*\*Active comparison:\*\*/);
+  assert.match(specification, /Note any standing parity instruction, given before or after selection, with its source/);
+  assert.match(workflow, /any alternative a \[standing parity instruction\]\(#keep-active-alternatives-comparable\) for full functional parity keeps active/);
+  assert.match(specification, /Active alternative \/ selected target \/ retained snapshot/);
+});
+
 test("instruction contract: ordinary selected-prototype updates skip the choice question", () => {
   const workflow = read("references/ui-ux/design-workflow.md");
   const integration = read("references/ui-ux-design.md");

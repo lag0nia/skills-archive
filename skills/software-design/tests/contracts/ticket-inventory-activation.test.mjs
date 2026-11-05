@@ -53,3 +53,22 @@ test("inventory completion is snapshot-bounded and missing historical receipts d
   assert.match(buildDesignMode, /do not block Build Design for that reason alone/i);
   assert.match(buildDesignMode, /receipt absence alone does not block Build Design/i);
 });
+
+// Guidance checks only: whether an agent actually finds an undeclared operation is
+// exercised by the manual evaluation in tests/behavioral/workflow-reliability/.
+test("journey-operation discovery starts from requirements and Stage 9 consumes it", () => {
+  const staged = fs.readFileSync(path.join(skillRoot, "references", "staged-design-workflow.md"), "utf8");
+  const format = fs.readFileSync(path.join(skillRoot, "references", "system-model-format.md"), "utf8");
+  assert.match(inventoryMode, /\*\*Journey-operation census:\*\* start from the approved requirements, flows, user journeys, and target outcomes in scope, not from existing tickets or `ACT-NNN` lists/);
+  assert.match(inventoryMode, /A published event, projection, or simulation describes a result; it does not supply the command that initiates it/);
+  assert.match(inventoryMode, /reuse or widen a suitable existing action rather than adding one per button/);
+  assert.match(inventoryMode, /No validator or lead report can find an operation that no record declares/);
+  assert.match(inventoryMode, /all journey-operation dispositions/);
+  assert.match(staged, /7C — Handoff, journey-operation, outcome\/profile/);
+  assert.match(staged, /a published event, projection, or simulation does not prove that its initiating command exists/);
+  assert.match(staged, /return partial when material findings remain undispositioned or a contract gap found remains unrepaired/);
+  assert.match(inventoryMode, /every contract gap found there is repaired;/);
+  assert.match(format, /do not infer that a command surface also provides a read surface, or that a published event, projection, or simulation implies the command that initiates it/);
+  assert.match(skill, /also run the journey-operation census there/);
+  assert.match(buildDesignMode, /An operation with neither blocks the affected slice and routes as the \[journey-operation census\]\(ticket-inventory-mode\.md#reverse-challenge-pass\) does/);
+});
