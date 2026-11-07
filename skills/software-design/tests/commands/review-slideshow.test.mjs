@@ -124,6 +124,39 @@ test("the slideshow helper rejects unusable input without writing a deck", (cont
   assert.match(run("--output", output).stderr, /Usage:/);
 });
 
+test("ordinary Spanish todo is meaningful slideshow text while TODO markers stay placeholders", (context) => {
+  const { manifest, writeManifest, output } = workspace(context);
+  const slide = (change) => ({ ...manifest, slides: [{ ...manifest.slides[0], ...change }, manifest.slides[1]] });
+  const spanish = {
+    ...manifest,
+    lang: "es",
+    title: "Revisión de todo el recorrido del cliente",
+    coverage: "Todo el recorrido del cliente",
+    slides: [
+      { ...manifest.slides[0], alt: "TODO EL PEDIDO ESTÁ CONFIRMADO", caption: "Cliente · Se revisa todo el presupuesto · 1280 px" },
+      { ...manifest.slides[1], alt: "MÉTODO: pago con tarjeta".normalize("NFC"), caption: "ME\u0301TODO: pago con tarjeta · 390 px" },
+    ],
+  };
+  const accepted = run("--manifest", writeManifest(spanish), "--output", output);
+  assert.equal(accepted.status, 0, accepted.stderr);
+  assert.deepEqual(reviewSlideshowErrors(fs.readFileSync(output, "utf8"), output), []);
+
+  for (const [value, expected] of [
+    [{ ...manifest, title: "TODO" }, /requires a meaningful document title/],
+    [{ ...manifest, title: "TODO: name this deck" }, /requires a meaningful document title/],
+    [slide({ caption: "TODO: describir la pantalla" }), /slide 1 requires a meaningful visible figcaption/],
+    [slide({ caption: "Pantalla de sesio\u0301n — TODO: describir" }), /slide 1 requires a meaningful visible figcaption/],
+    [slide({ alt: "[TODO]" }), /slide 1 requires a meaningful screenshot description/],
+    [{ ...manifest, coverage: "TODO(owner): list the covered journeys" }, /data-slideshow-coverage/],
+  ]) {
+    fs.rmSync(output, { force: true });
+    const result = run("--manifest", writeManifest(value), "--output", output);
+    assert.notEqual(result.status, 0, String(expected));
+    assert.match(result.stderr, expected);
+    assert.equal(fs.existsSync(output), false, String(expected));
+  }
+});
+
 test("the slideshow helper applies one fixed order: viewport, then one role at a time, then part", (context) => {
   const { captures, manifest, writeManifest, output } = workspace(context);
   // Listed in journey order, where two roles take turns across three viewports.

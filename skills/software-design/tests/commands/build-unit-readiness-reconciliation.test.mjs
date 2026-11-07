@@ -42,7 +42,7 @@ None.
 }
 
 function ticket({ status = "todo", buildUnits = ["BU-001"], buildUnitDisposition = null, repositories = null, repositoryContractArea = null } = {}) {
-  const resolution = status === "todo" ? "null" : JSON.stringify("Use the selected reproducible command.");
+  const resolution = ["todo", "deferred"].includes(status) ? "null" : JSON.stringify("Use the selected reproducible command.");
   const repositoryFields = repositories === null
     ? ""
     : `    repositories: ${JSON.stringify(repositories)}\n    repository_contract_area: ${JSON.stringify(repositoryContractArea)}\n`;
@@ -72,7 +72,7 @@ tickets:
     write_targets: ["system-model/domains/sample/responsibilities/sr-001-example.md"]
     build_units: ${JSON.stringify(buildUnits)}
     build_unit_disposition: ${buildUnitDisposition === null ? "null" : JSON.stringify(buildUnitDisposition)}
-${repositoryFields}`;
+${status === "deferred" ? '    resume_when: "Before the library is first published."\n' : ""}${repositoryFields}`;
 }
 
 function additionalTicket({ id = "TICKET-0002", status = "finished", buildUnits = ["BU-001"] } = {}) {
@@ -240,5 +240,83 @@ test("does not report an unmapped material repository contract ticket as reconci
     );
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+// Ordinary Spanish "todo" (all/everything) and words containing it are prose, in any case.
+const SPANISH_PROSE = [
+  "Está todo definido.",
+  "Se revisa todo el presupuesto.",
+  "TODO EL ALCANCE ESTÁ CUBIERTO.",
+  "No todo requiere aprobación.",
+  "El método de publicación está definido.",
+  "MÉTODO: `npm publish` desde la rama principal.",
+  // The same word precomposed (NFC) and decomposed (NFD): E followed by a combining acute accent.
+  "MÉTODO: publicar.".normalize("NFC"),
+  "ME\u0301TODO: publicar.",
+];
+
+function writeUnitText(root, id, text) {
+  writeText(path.join(root, "build", "units", id.toLowerCase() + "-example.md"), buildUnit(id, text));
+}
+
+test("ordinary Spanish todo in build-unit prose is not an unresolved statement", () => {
+  const root = fixture();
+  try {
+    writeUnitText(root, "BU-002", ["| Build library | `npm run build` | Planned | Command selected. |", "", ...SPANISH_PROSE].join("\n"));
+    const report = buildReadinessReconciliationReport(root, ["BU-002"]);
+    assert.deepEqual(report.units[0].cues, []);
+    assert.equal(report.units[0].status, "RECONCILED");
+    const result = runNode(script, ["--root", root, "--units", "BU-002", "--assert-ready"]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.match(result.stdout, /BU-002: RECONCILED/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("genuine unfinished markers and unresolved phrases still make the build unit a mismatch", () => {
+  for (const line of [
+    "TODO: elegir el comando de publicación.",
+    "Publicacio\u0301n — TODO: elegir el canal.",
+    "TODO(owner): choose the publish command.",
+    "| Publish library | [TODO] | Planned | |",
+    "| Publish library | TBD | Planned | |",
+    "The publish command is not yet defined.",
+    "The publish command remains open.",
+  ]) {
+    const root = fixture();
+    try {
+      writeUnitText(root, "BU-002", "| Build library | `npm run build` | Planned | Command selected. |\n" + line);
+      const report = buildReadinessReconciliationReport(root, ["BU-002"]);
+      assert.deepEqual(report.units[0].cues.map(({ type, text }) => ({ type, text })), [{ type: "unassigned-unresolved-statement", text: line }], line);
+      assert.equal(report.units[0].status, "MISMATCH", line);
+      const result = runNode(script, ["--root", root, "--units", "BU-002", "--assert-ready"]);
+      assert.equal(result.status, 1, line);
+      assert.match(result.stderr, /1 reconciliation mismatch\(es\)/, line);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
+  }
+});
+
+test("mapped todo and deferred tickets still block and a resolved one is still a mismatch beside Spanish prose", () => {
+  for (const [status, cue, unitStatus, exitCode] of [
+    ["todo", "mapped-blocker", "BLOCKED", 1],
+    ["deferred", "mapped-blocker", "BLOCKED", 1],
+    ["finished", "resolved-ticket-still-described-as-unresolved", "MISMATCH", 1],
+  ]) {
+    const root = fixture({ status });
+    try {
+      writeUnitText(root, "BU-001", ["| Build library | Not selected — `TICKET-0001` | Planned | The toolchain remains open. |", "", ...SPANISH_PROSE].join("\n"));
+      const report = buildReadinessReconciliationReport(root, ["BU-001"]);
+      assert.deepEqual(report.units[0].cues.map(({ type, ticketId }) => ({ type, ticketId })), [{ type: cue, ticketId: "TICKET-0001" }], status);
+      assert.equal(report.units[0].status, unitStatus, status);
+      assert.deepEqual(report.units[0].mappedBlockingTickets.map(({ id, status: ticketStatus }) => ({ id, status: ticketStatus })), unitStatus === "BLOCKED" ? [{ id: "TICKET-0001", status }] : [], status);
+      const result = runNode(script, ["--root", root, "--units", "BU-001", "--assert-ready"]);
+      assert.equal(result.status, exitCode, status);
+    } finally {
+      fs.rmSync(root, { recursive: true, force: true });
+    }
   }
 });

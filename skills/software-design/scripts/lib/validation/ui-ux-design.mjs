@@ -3,6 +3,7 @@ import { readRuntimeEvidence } from "./prototype-runtime.mjs";
 import path from "node:path";
 import { markdownAnchorExists } from "../model/markdown.mjs";
 import { embeddedScreenshotProblem } from "../model/screenshot-image.mjs";
+import { hasTodoMarker, isTodoField } from "../unfinished-marker.mjs";
 
 const REQUIRED_SPEC_SECTIONS = [
   "Scope And Ownership", "Intended Users And Main Tasks", "Design Rationale",
@@ -293,7 +294,8 @@ function interactionSeparationChecks(html, sourcePath, errors) {
   for (const nav of html.matchAll(/<nav\b[^>]*>[\s\S]*?<\/nav>/gi)) if (/data-review-(?:state-target|actor)\b/i.test(nav[0])) errors.push(sourcePath + ": product navigation must not contain prototype reviewer controls.");
 }
 
-const placeholderText = (text) => !text || text.length < 3 || /\bTBD\b|\bTODO\b|lorem ipsum|replace (?:this|with)/i.test(text);
+// A bare TODO is a placeholder field; other TODO text is one only in marker syntax.
+const placeholderText = (text) => !text || text.length < 3 || isTodoField(text) || hasTodoMarker(text) || /\bTBD\b|lorem ipsum|replace (?:this|with)/i.test(text);
 const decodeEntities = (text) => text.replace(/&(?:#(\d+)|#x([\da-f]+)|(amp|lt|gt|quot|apos|nbsp));/gi, (entity, decimal, hex, name) => {
   if (name) return ({ amp: "&", lt: "<", gt: ">", quot: '"', apos: "'", nbsp: " " })[name.toLowerCase()];
   const code = parseInt(decimal || hex, decimal ? 10 : 16);

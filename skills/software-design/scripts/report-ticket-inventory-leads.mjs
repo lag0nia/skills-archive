@@ -4,9 +4,11 @@ import fs from "node:fs";
 import path from "node:path";
 import { isEntryPoint } from "./lib/entry-point.mjs";
 import { validateImplementationDetailTickets } from "./validate-implementation-detail-tickets.mjs";
+import { TODO_MARKER_PATTERN } from "./lib/unfinished-marker.mjs";
 
 const LEAD_PATTERNS = [
-  /\b(?:TBD|TODO)\b/i,
+  /\bTBD\b/i,
+  TODO_MARKER_PATTERN,
   /\b(?:component|responsibility)[- ]level implementation details?\b/i,
   /\b(?:component|responsibility)-owned implementation(?:-detail)? work\b/i,
   /\bimplementation-detail work\b/i,
