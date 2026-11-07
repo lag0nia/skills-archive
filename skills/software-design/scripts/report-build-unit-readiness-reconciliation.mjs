@@ -7,8 +7,9 @@ import { validateImplementationDetailTickets } from "./validate-implementation-d
 import { findBuildUnitRecords } from "./lib/model/build-unit-records.mjs";
 import { parseFrontmatter } from "./lib/model/frontmatter.mjs";
 import { buildLayout } from "./lib/model/build-layout.mjs";
+import { hasTodoMarker } from "./lib/unfinished-marker.mjs";
 
-const UNRESOLVED_PATTERN = /\b(?:not selected|remain(?:s)? open|unresolved|not yet (?:selected|defined|specified|chosen)|TBD|TODO)\b/i;
+const UNRESOLVED_PATTERN = /\b(?:not selected|remain(?:s)? open|unresolved|not yet (?:selected|defined|specified|chosen)|TBD)\b/i;
 const BLOCKING_STATUSES = new Set(["todo", "deferred"]);
 
 function parseArgs(argv) {
@@ -56,7 +57,7 @@ function indexedBuildUnits(root) {
 function unresolvedCues(unit, tickets) {
   const cues = [];
   for (const [index, rawLine] of unit.content.split(/\r?\n/).entries()) {
-    if (!UNRESOLVED_PATTERN.test(rawLine)) continue;
+    if (!UNRESOLVED_PATTERN.test(rawLine) && !hasTodoMarker(rawLine)) continue;
     const ids = unresolvedTicketIds(rawLine);
     if (!ids.length) {
       cues.push({ line: index + 1, text: rawLine.trim(), type: "unassigned-unresolved-statement", ticketId: null });

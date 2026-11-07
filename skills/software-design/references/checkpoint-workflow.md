@@ -7,6 +7,7 @@ Read this reference before presenting a Software Design write checkpoint, interp
 - Checkpoint Rule
 - Active Section Passes
 - Approval Semantics
+- Before Asking
 - Correction Handling
 - Upstream Repair Handling
 - Checkpoint Content
@@ -49,6 +50,17 @@ Do not ask the user to approve preparing another checkpoint. Checkpoints are int
 After a non-writing setup checkpoint is approved or corrected and no blockers remain, immediately show the next write-stage checkpoint in the same response when possible. The next user `approve` should write that stage.
 
 These rules decide when files may be written. Whether the user personally approved a particular choice is read separately, from the exchange and the choice actually presented, and recorded as its attribution under [Interpreting Approval](decision-attribution.md#interpreting-approval). A stage approval approves the consequential choices that checkpoint clearly presented; choices made afterward while writing the stage are Agent-chosen.
+
+## Before Asking
+
+Apply this before putting any question to the user, whether a checkpoint question, a ticket question, a prototype choice, or a blocker report, so a question reaches the user only when their answer is needed. It adds no checkpoint, form, or approval cycle.
+
+1. **Investigate first.** Read the discoverable facts and settled decisions relevant to the choice: approved sources, canonical owners, ticket answers and their attribution, the user's standing instructions, and code or history within the authorized source scope.
+2. **Use the authority you have.** Make the routine, reversible choices the task covers, and the material choices the user has explicitly delegated, whenever the result stays within approved requirements and the approved data-sharing, cost, security, and product boundaries. Record each meaningful one as Agent-chosen under [Interpreting Approval](decision-attribution.md#interpreting-approval) and continue.
+3. **Ask only what remains.** Ask only about a material choice whose consequences fall outside approved requirements or the authority delegated to you. Judge materiality by consequence, not by calling a choice technical or business: a choice that changes security exposure, cost, stored or shared data, or who holds authority is material, whichever kind it is. Delegation never overrides an approved requirement or extends those boundaries; when the best option would exceed one, ask about that specific excess. For example, choosing a map display library that adds no cost, account, or external data recipient is routine. How locations are stored, whether users place them, and whether addresses go to an external geocoding service is a material product and provider choice: ask about it unless the user has explicitly delegated it and your approach stays within the approved boundaries, and if geocoding would send addresses to a recipient or at a cost the user has not approved, ask about that recipient or cost.
+4. **Make the question concrete.** Name the choice, the consequence that needs the user's answer, and a recommendation when evidence supports one. Keep doing the authorized work the answer does not affect; a stage checkpoint still gates that stage's writes.
+
+After a repair, resume the authorized work automatically while its scope remains covered, as [Upstream Repair Handling](#upstream-repair-handling) describes.
 
 ## Correction Handling
 

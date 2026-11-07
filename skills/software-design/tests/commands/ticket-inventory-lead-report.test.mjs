@@ -5,7 +5,9 @@ import fs from "node:fs";
 import path from "node:path";
 import test from "node:test";
 import { buildTicketInventoryLeadReport, formatTicketInventoryLeadReport } from "../../scripts/report-ticket-inventory-leads.mjs";
-import { createWorkspace, writeText } from "../support/workspace.mjs";
+import { createWorkspace, runNode, writeText } from "../support/workspace.mjs";
+
+const script = path.resolve(path.dirname(new URL(import.meta.url).pathname), "..", "..", "scripts", "report-ticket-inventory-leads.mjs");
 
 function createFixture() {
   const root = createWorkspace("software-design-ticket-leads-");
@@ -103,6 +105,41 @@ test("lead report counts owned tickets and exposes zero-owner responsibilities",
     assert.equal(report.unresolvedLanguageLeads.length, 1);
     assert.equal(report.unresolvedLanguageLeads[0].file, "system-model/domains/sample/responsibilities/sr-002-second-responsibility.md");
     assert.match(formatTicketInventoryLeadReport(report), /System Responsibilities with zero owned tickets: SR-002/);
+  } finally {
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test("lead report ignores ordinary Spanish todo but still surfaces TODO markers and TBD", () => {
+  const root = createFixture();
+  const notes = path.join(root, "system-model", "domains", "sample", "responsibilities", "sr-001-first-responsibility.md");
+  try {
+    writeText(notes, fs.readFileSync(notes, "utf8") + [
+      "",
+      "Está todo definido.",
+      "Se revisa todo el presupuesto.",
+      "TODO EL ALCANCE ESTÁ CUBIERTO.",
+      "No todo requiere aprobación.",
+      "El método de autenticación está definido.",
+      "MÉTODO: publicar.".normalize("NFC"),
+      "ME\u0301TODO: publicar.",
+      "",
+    ].join("\n"));
+    let result = runNode(script, ["--root", root, "--json"]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(JSON.parse(result.stdout).unresolvedLanguageLeads.map(({ file }) => file), [
+      "system-model/domains/sample/responsibilities/sr-002-second-responsibility.md",
+    ]);
+
+    writeText(notes, fs.readFileSync(notes, "utf8") + "TODO: definir la caducidad de la sesión.\nSession lifetime: TBD.\nSesio\u0301n — TODO: definir la caducidad.\n");
+    result = runNode(script, ["--root", root, "--json"]);
+    assert.equal(result.status, 0, result.stderr);
+    assert.deepEqual(JSON.parse(result.stdout).unresolvedLanguageLeads.map(({ text }) => text), [
+      "TODO: definir la caducidad de la sesión.",
+      "Session lifetime: TBD.",
+      "Sesio\u0301n — TODO: definir la caducidad.",
+      "Exact queue retry behavior remains responsibility-level implementation detail.",
+    ]);
   } finally {
     fs.rmSync(root, { recursive: true, force: true });
   }
