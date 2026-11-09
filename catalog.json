@@ -1,0 +1,1015 @@
+{
+  "schema": "skills-archive.catalog.v1",
+  "purposes": [
+    "Verification",
+    "Code quality",
+    "Debugging",
+    "Planning and delivery",
+    "Design and UI",
+    "Animation",
+    "Writing",
+    "Workflow",
+    "Investigation"
+  ],
+  "collections": [
+    {
+      "id": "main",
+      "name": "Main collection",
+      "path": "skills/",
+      "author": null,
+      "byline": "Main collection",
+      "subtitle": "Skills Archive · main collection",
+      "summary": "The archive’s own skills for planning and delivering software, keeping code healthy and running long agent workflows.",
+      "groups": [
+        {
+          "name": "Software delivery",
+          "description": "From rough requirements to an implemented, verified workpack.",
+          "skills": [
+            "software-design-intake",
+            "software-design",
+            "delivery-planning",
+            "delivery-workpack-execution"
+          ],
+          "sequence": true
+        },
+        {
+          "name": "Code health",
+          "description": "Find defects, remove what’s obsolete, or restructure while keeping behavior.",
+          "skills": [
+            "find-bugs",
+            "codebase-cleanup",
+            "codebase-restructure"
+          ],
+          "sequence": false
+        },
+        {
+          "name": "Working style",
+          "description": "Keep long work oriented, quiet and reviewable.",
+          "skills": [
+            "recap",
+            "quiet",
+            "repo-workflow",
+            "task-brief"
+          ],
+          "sequence": false
+        }
+      ],
+      "beforeInstalling": [],
+      "source": [
+        {
+          "label": "License",
+          "value": "MIT"
+        }
+      ]
+    },
+    {
+      "id": "poteto",
+      "name": "pstack",
+      "path": "third-party/poteto/",
+      "author": "Lauren Tan (poteto)",
+      "byline": "poteto · pstack",
+      "subtitle": "Lauren Tan (poteto)",
+      "summary": "Six verification skills selected from pstack, copied unchanged.",
+      "groups": [
+        {
+          "name": "Real-app verification",
+          "description": "Checks observable behavior by launching and driving the running application, and keeps evidence.",
+          "skills": [
+            "create-verification-skill",
+            "maintain-verification-skill"
+          ],
+          "sequence": true
+        },
+        {
+          "name": "Formal verification",
+          "description": "Checks stated properties with models or formal tools, under explicit assumptions and bounds. Uses Statechart for TLA+.",
+          "skills": [
+            "create-formal-verification-skill",
+            "maintain-formal-verification-skill"
+          ],
+          "sequence": true
+        },
+        {
+          "name": "Model exploration",
+          "description": "Explores a TLA+ model and shows transitions and violation paths. Used by the formal pair.",
+          "skills": [
+            "statechart"
+          ],
+          "sequence": false
+        },
+        {
+          "name": "Repeated mistakes",
+          "description": "Changes the repository so a class of mistake can’t recur.",
+          "skills": [
+            "correct"
+          ],
+          "sequence": false
+        }
+      ],
+      "note": "The real-app and formal pairs complement each other; they are not interchangeable. A passing model doesn’t prove the shipped app matches it.",
+      "beforeInstalling": [
+        "Some instructions assume Cursor’s .cursor/skills/ location and agent, app-driving or GitHub capabilities.",
+        "The maintenance skills change only verification artifacts unless separately authorized to change product code."
+      ],
+      "source": [
+        {
+          "label": "Upstream",
+          "value": "github.com/cursor/plugins · pstack (plugin 0.15.36)"
+        },
+        {
+          "label": "Revision",
+          "value": "6b03002"
+        },
+        {
+          "label": "License",
+          "value": "MIT · Lauren Tan"
+        },
+        {
+          "label": "Archived",
+          "value": "9 Nov 2026 · unchanged"
+        }
+      ]
+    },
+    {
+      "id": "emilkowalski",
+      "name": "Emil Kowalski",
+      "path": "third-party/emilkowalski/",
+      "author": "Emil Kowalski",
+      "byline": "Emil Kowalski",
+      "subtitle": "UI and animation skills",
+      "summary": "UI and animation skills, archived as complete upstream directories.",
+      "groups": [
+        {
+          "name": "Motion",
+          "description": "Find where motion helps, build it, audit it, review it, or remove it. Animate calls Pick UI library when a component needs one.",
+          "skills": [
+            "find-animation-opportunities",
+            "animate",
+            "improve-animations",
+            "review-animations",
+            "remove-animations"
+          ],
+          "sequence": false
+        },
+        {
+          "name": "Interface",
+          "description": "Stress-test, polish and adapt interfaces for phones.",
+          "skills": [
+            "break-ui",
+            "emil-design-eng",
+            "mobile-native",
+            "pick-ui-library"
+          ],
+          "sequence": false
+        }
+      ],
+      "note": "Emil’s own prototype skill isn’t archived: Matt Pocock’s prototype already uses that name, and names must be unique.",
+      "beforeInstalling": [],
+      "source": [
+        {
+          "label": "Upstream",
+          "value": "github.com/emilkowalski/skills"
+        },
+        {
+          "label": "Revisions",
+          "value": "2d22863 (Break UI, 13 Oct 2026) · 5206a95 (others, 9 Nov 2026)"
+        },
+        {
+          "label": "License",
+          "value": "MIT · Emil Kowalski"
+        },
+        {
+          "label": "Modifications",
+          "value": "None"
+        }
+      ]
+    },
+    {
+      "id": "mattpocock",
+      "name": "Matt Pocock",
+      "path": "third-party/mattpocock/",
+      "author": "Matt Pocock",
+      "byline": "Matt Pocock",
+      "subtitle": "Prototyping, review, debugging and writing for agents",
+      "summary": "Seven skills for prototyping, reviewing, debugging and writing for agents.",
+      "groups": [
+        {
+          "name": "Retrospective",
+          "description": "Retro calls Writing for agents; install both for the full workflow.",
+          "skills": [
+            "retro",
+            "writing-for-agents"
+          ],
+          "sequence": true
+        },
+        {
+          "name": "Standalone",
+          "description": "Each works on its own.",
+          "skills": [
+            "prototype",
+            "wait-what",
+            "code-review",
+            "diagnosing-bugs",
+            "to-questionnaire"
+          ],
+          "sequence": false
+        }
+      ],
+      "beforeInstalling": [],
+      "source": [
+        {
+          "label": "Upstream",
+          "value": "github.com/mattpocock/skills"
+        },
+        {
+          "label": "Revision",
+          "value": "b0618bc"
+        },
+        {
+          "label": "License",
+          "value": "MIT · Matt Pocock"
+        },
+        {
+          "label": "Archived",
+          "value": "9 Oct 2026 · To questionnaire 11 Oct 2026"
+        }
+      ]
+    },
+    {
+      "id": "morluto",
+      "name": "Morluto REA skill",
+      "path": "third-party/morluto/",
+      "author": "morluto",
+      "byline": "morluto · REA",
+      "subtitle": "morluto",
+      "summary": "Reverse engineering of shipped artifacts and runtime behavior with REA evidence.",
+      "groups": [
+        {
+          "name": "Investigation",
+          "description": "One skill; REA tools are configured separately.",
+          "skills": [
+            "reverse-engineer-anything"
+          ],
+          "sequence": false
+        }
+      ],
+      "beforeInstalling": [
+        "Installing adds instructions only. It does not register the REA MCP server or install analysis engines."
+      ],
+      "source": [
+        {
+          "label": "Upstream",
+          "value": "github.com/morluto/rea"
+        },
+        {
+          "label": "Revision",
+          "value": "efbc486"
+        },
+        {
+          "label": "License",
+          "value": "MIT · morluto"
+        },
+        {
+          "label": "Archived",
+          "value": "14 Oct 2026 · unchanged"
+        }
+      ]
+    }
+  ],
+  "skills": {
+    "recap": {
+      "collection": "main",
+      "name": "Recap",
+      "purpose": "Workflow",
+      "summary": "Catch up on the current plan: goal, phases, progress",
+      "icon": "flag",
+      "compare": "task-brief"
+    },
+    "quiet": {
+      "collection": "main",
+      "name": "Quiet",
+      "purpose": "Workflow",
+      "summary": "Agent and subagents write only when long work is done",
+      "icon": "moon"
+    },
+    "repo-workflow": {
+      "collection": "main",
+      "name": "Repo workflow",
+      "purpose": "Workflow",
+      "summary": "A branch per feature, small commits, a PR for every change",
+      "icon": "git"
+    },
+    "software-design-intake": {
+      "collection": "main",
+      "name": "Software design intake",
+      "purpose": "Planning and delivery",
+      "summary": "Turn rough requirements into a reviewed software brief",
+      "icon": "doc",
+      "compare": "software-design"
+    },
+    "software-design": {
+      "collection": "main",
+      "name": "Software design",
+      "purpose": "Planning and delivery",
+      "summary": "Design behavior, architecture, UI/UX, contracts and delivery readiness",
+      "icon": "map",
+      "compare": "software-design-intake"
+    },
+    "delivery-planning": {
+      "collection": "main",
+      "name": "Delivery planning",
+      "purpose": "Planning and delivery",
+      "summary": "Turn a ready design handoff into a verifiable delivery workpack",
+      "icon": "route",
+      "compare": "delivery-workpack-execution"
+    },
+    "delivery-workpack-execution": {
+      "collection": "main",
+      "name": "Delivery workpack execution",
+      "purpose": "Planning and delivery",
+      "summary": "Implement and verify a delivery workpack",
+      "icon": "check",
+      "effect": "Changes code",
+      "compare": "delivery-planning"
+    },
+    "codebase-cleanup": {
+      "collection": "main",
+      "name": "Codebase cleanup",
+      "purpose": "Code quality",
+      "summary": "Remove obsolete code and needless complexity, keeping behavior",
+      "icon": "eraser",
+      "effect": "Changes code",
+      "compare": "codebase-restructure"
+    },
+    "codebase-restructure": {
+      "collection": "main",
+      "name": "Codebase restructure",
+      "purpose": "Code quality",
+      "summary": "Assess architecture; plan or make behavior-preserving restructuring",
+      "icon": "blocks",
+      "effect": "Plans or changes code",
+      "compare": "codebase-cleanup"
+    },
+    "find-bugs": {
+      "collection": "main",
+      "name": "Find bugs",
+      "purpose": "Debugging",
+      "summary": "Find defects and confirm each independently, without fixing them",
+      "icon": "bug",
+      "effect": "No fixes",
+      "compare": "diagnosing-bugs"
+    },
+    "task-brief": {
+      "collection": "main",
+      "name": "Task brief",
+      "purpose": "Writing",
+      "summary": "Capture a durable task brief and plan in one Markdown file",
+      "icon": "list",
+      "compare": "recap"
+    },
+    "statechart": {
+      "collection": "poteto",
+      "name": "Statechart",
+      "purpose": "Verification",
+      "summary": "Explore a TLA+ model and show the paths that break its rules",
+      "icon": "graph",
+      "effect": "Formal model",
+      "useWhen": "You want to explore a TLA+ model and see how its rules can be violated. Replay findings against real code before calling them product bugs.",
+      "prerequisites": [
+        {
+          "text": "Node 22.18–22.x, Node 23.6+, Bun 1.1.5+ or Deno 2+"
+        },
+        {
+          "text": "TLC and Java: fetched through mise on first use (needs network), or set TLA2TOOLS and JAVA"
+        },
+        {
+          "text": "SVG rendering uses Pele, separately"
+        }
+      ],
+      "compare": "create-formal-verification-skill"
+    },
+    "create-verification-skill": {
+      "collection": "poteto",
+      "name": "Create verification skill",
+      "purpose": "Verification",
+      "summary": "Create a project check that drives the real app and keeps evidence",
+      "icon": "monitor",
+      "effect": "Drives the real app",
+      "useWhen": "A project needs repeatable proof that its features work in the running application.",
+      "prerequisites": [],
+      "compare": "create-formal-verification-skill"
+    },
+    "maintain-verification-skill": {
+      "collection": "poteto",
+      "name": "Maintain verification skill",
+      "purpose": "Verification",
+      "summary": "Re-run every mapped feature live and repair the verification harness",
+      "icon": "monitor",
+      "effect": "Drives the real app",
+      "useWhen": "Code has changed and an existing real-app verification skill may be out of date.",
+      "prerequisites": [
+        {
+          "text": "An existing project-local verification skill",
+          "skill": "create-verification-skill",
+          "relation": "made with"
+        },
+        {
+          "text": "Source-reading subagents"
+        },
+        {
+          "text": "A way to drive the app"
+        }
+      ],
+      "compare": "maintain-formal-verification-skill"
+    },
+    "create-formal-verification-skill": {
+      "collection": "poteto",
+      "name": "Create formal verification skill",
+      "purpose": "Verification",
+      "summary": "Create a repeatable formal check of a stated property",
+      "icon": "sigma",
+      "effect": "Formal model",
+      "useWhen": "A property must hold under stated assumptions and bounds, beyond what running the app can show.",
+      "prerequisites": [
+        {
+          "text": "A suitable model checker, prover or code verifier"
+        },
+        {
+          "text": "For the TLA+ path: Statechart installed",
+          "skill": "statechart"
+        }
+      ],
+      "compare": "create-verification-skill"
+    },
+    "maintain-formal-verification-skill": {
+      "collection": "poteto",
+      "name": "Maintain formal verification skill",
+      "purpose": "Verification",
+      "summary": "Reconcile formal checks with changed code; separate drift from bugs",
+      "icon": "sigma",
+      "effect": "Formal model",
+      "useWhen": "Code has changed and formal checks may have drifted from it.",
+      "prerequisites": [],
+      "compare": "maintain-verification-skill"
+    },
+    "correct": {
+      "collection": "poteto",
+      "name": "Correct",
+      "purpose": "Code quality",
+      "summary": "Prevent repeated mistakes with enforced safeguards",
+      "icon": "shield",
+      "effect": "Changes code",
+      "useWhen": "You keep correcting agents for the same mistake in this repository. Invoked with /correct; run again after each new correction.",
+      "prerequisites": [],
+      "compare": "retro"
+    },
+    "break-ui": {
+      "collection": "emilkowalski",
+      "name": "Break UI",
+      "purpose": "Design and UI",
+      "summary": "Stress-test interfaces with worst-case content, empty states and extremes",
+      "icon": "bolt",
+      "effect": "Stress test",
+      "source": [
+        {
+          "label": "Revision",
+          "value": "2d22863 · archived 13 Oct 2026"
+        }
+      ]
+    },
+    "animate": {
+      "collection": "emilkowalski",
+      "name": "Animate",
+      "purpose": "Animation",
+      "summary": "Build purposeful interface animations",
+      "icon": "wave",
+      "effect": "Changes code",
+      "prerequisites": [
+        {
+          "text": "Calls Pick UI library when a component needs a library",
+          "skill": "pick-ui-library"
+        }
+      ],
+      "compare": "find-animation-opportunities",
+      "source": [
+        {
+          "label": "Revision",
+          "value": "5206a95 · archived 9 Nov 2026"
+        }
+      ]
+    },
+    "emil-design-eng": {
+      "collection": "emilkowalski",
+      "name": "Design engineering",
+      "purpose": "Design and UI",
+      "summary": "Apply design-engineering and UI polish principles",
+      "icon": "sparkle",
+      "source": [
+        {
+          "label": "Revision",
+          "value": "5206a95 · archived 9 Nov 2026"
+        }
+      ]
+    },
+    "find-animation-opportunities": {
+      "collection": "emilkowalski",
+      "name": "Find animation opportunities",
+      "purpose": "Animation",
+      "summary": "Find where motion is worth adding, without implementing it",
+      "icon": "bulb",
+      "effect": "Suggests only",
+      "compare": "animate",
+      "source": [
+        {
+          "label": "Revision",
+          "value": "5206a95 · archived 9 Nov 2026"
+        }
+      ]
+    },
+    "improve-animations": {
+      "collection": "emilkowalski",
+      "name": "Improve animations",
+      "purpose": "Animation",
+      "summary": "Audit existing motion and prepare an implementation plan",
+      "icon": "trend",
+      "effect": "Plans changes",
+      "compare": "review-animations",
+      "source": [
+        {
+          "label": "Revision",
+          "value": "5206a95 · archived 9 Nov 2026"
+        }
+      ]
+    },
+    "mobile-native": {
+      "collection": "emilkowalski",
+      "name": "Mobile native",
+      "purpose": "Design and UI",
+      "summary": "Make web interfaces behave better on phones",
+      "icon": "phone",
+      "source": [
+        {
+          "label": "Revision",
+          "value": "5206a95 · archived 9 Nov 2026"
+        }
+      ]
+    },
+    "remove-animations": {
+      "collection": "emilkowalski",
+      "name": "Remove animations",
+      "purpose": "Animation",
+      "summary": "Remove or simplify unnecessary motion",
+      "icon": "waveoff",
+      "effect": "Changes code",
+      "compare": "improve-animations",
+      "source": [
+        {
+          "label": "Revision",
+          "value": "5206a95 · archived 9 Nov 2026"
+        }
+      ]
+    },
+    "review-animations": {
+      "collection": "emilkowalski",
+      "name": "Review animations",
+      "purpose": "Animation",
+      "summary": "Review animation changes against a defined craft bar",
+      "icon": "eye",
+      "effect": "Review",
+      "compare": "improve-animations",
+      "source": [
+        {
+          "label": "Revision",
+          "value": "5206a95 · archived 9 Nov 2026"
+        }
+      ]
+    },
+    "pick-ui-library": {
+      "collection": "emilkowalski",
+      "name": "Pick UI library",
+      "purpose": "Design and UI",
+      "summary": "Choose a suitable UI library for a component",
+      "icon": "box",
+      "effect": "Called by Animate",
+      "source": [
+        {
+          "label": "Revision",
+          "value": "5206a95 · archived 9 Nov 2026"
+        }
+      ]
+    },
+    "prototype": {
+      "collection": "mattpocock",
+      "name": "Prototype",
+      "purpose": "Design and UI",
+      "summary": "Explore a design question with a logic demo or UI alternatives",
+      "icon": "flask",
+      "nameNote": "Not Emil Kowalski’s skill of the same name, which isn’t in the archive."
+    },
+    "wait-what": {
+      "collection": "mattpocock",
+      "name": "Wait, what?",
+      "purpose": "Writing",
+      "summary": "Re-explain a message in clearer language, with missing context",
+      "icon": "chat",
+      "prerequisites": [
+        {
+          "text": "References a project glossary"
+        }
+      ]
+    },
+    "code-review": {
+      "collection": "mattpocock",
+      "name": "Code review",
+      "purpose": "Code quality",
+      "summary": "Review committed changes against requirements and standards",
+      "icon": "eye",
+      "effect": "Review",
+      "prerequisites": [
+        {
+          "text": "Issue-tracker information"
+        },
+        {
+          "text": "Parallel-agent capabilities"
+        }
+      ],
+      "compare": "find-bugs"
+    },
+    "diagnosing-bugs": {
+      "collection": "mattpocock",
+      "name": "Diagnosing bugs",
+      "purpose": "Debugging",
+      "summary": "Reproduce, diagnose, fix and verify a reported bug or regression",
+      "icon": "bug",
+      "effect": "Changes code",
+      "compare": "find-bugs"
+    },
+    "retro": {
+      "collection": "mattpocock",
+      "name": "Retro",
+      "purpose": "Investigation",
+      "summary": "Investigate an agent session and recommend environment improvements",
+      "icon": "rewind",
+      "effect": "Recommends",
+      "useWhen": "After an agent session, to improve the environment it worked in.",
+      "prerequisites": [
+        {
+          "text": "Calls Writing for agents; install both",
+          "skill": "writing-for-agents"
+        }
+      ],
+      "compare": "correct"
+    },
+    "writing-for-agents": {
+      "collection": "mattpocock",
+      "name": "Writing for agents",
+      "purpose": "Writing",
+      "summary": "Write and organize instructions that agents read",
+      "icon": "pen"
+    },
+    "to-questionnaire": {
+      "collection": "mattpocock",
+      "name": "To questionnaire",
+      "purpose": "Writing",
+      "summary": "Prepare a questionnaire for someone whose knowledge informs a decision",
+      "icon": "list",
+      "effect": "Explicit use only",
+      "prerequisites": [
+        {
+          "text": "Invoked explicitly; produces Markdown"
+        }
+      ]
+    },
+    "reverse-engineer-anything": {
+      "collection": "morluto",
+      "name": "Reverse engineer anything",
+      "purpose": "Investigation",
+      "summary": "Investigate shipped artifacts and runtime behavior with REA evidence",
+      "icon": "cpu",
+      "effect": "Needs REA setup",
+      "prerequisites": [
+        {
+          "text": "The REA MCP server and analysis engines, set up separately; installing adds instructions only"
+        }
+      ]
+    }
+  },
+  "comparisons": [
+    {
+      "skills": [
+        "create-verification-skill",
+        "create-formal-verification-skill"
+      ],
+      "rows": [
+        {
+          "aspect": "Checks",
+          "values": [
+            "Observable behavior of the running app",
+            "A stated property, under explicit assumptions and bounds"
+          ]
+        },
+        {
+          "aspect": "How",
+          "values": [
+            "Launches and drives the real app",
+            "A model checker, prover or code verifier"
+          ]
+        },
+        {
+          "aspect": "Leaves",
+          "values": [
+            "A feature map and saved evidence",
+            "A repeatable check shown to catch a deliberately broken case"
+          ]
+        }
+      ],
+      "note": "Not interchangeable: a passing model doesn’t prove the shipped app matches it."
+    },
+    {
+      "skills": [
+        "maintain-verification-skill",
+        "maintain-formal-verification-skill"
+      ],
+      "rows": [
+        {
+          "aspect": "Keeps current",
+          "values": [
+            "The real-app feature map and harness",
+            "Formal checks, after code changes"
+          ]
+        },
+        {
+          "aspect": "How",
+          "values": [
+            "Exercises every mapped feature live",
+            "Separates verification drift from actual product bugs"
+          ]
+        },
+        {
+          "aspect": "Changes",
+          "values": [
+            "Verification docs and harnesses only, unless authorized",
+            "Verification artifacts only, unless authorized"
+          ]
+        }
+      ]
+    },
+    {
+      "skills": [
+        "statechart",
+        "create-formal-verification-skill"
+      ],
+      "rows": [
+        {
+          "aspect": "Purpose",
+          "values": [
+            "Explore a TLA+ model",
+            "Create a lasting, repeatable property check"
+          ]
+        },
+        {
+          "aspect": "Shows",
+          "values": [
+            "Transitions and violation paths as a statechart",
+            "That the check catches a deliberately broken case"
+          ]
+        },
+        {
+          "aspect": "Relation",
+          "values": [
+            "Used by the formal pair for TLA+",
+            "Needs Statechart for the TLA+ path"
+          ]
+        }
+      ],
+      "note": "Statechart findings should be replayed against real code before being called product bugs."
+    },
+    {
+      "skills": [
+        "correct",
+        "retro"
+      ],
+      "rows": [
+        {
+          "aspect": "Looks at",
+          "values": [
+            "Mistakes agents keep repeating in this repo",
+            "One agent session"
+          ]
+        },
+        {
+          "aspect": "Produces",
+          "values": [
+            "Architecture, types, lint or tests that block the mistake, proven on a past case",
+            "Recommendations for the working environment"
+          ]
+        },
+        {
+          "aspect": "Changes code",
+          "values": [
+            "Yes: architecture, types, lint, CI, tests",
+            "Recommends"
+          ]
+        }
+      ]
+    },
+    {
+      "skills": [
+        "find-bugs",
+        "diagnosing-bugs"
+      ],
+      "rows": [
+        {
+          "aspect": "Starts from",
+          "values": [
+            "No known bug: discovers defects",
+            "A reported bug or performance regression"
+          ]
+        },
+        {
+          "aspect": "Fixes",
+          "values": [
+            "No: confirms each defect independently",
+            "Yes: fixes and verifies"
+          ]
+        }
+      ]
+    },
+    {
+      "skills": [
+        "code-review",
+        "find-bugs"
+      ],
+      "rows": [
+        {
+          "aspect": "Scope",
+          "values": [
+            "Committed changes",
+            "Defects anywhere in scope"
+          ]
+        },
+        {
+          "aspect": "Measured against",
+          "values": [
+            "Requirements and coding standards",
+            "Independent confirmation of each defect"
+          ]
+        }
+      ]
+    },
+    {
+      "skills": [
+        "improve-animations",
+        "review-animations"
+      ],
+      "rows": [
+        {
+          "aspect": "Starts from",
+          "values": [
+            "Existing motion in the interface",
+            "A set of animation changes"
+          ]
+        },
+        {
+          "aspect": "Produces",
+          "values": [
+            "An audit and an implementation plan",
+            "A review against a defined craft bar"
+          ]
+        }
+      ]
+    },
+    {
+      "skills": [
+        "find-animation-opportunities",
+        "animate"
+      ],
+      "rows": [
+        {
+          "aspect": "Does",
+          "values": [
+            "Finds where motion is worth adding",
+            "Builds the animation"
+          ]
+        },
+        {
+          "aspect": "Changes code",
+          "values": [
+            "No",
+            "Yes"
+          ]
+        }
+      ]
+    },
+    {
+      "skills": [
+        "remove-animations",
+        "improve-animations"
+      ],
+      "rows": [
+        {
+          "aspect": "Does",
+          "values": [
+            "Removes or simplifies motion",
+            "Audits motion and plans improvements"
+          ]
+        },
+        {
+          "aspect": "Changes code",
+          "values": [
+            "Yes",
+            "Plans only"
+          ]
+        }
+      ]
+    },
+    {
+      "skills": [
+        "software-design-intake",
+        "software-design"
+      ],
+      "rows": [
+        {
+          "aspect": "Starts from",
+          "values": [
+            "Rough requirements",
+            "A software brief"
+          ]
+        },
+        {
+          "aspect": "Produces",
+          "values": [
+            "A reviewed software brief",
+            "Behavior, architecture, UI/UX and contracts, ready for delivery"
+          ]
+        }
+      ]
+    },
+    {
+      "skills": [
+        "delivery-planning",
+        "delivery-workpack-execution"
+      ],
+      "rows": [
+        {
+          "aspect": "Starts from",
+          "values": [
+            "A ready design handoff",
+            "A delivery workpack"
+          ]
+        },
+        {
+          "aspect": "Produces",
+          "values": [
+            "A verifiable delivery workpack",
+            "Implemented and verified changes"
+          ]
+        }
+      ]
+    },
+    {
+      "skills": [
+        "codebase-cleanup",
+        "codebase-restructure"
+      ],
+      "rows": [
+        {
+          "aspect": "Does",
+          "values": [
+            "Removes obsolete code and unnecessary complexity",
+            "Assesses architecture; plans or implements restructuring"
+          ]
+        },
+        {
+          "aspect": "Behavior",
+          "values": [
+            "Supported behavior preserved",
+            "Behavior preserved"
+          ]
+        }
+      ]
+    },
+    {
+      "skills": [
+        "recap",
+        "task-brief"
+      ],
+      "rows": [
+        {
+          "aspect": "Does",
+          "values": [
+            "Summarizes where the current plan stands",
+            "Writes a durable brief and plan"
+          ]
+        },
+        {
+          "aspect": "Output",
+          "values": [
+            "A catch-up in the conversation",
+            "One Markdown file"
+          ]
+        }
+      ]
+    }
+  ]
+}
