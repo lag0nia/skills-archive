@@ -111,10 +111,21 @@ The skill triggers by itself when an agent is about to change files, commit, pus
 
 To approve a merge, tell the agent "merge" (or "mergea") for that PR, or merge it yourself on GitHub.
 
+## Catalog
+
+[`catalog.json`](catalog.json) describes the archive for apps that browse it (schema `skills-archive.catalog.v1`). It is metadata only: installers ignore it, and a skill's `SKILL.md` stays the source of its name, description and instructions.
+
+- `purposes`: the purpose labels a skill can have, in the order apps list them.
+- `collections`: the main collection and each third-party collection by its folder (`main`, then the `third-party/<author>` name): its display name, path, author (null for the main collection, which records none separately), a one-line summary, groups of skills that work together (`sequence` when they are used in that order), a note on how they relate, what to know before installing, and the source facts its README records (upstream, revision, license, archive date, modifications).
+- `skills`: each skill by its folder name: its collection, display name, purpose, a one-line summary, an icon name, what it does to a project where that matters (`effect`, such as "Changes code"), when to use it, its prerequisites as the collection README lists them (a prerequisite that is another skill names it in `skill`), the skill it is most easily confused with (`compare`) and a note on its name where another author's skill shares it. A third-party skill archived from another revision than its collection records it in `source`.
+- `comparisons`: side-by-side rows for those easily confused pairs, in the order of `skills`, with a closing note where the READMEs give one.
+
+Wording is condensed from the collection READMEs and each `SKILL.md`; keep it in step when a skill or its README changes. Skill and collection names must exist in the archive, and every skill in the archive has an entry.
+
 ## Adding a skill
 
 1. Create `skills/<name>/SKILL.md` with `name` and `description` frontmatter (keep to those plus `license` so every client accepts it).
-2. Add a row to the table above.
+2. Add a row to the table above and an entry to [`catalog.json`](catalog.json) (and to a group of its collection).
 3. Commit on a branch, open a pull request and merge it (see `repo-workflow`), then re-run the installer wherever you use it.
 
 ## License
