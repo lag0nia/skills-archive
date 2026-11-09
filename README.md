@@ -20,7 +20,9 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. The main co
 
 [Matt Pocock’s selected skills](third-party/mattpocock/README.md): `prototype`, `wait-what`, `code-review`, `diagnosing-bugs`, `retro`, `writing-for-agents`, and `to-questionnaire`. Their source revision, license, dependencies, and update notes are recorded with the collection. The root installer includes these skills and accepts their names just like the main collection.
 
-[Emil Kowalski’s UI stress-testing skill](third-party/emilkowalski/README.md): `break-ui`, checking interfaces against worst-case content, empty states, and extreme values. The upstream source and MIT license are preserved; the root installer accepts its name.
+[Emil Kowalski’s UI and animation skills](third-party/emilkowalski/README.md): `break-ui` plus animation construction, review, audit, discovery, removal, design engineering, mobile polish and UI-library selection. Complete upstream directories and MIT attribution are preserved.
+
+[Lauren Tan (poteto)’s pstack verification skills](third-party/poteto/README.md): `statechart`, the runtime and formal verification create/maintain pairs, and `correct`. The collection explains their differences, prerequisites and source revision; the root installer discovers all six names.
 
 [Morluto’s REA skill](third-party/morluto/README.md): `reverse-engineer-anything`, investigating shipped artifacts and runtime behavior with REA. The upstream skill, six reference files, and MIT license are preserved; the root installer accepts its name. Using it requires REA tools to be configured separately.
 
