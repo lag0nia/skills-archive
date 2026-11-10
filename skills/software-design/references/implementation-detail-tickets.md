@@ -18,7 +18,7 @@ Read this reference whenever a System Responsibility, Domain, flow, Software Des
 
 ## Purpose And Ownership
 
-Create one ticket for each material, independently answerable implementation-detail question. Do not create tickets for explanatory follow-ups, derivable validation checks, formatting choices, or every sentence written during a discussion.
+Create one ticket for each material, independently answerable implementation-detail question. Do not create tickets for explanatory follow-ups, derivable validation checks, formatting choices, or every sentence written during a discussion. A prototype selection the user already supplied is recorded in the UI/UX specification, not in a ticket of its own ([UI/UX Design](ui-ux-design.md#artifact-and-prototype-constraints)); material product or interaction questions around it follow these rules.
 
 The ticket owns workflow state, the concise question, the resolution summary and its attribution, dependencies, links to every write target, and—after Build Design exists—affected Build Units. Canonical behavior remains in the approved architecture, Domain, System Responsibility, flow, contract, Technical Constraint, Build Unit record, or other durable owner. A ticket may summarize that truth but must not become a competing system specification. Domain and architecture explanations carry source-backed rationale at the appropriate scope; exact behavior stays with its authoritative owner.
 

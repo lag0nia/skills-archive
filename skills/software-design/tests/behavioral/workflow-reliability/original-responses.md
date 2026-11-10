@@ -1466,3 +1466,282 @@ All three still set interface behavior, so each is a meaningful decision that ne
   - Then implement recurring weekly bookings in `c` from FLOW-004 and the updated requirements, open `ui-ux/index.html` from disk, exercise the affected journeys (action, persistent result, cancellation, failure and recovery, keyboard, desktop and phone), and capture `runtime-evidence.json` if `c` is JavaScript-rendered.
   - Record `Reviewed` rows for those journeys, clear the TICKET-0012 pending rows, and validate.
 - **If the user chooses to keep comparing:** add the same bounded recurring-booking states to all five candidates with the same demo data, inspect each from disk, and record the extended comparable coverage in each row. The selection stays `Unresolved`. Clear the pending rows only once all five reflect the change, and say that no implementation target exists yet.
+
+
+## Third round: selection lifecycle (2026-11-09)
+
+Verbatim responses from fresh agents given the skill at commit `a5777e3`, stripped of `tests/`. Scenarios I1–I3 and I4 ran in separate agents.
+
+### Scenarios I1–I3
+
+#### Scenario I1: Parity requested while exploring, then a selection
+
+**How I read the situation (before acting)**
+- The selection is settled. The specification records "Let's go with A." as Human-approved · User specified, so `a` is the selected target.
+- The 2026-10-01 instruction ("Keep all five alternatives at the same functionality; I want to compare them fairly.") was given to make the comparison fair. Choosing A ended that comparison. Nothing the user said at or after selection asks for other alternatives to be kept going. So it is not a standing parity instruction that survives the selection.
+- Under the workflow, after a user-made selection the other candidates become **retained snapshots** unless a standing parity instruction keeps them active. The stale "Active alternative — kept at parity" labels on rows `b`…`e` do not decide their role; the selection evidence and the user's instructions do.
+- This pass therefore covers only `a`. Your explicit prototype-change request authorises the update and the inspection, so no further approval is needed. No question to the user is required.
+
+**Actions**
+1. Read TICKET-0012's canonical owners and the updated specification requirements for recurring weekly bookings. Use them as the only source of behaviour, and invent nothing beyond them.
+2. `ui-ux/alternatives/a/` (affected page(s), script and styles):
+   - Add the recurring-booking option to the create-booking journey, using A's own layout, controls and visual language.
+   - Carry it through to the confirmation and the persistent result, and into the cancellation and payment-failure/recovery states wherever the canonical behaviour makes them differ for a recurring booking.
+   - Keep A keyboard-operable and responsive, with no internal identifiers shown.
+   - Leave product content and the reviewer area separate.
+3. Rendered inspection:
+   - Open `ui-ux/index.html` directly from disk, not through a local server, and follow the launcher to A.
+   - Exercise arrival → availability → create a recurring weekly booking → confirmation, then return to confirm the result persists. Also exercise pre-submission cancellation and payment failure → recovery for a recurring booking.
+   - Check at desktop, tablet and phone widths, plus keyboard flow.
+   - Per the scenario, `a` passes.
+4. `ui-ux/alternatives/a/runtime-evidence.json`: recapture it through the explicit capture route for the selected candidate. A's resources changed, so the previous receipt's hash would be stale and would fail validation.
+5. Slideshow: only if `a/slides.html` exists, refresh its affected captures in the same pass. Retained snapshots get no deck maintenance.
+6. `ui-ux/specification.md`:
+   - **Active comparison** line: `None — comparison ended with the user's selection of A (2026-10-08); the 2026-10-01 parity instruction applied to that comparison.`
+   - Alternatives table:
+     - Row `a`: selected target; coverage now includes the recurring weekly booking (TICKET-0012).
+     - Rows `b`…`e`: `Retained snapshot — arrival → availability → create booking → confirmation, plus cancellation and payment failure; no recurring weekly booking (TICKET-0012); updated only on request.`
+   - **Journey And Route Coverage / State Coverage**: add the recurring-booking route and its distinct states for the booking journey if they are not already listed.
+   - **Prototype Review** row for the booking journey: `Reviewed`, with the evidence (browser tool, viewports, direct-file launcher check, interactions exercised, findings). Note that this is a heuristic agent walkthrough, not user testing.
+   - **Change Synchronization**: remove the TICKET-0012 pending row for the booking journey. Write `None.` if no other rows remain, and keep any unrelated pending rows untouched.
+   - **Required prototype coverage**: restore it to its previous named scope now that the gap is closed. Do not widen the scope.
+   - **Decision Attribution**: no new row. Retaining `b`…`e` follows from the user's own selection under the workflow rule, and the recurring-booking presentation stays within settled requirements.
+7. TICKET-0012: no status change.
+   - If it was `finished` with the recorded prototype exception, it stays `finished`.
+   - Its answer and attribution are already recorded, so the decision overview is not regenerated.
+8. Run `node <skill-dir>/scripts/validate-ui-ux-design.mjs --root <package>` and `node <skill-dir>/scripts/validate-software-design-structure.mjs --root <package>`. Run `validate-implementation-detail-tickets.mjs` only if a ticket file changes.
+
+**Report to the user**
+> I added the recurring weekly booking option to Candidate A, your selected implementation target, and checked that it works. I opened the launcher straight from the folder (no local server) and tested on desktop, tablet and phone widths and with the keyboard. I booked a weekly recurring appointment through to confirmation, came back to check the booking was still there, cancelled before submitting, and went through a failed payment and its recovery. Everything behaved as the specification and TICKET-0012 describe, and I found no usability blockers. I recaptured A's runtime evidence, cleared the TICKET-0012 pending prototype entry, and the UI/UX and structure validators pass.
+>
+> I did not update B–E. Your 2026-10-01 instruction to keep all five at the same functionality was so you could compare them fairly, and choosing A on 2026-10-08 ended that comparison. B–E are now recorded as retained snapshots, without recurring booking. Their table rows had still said "kept at parity", and I corrected that. If you still want any of them kept level with A, tell me which and I'll bring them up to date.
+>
+> What this proves and what it doesn't: this was my own rendered walkthrough of A's prototype, not user testing. It doesn't show that the implementation is ready or matches the prototype. I made no new design decisions on my own; the recurring-booking presentation follows A's existing patterns within the approved requirements. TICKET-0012's status is unchanged.
+
+#### Scenario I2: Continued comparison explicitly requested at selection
+
+**How I read the situation**
+- A is the selected target.
+- At selection the user said "keep B and D at the same functionality as A; the client still wants to see those two". That is a standing parity instruction given at selection, and it keeps `b` and `d` active until the user changes it.
+- `c` and `e` are not covered by it, so the selection made them retained snapshots. Their "kept at parity" labels are stale.
+- This feature update therefore covers `a`, `b` and `d`. The explicit request authorises updating and inspecting all three. No question is needed.
+
+**Actions**
+1. Read TICKET-0012's canonical owners and the updated specification requirements, as the only source of behaviour.
+2. Make the same functional change in three folders:
+   - `ui-ux/alternatives/a/`
+   - `ui-ux/alternatives/b/`
+   - `ui-ux/alternatives/d/`
+
+   Each candidate gets the recurring-booking option through its own layout, navigation and interaction treatment, carried into confirmation, the persistent result, cancellation and payment failure/recovery as the canonical behaviour requires. Shared logic is optional, not required.
+3. Rendered inspection:
+   - Open `ui-ux/index.html` directly from disk and reach each of A, B and D from the launcher.
+   - In each, exercise the recurring booking through to confirmation, returning to check it persisted, pre-submission cancellation, and payment failure → recovery.
+   - Check desktop, tablet and phone widths, plus keyboard.
+   - Per the scenario, all three pass.
+4. `ui-ux/alternatives/a/runtime-evidence.json`: recapture it, because the selected candidate changed. If B or D already hold a receipt, recapture it too so a stale one isn't left behind.
+5. Slides: refresh affected captures in the same pass for any of A, B and D that already has a `slides.html`. Do nothing for C or E.
+6. `ui-ux/specification.md`:
+   - **Active comparison** line: `Booking journey (arrival → availability → create booking incl. recurring weekly → confirmation, plus cancellation and payment failure) — B and D kept at functional parity with selected A; standing parity instruction, user 2026-10-08: "Let's go with A, but keep B and D at the same functionality as A; the client still wants to see those two."`
+   - Alternatives table:
+     - Row `a`: selected target, now including the recurring weekly booking.
+     - Rows `b` and `d`: `Active alternative — kept at parity with A (standing instruction 2026-10-08); includes recurring weekly booking (TICKET-0012).`
+     - Rows `c` and `e`: `Retained snapshot — arrival → availability → create booking → confirmation, plus cancellation and payment failure; no recurring weekly booking (TICKET-0012); updated only on request.`
+   - **Journey/State Coverage**: add the recurring route and its states if not already listed.
+   - **Prototype Review** row for the booking journey of selected `a`: `Reviewed`, with tool, viewports, direct-file check and findings. Record B's and D's verification in their own table rows; parity work never creates pending journey rows.
+   - **Change Synchronization**: remove the TICKET-0012 pending row and keep any unrelated rows.
+   - **Required prototype coverage**: restore it to its prior named scope.
+   - **Decision Attribution**: no new row. The selection row already cites the user's sentence, including the B/D instruction.
+7. TICKET-0012: unchanged.
+8. Run `validate-ui-ux-design.mjs --root <package>` and `validate-software-design-structure.mjs --root <package>`.
+
+**Report to the user**
+> I added the recurring weekly booking option to A, your selected target, and also to B and D, because on 2026-10-08 you asked to keep those two at the same functionality as A for the client. Each one shows the option in its own style. I opened the launcher straight from the folder (no local server) and checked each of the three on desktop, tablet and phone widths and with the keyboard. In each I booked a weekly recurring appointment to confirmation, checked it was still there on return, cancelled before submitting, and went through a failed payment and its recovery. All three work as the specification and TICKET-0012 describe, with no usability blockers. I recaptured A's runtime evidence and cleared the TICKET-0012 pending prototype entry, and the UI/UX and structure validators pass.
+>
+> C and E were not updated. Your instruction kept only B and D level with A, so C and E became retained snapshots when you selected A. Their rows had still said "kept at parity", and I corrected that. They now note that they don't include recurring booking. If the client should see either of them again, tell me and I'll update it.
+>
+> What this proves and what it doesn't: this was my own rendered walkthrough of the prototypes, not user testing. It doesn't show that the implementation is ready. B and D are comparison alternatives, not implementation targets; A remains the only target. I made no new design decisions on my own, and TICKET-0012's status is unchanged.
+
+#### Scenario I3: One candidate updated for a demonstration, no selection
+
+**How I read the situation**
+- There is no selection: the target is `Unresolved`, and all five candidates are active alternatives.
+- The 2026-10-01 parity instruction is a standing parity instruction for this comparison.
+- The user explicitly limited this pass to A ("Update only A for tomorrow's demo"). That narrows only this pass. It selects nothing, changes no other candidate's role, and leaves the parity instruction in force for later passes.
+- The pass covers only `a`, and it is complete once A is updated and verified. The gaps in B–E are recorded as information, not as an unfinished pass. No question is needed.
+
+**Actions**
+1. Read TICKET-0012's canonical owners and the updated specification requirements.
+2. `ui-ux/alternatives/a/`: add the recurring-booking option within the comparison journey, using A's own treatment. Carry it into confirmation, the persistent result, cancellation and payment failure/recovery as the canonical behaviour requires.
+3. Rendered inspection:
+   - Open `ui-ux/index.html` directly from disk and reach A from the launcher.
+   - Exercise the recurring booking through to confirmation, returning to check it persisted, pre-submission cancellation, and payment failure → recovery.
+   - Check desktop, tablet and phone widths, plus keyboard.
+   - Per the scenario, A passes.
+4. Runtime evidence is not required, because A is not selected. If `a/runtime-evidence.json` already exists, recapture it so a stale receipt is not left in place.
+5. Slides: if `a/slides.html` exists, refresh its affected captures in this pass. Leave the other decks untouched.
+6. `ui-ux/specification.md`:
+   - **Selected implementation target**: stays `Unresolved`.
+   - **Active comparison** line: unchanged in substance. Keep the 2026-10-01 parity instruction, and optionally note that the pass for the demo was limited to A at the user's request and that the instruction stays in force.
+   - Alternatives table:
+     - Row `a`: `Active alternative — arrival → availability → create booking (incl. recurring weekly, TICKET-0012) → confirmation, plus cancellation and payment failure`, with the review evidence.
+     - Rows `b`…`e`: keep `Active alternative`, and add `parity gap: recurring weekly booking (TICKET-0012) not yet added — pass limited to A for the demo at the user's request.`
+   - **Change Synchronization**: if a TICKET-0012 pending journey row exists, remove it. A is done, and the remaining work for B–E is recorded in their own rows, because parity gaps in unselected alternatives never go in pending journey rows. Keep unrelated rows.
+   - **Prototype Review**: record A's evidence (tool, viewports, direct-file check, findings) against the journey, scoped to A as an active alternative, not as a selected target.
+   - **Required prototype coverage**: no completion claim, since nothing is selected.
+   - **Decision Attribution**: no new row, because the user made no selection.
+7. TICKET-0012: unchanged.
+8. Run `validate-ui-ux-design.mjs --root <package>` and `validate-software-design-structure.mjs --root <package>`.
+
+**Report to the user**
+> A is ready for tomorrow's demo with the recurring weekly booking option. I opened the launcher straight from the folder (no local server) and tested A on desktop, tablet and phone widths and with the keyboard. I booked a weekly recurring appointment through to confirmation, checked it was still there on return, cancelled before submitting, and went through a failed payment and its recovery. It all behaves as the specification and TICKET-0012 describe, with no usability blockers. The UI/UX and structure validators pass.
+>
+> As you asked, I updated only A. B–E don't have recurring booking yet, so the five are not at the same functionality for now. I've recorded that gap in each of their rows. Your 2026-10-01 instruction to keep all five at the same functionality still applies to later passes, and I can bring B–E up to date whenever you want. Updating A for the demo doesn't select it; the implementation target is still unresolved.
+>
+> What this proves and what it doesn't: this was my own rendered walkthrough of A's prototype, not user testing. I made no new design decisions on my own, and TICKET-0012's status is unchanged.
+
+### Scenario I4
+
+#### I4a
+
+**What I read first (read-only).** Before deciding anything I check what the package already holds:
+- `ui-ux/specification.md`: the *Prototype Alternatives And Selection* fields, the Active comparison field, the five alternative rows, Change Synchronization, and any existing `## Decision Attribution` section.
+- `ui-ux/index.html`.
+- The ticket files, to confirm that no ticket covers the prototype direction.
+- Applicable Build Units and handoffs, if Stage 8 or 9 exists.
+
+```sh
+SKILL=/private/tmp/claude-501/-Users-alanguerrero--claude-spares-spare-LbxDkd/ce8c0584-1870-42dc-91bf-60327d56a398/scratchpad/original-skill
+PKG=design/software-design   # resolved package root
+node $SKILL/scripts/generate-decision-overview.mjs --root $PKG --affected ui-ux/specification.md
+```
+
+That check confirms the package has no settled selection, no standing parity instruction, and no record of last week's call.
+
+**How I read the request**
+- The user states the choice in their own words in this message ("A is the one we're building"), so it is **Human-approved · User specified**.
+- The evidence is this message, quoted exactly. The call itself is not retained anywhere, so I quote nothing from it and give it no date.
+- No ticket owns this decision, so its attribution goes in the specification's `## Decision Attribution` section. I create no ticket after the fact just to hold the attribution.
+- Before a selection, every candidate is "Active alternative" by default. That default is not a standing parity instruction. So once the user selects A, B to E become **retained snapshots**.
+- Nothing material is left to decide, so I ask no question.
+
+**Edits to `ui-ux/specification.md`, in *Prototype Alternatives And Selection***
+- Change `**Selected implementation target:** `Unresolved`` to `**Selected implementation target:** `./alternatives/a/index.html``. A's row already links that path directly, which the validator requires. If A's recorded entrypoint is a different page, I use that page.
+- **Direction selection:** `Selected — A (<A's direction as described in its row>)`
+- **Active comparison:** `None — the user's selection of A on 2026-11-09 ended the comparison; no standing parity instruction is recorded.`
+- Covered-flow approval, Required prototype coverage and Review slideshows stay unchanged.
+- A's row, status cell: `Selected target — <A's existing coverage limits, unchanged>; selected 2026-11-09`.
+  - If A's row lists parity gaps, I remove them from the row and add them as pending rows under Change Synchronization: `| [<journey>](#journey-<id>) | <gap text moved from A's row> | [<canonical owner of that journey>](<relative link>) |`.
+  - If it lists none, Change Synchronization stays `None.`.
+- Rows B, C, D and E, status cell: `Retained snapshot — <existing coverage limits, unchanged>; no longer compared or maintained after A was selected on 2026-11-09`.
+- New `## Decision Attribution` section, placed directly after that table. If the section already exists, I add only the row.
+
+```markdown
+## Decision Attribution
+
+| Decision | Origin | Evidence | Conditions |
+| --- | --- | --- | --- |
+| Candidate A ([alternatives/a/index.html](./alternatives/a/index.html)) is the selected prototype direction and implementation target. | Human-approved · User specified | User message in this session, 2026-11-09: "I already told you in our call last week: A is the one we're building. Make sure the design package records that properly." The earlier call is not recorded in the package; this message is the evidence. | None |
+```
+
+**Other files**
+- `ui-ux/index.html`: add the Selected tag to A's card only. Nothing else changes.
+- If Stage 8 exists, each applicable Build Unit's `UI/UX Realization` links the selected candidate `ui-ux/alternatives/a/index.html`. Any existing human-facing handoff that covers those units is refreshed and re-snapshotted in the same pass.
+- I edit no prototype files and touch no slideshows.
+
+**Commands after editing**
+```sh
+node $SKILL/scripts/validate-ui-ux-design.mjs --root $PKG
+node $SKILL/scripts/validate-software-design-structure.mjs --root $PKG
+node $SKILL/scripts/generate-decision-overview.mjs --root $PKG
+node $SKILL/scripts/generate-decision-overview.mjs --root $PKG --check
+```
+
+**Report to the user**
+> Done. The package now records candidate A as the selected direction and the one being built. It's marked as your own choice. The package had no record of last week's call, which is why it still said "Unresolved", so the evidence is your message today, quoted word for word.
+>
+> What changed:
+> - `ui-ux/specification.md`: the selected target is `./alternatives/a/index.html` and the direction is "Selected — A". A's row reads "Selected target". A new Decision Attribution entry records the choice as Human-approved · User specified.
+> - B, C, D and E are now retained snapshots. They stay as reference but are no longer compared or updated. No instruction to keep them in step is on record. If you want any of them kept matching A, tell me and I'll record that.
+> - `ui-ux/index.html` shows the Selected tag on A.
+> - The decision overview (`build/workflow/decision-overview.md`) has been regenerated.
+>
+> What this doesn't mean yet: choosing A doesn't approve A's flows, and it doesn't approve any behaviour it shows that is labelled exploratory. It also doesn't make A's prototype coverage complete or make it ready for delivery. Those statuses are unchanged.
+>
+> Checks: the UI/UX and structure validators pass, and the decision overview is up to date. These are structural checks only. I didn't open or review the prototype in this pass.
+>
+> I recorded no decisions of my own in this pass.
+
+#### I4b
+
+**What I read first (read-only)**
+- TICKET-0020 in full: status `decided`, its resolution, both attribution entries with their conditions, `write_targets` and `build_units`.
+- `ui-ux/specification.md` and `ui-ux/index.html`.
+
+The selection revises a decided ticket, so I list the settled decisions it touches before changing anything:
+
+```sh
+node $SKILL/scripts/generate-decision-overview.mjs --root $PKG --affected TICKET-0020
+node $SKILL/scripts/generate-decision-overview.mjs --root $PKG --affected ui-ux/specification.md
+```
+
+**How I read the request**
+- "Go with A" is the user's own selection, so it is **Human-approved · User specified**.
+- The user's earlier instruction kept A to E at parity "until the client review", which left the choice of a direction for that review. TICKET-0020 ("Booking prototype direction") therefore owns this answer, and the attribution goes in the ticket. The specification refers to the ticket. I add no specification attribution row for the selection, because recording it in two places would make the decision overview generator fail.
+- Both existing human-approved decisions still hold:
+  - **Parity** was bounded by the user's own words, "until the client review". That period has now ended on its own terms; it is neither revoked nor revised. I leave its entry unchanged as accurate history. B to E therefore become retained snapshots.
+  - **Left-hand step navigation** keeps applying to A, the selected target, and so to its implementation.
+- No settled decision changes, so I ask no question.
+
+**Edits to TICKET-0020**
+- `resolution`, new value:
+  `"- Until the client review, candidates A–E were kept at full functional parity.\n- Every candidate uses left-hand step navigation; this continues to apply to the selected target.\n- After the client review, candidate A (`ui-ux/alternatives/a/index.html`) is the selected implementation target; B–E are retained snapshots and are no longer kept at parity."`
+- `attribution`: the two existing entries stay exactly as they are. I append this one:
+  `{"decision": "After the client review, candidate A (`ui-ux/alternatives/a/index.html`) is the selected booking prototype direction and implementation target.", "origin": "human-approved/user-specified", "evidence": "User message on 2026-11-09, after the client review: \"Go with A.\" B–E become retained snapshots because the parity decision applied only until the client review.", "conditions": []}`
+- `write_targets`: I make sure the list includes `"ui-ux/specification.md"`.
+- `status`: becomes `"finished"` once every write target holds the resolution and the validators pass. Pending prototype work recorded in the specification is the only exception allowed. If some other write target still lacks the resolution, the ticket stays `"decided"` and I name that target.
+- The question, options, recommendation, kind, `depends_on` and `build_units` stay unchanged.
+
+**Edits to `ui-ux/specification.md`**
+- **Selected implementation target:** `./alternatives/a/index.html`
+- **Direction selection:** `Selected — A (<A's recorded direction>)`, followed by "chosen by the user after the client review; attribution in [TICKET-0020](<relative path to its ticket file>)".
+- **Active comparison:** `None — the user selected A after the client review (TICKET-0020). The standing parity instruction "Keep candidates A–E at full functional parity until the client review" (TICKET-0020, user-specified 2026-10-01) ended at the client review.`
+- A's row: `Selected target — <existing coverage limits>; selected after the client review (TICKET-0020)`. If A's row lists parity gaps, they move into pending rows under Change Synchronization.
+- Rows B, C, D and E: `Retained snapshot — <coverage as of the client review, unchanged>; kept at full functional parity until the client review (TICKET-0020); no longer compared or maintained`. Any gaps already recorded in these rows stay there as snapshot limitations.
+- *Interaction And Content Rules*: if the rule isn't there yet, add `- Step navigation: left-hand step navigation, including in the selected target ([TICKET-0020](<ticket file>)).`.
+- If A does not yet illustrate left-hand step navigation, add this pending row: `| [<affected journey>](#journey-<id>) | Use left-hand step navigation | [TICKET-0020](<ticket file>) |`. Otherwise Change Synchronization stays as it is.
+- Covered-flow approval and Required coverage stay unchanged. I add no `## Decision Attribution` row for the selection.
+
+**Other files**
+- `ui-ux/index.html`: add the Selected tag to A's card only.
+- If Stage 8 exists, each Build Unit in TICKET-0020's `build_units`, or each applicable UI unit, links A in its `UI/UX Realization`. Any affected handoff is refreshed and re-snapshotted.
+- I edit no prototype files and do not run a GitHub sync.
+
+**Commands after editing**
+```sh
+node $SKILL/scripts/validate-implementation-detail-tickets.mjs --root $PKG
+node $SKILL/scripts/validate-technical-constraints.mjs --root $PKG
+node $SKILL/scripts/validate-ui-ux-design.mjs --root $PKG
+node $SKILL/scripts/validate-software-design-structure.mjs --root $PKG
+node $SKILL/scripts/generate-decision-overview.mjs --root $PKG
+node $SKILL/scripts/generate-decision-overview.mjs --root $PKG --check
+```
+
+**Report to the user**
+> Recorded: A is the selected booking prototype direction and the one we'll build. It's marked as your choice in TICKET-0020, quoting your "Go with A."
+>
+> Your two earlier decisions in that ticket are unchanged:
+> - **Parity:** you asked for A to E to be kept at full functional parity until the client review. That period has now ended, so B, C, D and E are now retained snapshots. They stay as reference and won't be updated unless you ask.
+> - **Navigation:** left-hand step navigation still applies to A and to the build. It's written into the specification's interaction rules, with a pending prototype item if A doesn't show it yet.
+>
+> What changed:
+> - TICKET-0020: the resolution now includes the selection, and a third attribution entry records "Go with A." Its status is `finished` if all its write targets now hold the answer; otherwise it stays `decided`, and I'll say which file still needs it.
+> - `ui-ux/specification.md`: the selected target is `./alternatives/a/index.html`, comparison has ended, A's row reads "Selected target" and B to E read "Retained snapshot".
+> - `ui-ux/index.html` shows the Selected tag on A.
+> - The decision overview has been regenerated.
+>
+> Choosing A doesn't approve A's flows. It also doesn't make A's coverage complete or ready for delivery.
+>
+> Checks: the ticket, constraint, UI/UX and structure validators pass, and the overview is up to date. These are structural checks only. I didn't render the prototype. The GitHub issue for TICKET-0020 will update on the next sync; I haven't run one.
+>
+> I recorded no decisions of my own in this pass.

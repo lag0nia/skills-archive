@@ -85,7 +85,7 @@ test("portable UI/UX module is stage-neutral and selectively routed", () => {
   assert.match(workflow, /Two or three references will often suffice, but there is no quota/);
   assert.match(workflow, /compact ASCII or text wireframe directly in the conversation/);
   assert.match(workflow, /request HTML alternatives without first selecting a wireframe/);
-  assert.match(workflow, /Selecting a direction does not approve unreviewed screens or establish delivery readiness/);
+  assert.match(workflow, /Selecting a direction does not approve unreviewed screens or establish complete prototype coverage, business acceptance, or delivery readiness/);
   assert.match(workflow, /Actual screenshot files belong in the consumer project's existing allowed artifact location/);
   assert.doesNotMatch(workflow, /Playwright|Chrome|ShowMe|Figma/);
   assert.match(workflow, /Comprehension:/);
@@ -136,7 +136,7 @@ test("instruction contract: active alternatives stay comparable while retained s
   const parity = workflow.split("### Keep Active Alternatives Comparable\n")[1]?.split("\n## ")[0] || "";
   assert.match(workflow, /an \*\*active alternative\*\* is a candidate the user is still comparing/);
   assert.match(workflow, /a \*\*retained snapshot\*\* is an unselected candidate kept for reference and no longer compared/);
-  assert.match(workflow, /The newest or most complete file, or a recommendation the user has not accepted, selects nothing/);
+  assert.match(workflow, /The newest or most complete file, a candidate updated alone for a demonstration, or a recommendation the user has not accepted selects nothing/);
   assert.match(workflow, /A historical selection whose origin cannot be established keeps its record but is never treated as the user's choice/);
   assert.match(parity, /An authorized feature update or synchronization pass covers every active alternative within the agreed comparison scope/);
   assert.match(parity, /A request that names particular alternatives covers only those; while a standing parity instruction applies, a request narrows the pass only when it explicitly limits this pass/);
@@ -151,8 +151,8 @@ test("instruction contract: active alternatives stay comparable while retained s
   assert.doesNotMatch(parity, /while any active alternative remains unfinished|already covers every active alternative/);
   assert.match(parity, /Sharing prototype logic across alternatives is an implementation option, not a required architecture/);
   assert.match(parity, /comparing an initial bounded journey never requires full-application coverage, and recording pending work edits no candidate/);
-  assert.match(parity, /A \*\*standing parity instruction\*\* is the user's instruction, given before or after a selection, to keep several alternatives maintained; it keeps them active after a selection until the user changes it/);
-  assert.match(parity, /unless a standing parity instruction keeps them active\. Move each parity gap recorded in the selected candidate's own row into a pending journey row, so it holds that target's readiness until synchronized/);
+  assert.match(parity, /A \*\*standing parity instruction\*\* is the user's instruction that explicitly requires alternatives to stay compared or maintained after a selection, whether given before or after it; it keeps the alternatives it names active until the user changes it/);
+  assert.match(parity, /unless a standing parity instruction keeps them active; keep that instruction recorded with its source\. Move each parity gap recorded in the selected candidate's own row into a pending journey row, so it holds that target's readiness until synchronized/);
   assert.match(parity, /Reuse the recorded set of active alternatives instead of asking again how many to maintain/);
   assert.match(parity, /When the record cannot establish a candidate's role, such as a selection of unknown origin or a candidate labelled retained with no evidence that the user set it aside, and the answer changes which alternatives the current pass updates, ask the user once, record the answer/);
   assert.doesNotMatch(parity, /\bStage\s+\d|\btickets?\b|\bBuild Unit\b/i);
@@ -163,9 +163,49 @@ test("instruction contract: active alternatives stay comparable while retained s
   assert.match(integration, /in each active alternative the pass covers, at coherent journey boundaries/);
   assert.match(workflow, /and each \[active alternative the pass covers\]\(#keep-active-alternatives-comparable\)/);
   assert.match(specification, /\*\*Active comparison:\*\*/);
-  assert.match(specification, /Note any standing parity instruction, given before or after selection, with its source/);
+  assert.match(specification, /Note any standing parity instruction, one that explicitly continues comparison after selection whether given before or after it, with its source/);
   assert.match(workflow, /any alternative a \[standing parity instruction\]\(#keep-active-alternatives-comparable\) for full functional parity keeps active/);
   assert.match(specification, /Active alternative \/ selected target \/ retained snapshot/);
+});
+
+test("instruction contract: an explicit selection ends exploration parity and needs no selection ticket", () => {
+  const skill = read("SKILL.md");
+  const workflow = read("references/ui-ux/design-workflow.md");
+  const integration = read("references/ui-ux-design.md");
+  const tickets = read("references/implementation-detail-tickets.md");
+  const specification = read("references/ui-ux/templates/specification.md");
+  const parity = workflow.split("### Keep Active Alternatives Comparable\n")[1]?.split("\n## ")[0] || "";
+  // Comparison then choosing A: A alone is maintained; an exploration-time parity request does not outlive the choice.
+  assert.match(parity, /An instruction to keep alternatives comparable while exploring, including full functional parity, governs the comparison only and ends with the selection/);
+  assert.match(parity, /After a selection the user made or delegated, the selected candidate is the sole maintained target/);
+  assert.match(skill, /After an explicit selection it is the sole maintained target unless the user explicitly keeps other alternatives in comparison/);
+  assert.match(integration, /after selection the selected candidate is the sole maintained target unless a standing parity instruction explicitly keeps others active/);
+  assert.match(specification, /keeping alternatives comparable while exploring ends at selection/);
+  // Explicit continued comparison after selection keeps the named alternatives active.
+  assert.match(parity, /explicitly requires alternatives to stay compared or maintained after a selection, whether given before or after it; it keeps the alternatives it names active/);
+  // Retained snapshots are preserved untouched as historical references.
+  assert.match(parity, /Keep each snapshot's existing files as a historical reference, and do not update, review, redesign, or delete it unless the user asks/);
+  assert.match(parity, /without presenting it as current or implementation-ready/);
+  assert.match(parity, /Shared resources may stay shared; do not duplicate code only to freeze a snapshot's appearance/);
+  assert.match(specification, /retained snapshot \(historical reference, not current\)/);
+  // Updating only A for a demonstration selects nothing and retires nothing.
+  assert.match(workflow, /a candidate updated alone for a demonstration, or a recommendation the user has not accepted selects nothing/);
+  assert.match(parity, /Narrowing a pass to named alternatives selects none of them, leaves every other candidate's role and pending work unchanged/);
+  // A recorded choice is neither asked again nor turned into a selection-only ticket.
+  assert.match(workflow, /Reuse a clearly recorded selection instead of asking the user to choose again/);
+  assert.match(integration, /An already supplied selection needs no implementation-detail ticket of its own, and a clearly recorded one is not asked again/);
+  assert.match(tickets, /A prototype selection the user already supplied is recorded in the UI\/UX specification, not in a ticket of its own/);
+  assert.match(tickets, /material product or interaction questions around it follow these rules/);
+  assert.match(skill, /record the selection in the specification without a selection-only ticket, and do not ask for it again/);
+  assert.match(specification, /A supplied selection needs no ticket of its own; when an existing ticket holds it, link that ticket instead of attributing the selection again/);
+  // An existing selection ticket is reconciled in place, without a second record.
+  assert.match(integration, /When an existing ticket already holds the selection, keep that ticket and reconcile its resolution and attribution instead; link it from the specification rather than attributing the selection twice/);
+  assert.match(integration, /Remove a comparison instruction the selection superseded from that current record, keeping unchanged decisions with their attribution under \[Changing A Settled Decision\]\(decision-attribution\.md#changing-a-settled-decision\); version history keeps the earlier wording/);
+  assert.match(integration, /Regenerate the Decision Overview and refresh other affected derived views through their existing mechanisms and authorization; add no other selection record/);
+  // Selection is not approval, coverage, acceptance, or readiness.
+  assert.match(workflow, /does not approve unreviewed screens or establish complete prototype coverage, business acceptance, or delivery readiness/);
+  assert.match(integration, /Selection, approval of covered journeys, completion of required coverage, business acceptance, and delivery readiness are separate claims/);
+  assert.doesNotMatch(parity, /\btickets?\b/i);
 });
 
 test("instruction contract: ordinary selected-prototype updates skip the choice question", () => {

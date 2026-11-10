@@ -28,7 +28,11 @@ Node.js is required for the bundled validators and renderers. The GitHub ticket 
 
 System Guide PDF export also needs a Chromium-based browser; see the bundled [PDF export guide](../../skills/software-design/references/guide-pdf-export.md) for discovery and `--browser`. The package includes its fonts, layout code and their notices.
 
-The complete package at the source revision below has 418 files and 10,944,903 bytes. The Sota Skills Archive marketplace bundled in Hermes image v1.8.0 limits a skill to 250 files and 2 MiB, so it cannot install this version through that marketplace. Its limits belong to the `hermes-harness-ui` plugin in `lag0nia/plugins`; this source sync does not change them. The archive's linked Claude Code/Codex installation and Hermes's image-bundled library are separate distribution paths. Existing marketplace installations are not updated automatically.
+The complete package at the source revision below has 418 files and 11,017,376 bytes. Version 1.3.0 of Sota's `hermes-harness-ui` plugin allows only 4 MiB per skill and 8 MiB per operation, so it cannot install this complete package. The capacity change prepared as [plugin 1.3.1](https://github.com/lag0nia/plugins/pull/19) supports 512 files and 40 MiB per skill, within an 80 MiB operation. It must be delivered on the selected connection separately; publishing this archive copy does not deploy the plugin or update installed skills automatically.
+
+Capacity is not the only installation check. An offline scan of this exact package using the native Hermes scanner pinned at `v2026.9.24` returned `caution`, which the archive's normal community-source policy refuses. The matches include relative paths in references and test evidence, a template HTML comment and evaluation-isolation wording. This source sync preserves the complete upstream package and does not override that policy. Installation through Sota remains unverified until the safety findings and the shared-copy ownership below are resolved through their supported owners.
+
+A copy provided by a shared skill folder is maintained there, and Skills Archive leaves it unchanged. The archive's linked Claude Code/Codex installation and Hermes's image-bundled library are separate distribution paths.
 
 Claude Code, Codex and Hermes load the same SKILL.md and bundled resources. Resolve resource paths relative to the installed skill directory. Existing agents/openai.yaml files are optional Codex UI metadata; other clients use SKILL.md. Installation does not supply missing runtimes or tool capabilities.
 
@@ -38,6 +42,6 @@ Ask the agent to use `software-design` for the task described above. Codex also 
 
 ## Source
 
-Imported byte-for-byte from [Alangr6/ai-prompts](https://github.com/Alangr6/ai-prompts/tree/495d26c275a77df12592fce5a4b0bf998bbccffa/skills/blueprint-development/technical/software-design) at revision `495d26c275a77df12592fce5a4b0bf998bbccffa`. The complete tracked directory is retained, including tests, assets and third-party notices. There are no local adaptations. The repository-level software-design.zip and all legacy skills are excluded.
+Imported byte-for-byte from [Alangr6/ai-prompts](https://github.com/Alangr6/ai-prompts/tree/85c42580b9f48bf49bdcef7edce4b1cb5a08296f/skills/blueprint-development/technical/software-design) at revision `85c42580b9f48bf49bdcef7edce4b1cb5a08296f`. The complete tracked directory is retained, including tests, assets and third-party notices. There are no local adaptations. The repository-level software-design.zip and all legacy skills are excluded.
 
 The upstream repository does not declare a repository-wide license in this revision. This import does not assert a new license for upstream material; preserve any included notices.
