@@ -35,18 +35,18 @@ Keep this to a few concrete sentences or compact entries, not a questionnaire.
 
 ## Prototype Alternatives And Selection
 
-Record one explicit selected candidate entrypoint or `Unresolved`, from the user's own choice or a choice the user delegated, and record where that choice was made; selection does not approve changed behavior or unreviewed journeys.
+Record one explicit selected candidate entrypoint or `Unresolved`, from the user's own choice or a choice the user delegated, and record where that choice was made; selection does not approve changed behavior or unreviewed journeys. A supplied selection needs no ticket of its own; when an existing ticket holds it, link that ticket instead of attributing the selection again.
 
 - **Selected implementation target:** `Unresolved` — select a linked candidate entrypoint after review.
 - **Direction selection:** `Selected — <direction>` / `Unresolved`.
-- **Active comparison:** `<agreed comparison journeys and states> — <active alternatives kept comparable>` / `None — <single candidate, or the selection that ended comparison>`. Note any standing parity instruction, given before or after selection, with its source.
+- **Active comparison:** `<agreed comparison journeys and states> — <active alternatives kept comparable>` / `None — <single candidate, or the selection that ended comparison>`. Note any standing parity instruction, one that explicitly continues comparison after selection whether given before or after it, with its source; keeping alternatives comparable while exploring ends at selection.
 - **Covered-flow approval:** `Approved — <flow and states>` / `Not reviewed` / `Blocked — <finding>`.
 - **Required prototype coverage:** `Complete — <named selected scope>` / `Incomplete — <affected and remaining scope>` / `Not started`. Complete means the candidate illustrates that scope's full approved interface: required journeys and routes, consequential interactions, and materially distinct visible states, including applicable waiting, success, failure, cancellation, and recovery. Equivalent data combinations may share an established pattern. Unanswered material UI decisions or unsynchronized approved changes make the affected scope incomplete.
 - **Review slideshows (optional):** `Not asked` / `Declined` / `Requested — <default or expanded coverage>` / `Skipped — <missing capture capability>`. After a candidate's `slides.html` exists, link it after that candidate's entrypoint in the table below, labelled Slides, and add `partial — <omission>` or `outdated — <limitation>` when applicable. A deck is a derived screenshot aid; it never selects a candidate, approves a flow, or evidences tested interactions.
 
 | Alternative | Bounded comparable coverage | Material presentation or interaction difference | Selection / review status |
 | --- | --- | --- | --- |
-| [Main candidate](./alternatives/main/index.html) | TBD | TBD | Active alternative / selected target / retained snapshot — <coverage limits>; optional date or revision |
+| [Main candidate](./alternatives/main/index.html) | TBD | TBD | Active alternative / selected target / retained snapshot (historical reference, not current) — <coverage limits>; optional date or revision |
 
 ## Product And Demo Boundary
 

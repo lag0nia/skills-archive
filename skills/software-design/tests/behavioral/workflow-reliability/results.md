@@ -84,3 +84,26 @@ The fixes are local wording changes with matching contract assertions. B, D and 
 - Agents were told to read the skill's routing; real runs may load fewer references.
 - Structural tests in `tests/contracts/` guard the written guidance only; they do not show agent behavior.
 - The second round adds the same caveats: one sample per scenario, scenarios written by the author of the change, and G2, G3 and H added in response to observed output or review. Scenarios E–G2 mirror the revised Before Asking example, so they test that wording's application rather than independent transfer.
+
+## Third round: selection lifecycle
+
+On 2026-11-09 the guidance was clarified so that an explicit selection makes the selected candidate the sole maintained target. The changes:
+
+- A parity instruction given while exploring now ends with the selection. A standing parity instruction must explicitly continue comparison after selection.
+- Unselected candidates stay as untouched historical references.
+- An already supplied selection is recorded in the UI/UX specification without a ticket of its own.
+- An existing ticket that holds the selection is reconciled in place.
+
+Fresh agents received [Scenarios I1–I4](inputs.md#third-round-selection-lifecycle), one set with the skill at commit `a5777e3` and one with the revised skill. Each version ran two agents: I1–I3 and I4. Copies were stripped of `tests/`. [Criteria](criteria.md#third-round-criteria-i1i4) were recorded before any output was read. All scenarios are plain-text simulations. Full responses are appended to the [original](original-responses.md#third-round-selection-lifecycle-2026-11-09) and [revised](revised-responses.md#third-round-selection-lifecycle-2026-11-09) response files.
+
+| Case | Original | Revised | Assessment |
+| --- | --- | --- | --- |
+| I1 Parity requested while exploring, then A selected | Updated and verified only `a`. Read "compare them fairly" as ending with the selection, relabelled `b`–`e` retained snapshots and asked nothing. | Same. Cited the rule that a comparison-time instruction ends at selection, and labelled `b`–`e` "historical reference, not current". | Both meet. Not discriminating: the instruction's stated purpose let the original infer its end. |
+| I2 Continued comparison requested at selection | Updated and verified `a`, `b` and `d`. Left `c` and `e` as retained snapshots. | Same. | Both meet. |
+| I3 Only A updated for a demo | Updated and verified only `a`, kept all five active, selected nothing and recorded the gaps in the other rows. Closed with a statement-form offer. | Same. | Both meet. |
+| I4a Selection already supplied, no ticket | Recorded A in the specification as Human-approved · User specified, quoting the user's message. Created no ticket and asked nothing. | Same, citing the no-selection-ticket rule. | Both meet. Already covered by the existing rule against retrospective attribution tickets. |
+| I4b Selection replaces a parity decision in TICKET-0020 | Kept TICKET-0020 and added a selection entry. Kept the parity instruction in the current resolution as past-tense history, kept its attribution entry, and called it a standing parity instruction that had ended. | Kept TICKET-0020. Removed the parity part and its entry, kept the navigation entry unchanged, and added the selection entry. Linked the ticket from the specification without attributing the selection twice. | Original deviates: the superseded instruction stays a current decision, so the Decision Overview would still list it. Revised meets. |
+
+Only I4b separates the versions. I1–I4a show no regression and do not demonstrate improvement there. In I4b, the revised run kept the navigation decision's original wording, "every candidate uses left-hand step navigation". That is correct under preserve-unchanged-decisions, but after the selection a reader may take "every candidate" to include the retained snapshots.
+
+Limits follow the earlier rounds: one sample per version and scenario, from the same model family that wrote the change; scenarios written by the change's author; plain-text simulation only. I1's instruction carried a purpose ("compare them fairly"). A bare "keep all five at the same functionality" with no stated purpose was not tested; under the revised wording it also ends at selection, because it does not explicitly extend past it.

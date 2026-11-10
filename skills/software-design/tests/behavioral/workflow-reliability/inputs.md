@@ -121,3 +121,25 @@ Added after the second independent review. In a ticket session (not a Stage 7 pa
 Agents received Scenarios 1–10 above and a path to their own fixture copy, not this note. `fixture-builder.mjs` (kept with the run notes, outside this skill) builds a format-2 package with an approved brief of three required journeys: (1) work-report validation, where a site manager submits a daily report and an office clerk validates it or returns it with a written reason that the site manager sees before resubmitting; (2) customer invoice issuance, where a clerk previews totals and then issues the invoice, which assigns the next series number, makes it final and makes it available to accounting; (3) the accountant lists issued invoices for a period. Email delivery, invoice layout customisation and credit notes are out of scope.
 
 Responsibilities: `SR-001` Work Reports, `SR-004` Office Workspace (Operations); `SR-002` Invoicing, `SR-003` Accounting Registers (Billing). Flows `FLOW-001` and `FLOW-002` describe the two journeys. `IFACE-001` declares `ACT-001` "Validate or return a work report" (callable; input: report and decision, no reason) and `ACT-002` "Validated quantities for a period". `IFACE-002` declares `ACT-001` "Issued invoice published" (event), `ACT-002` "Invoice simulation" (read, no side effects) and `ACT-003` "Issued invoices for a period". No action submits a report, shows a returned report's reason, or issues an invoice. One ticket, TICKET-0001 (invoice line rounding), is `todo`. The structure and ticket validators pass.
+
+## Third round: selection lifecycle
+
+Added on 2026-11-09 for the selection-lifecycle clarification. Agents received only these scenarios and a skill copy stripped of `tests/`. One set used the skill at commit `a5777e3`, the other the revised skill.
+
+### Scenario I1 — Parity requested while exploring, then a selection
+
+A booking product's specification lists five candidates `a` … `e`. While the user was comparing them, they said (2026-10-01, recorded on the Active comparison line): "Keep all five alternatives at the same functionality; I want to compare them fairly." On 2026-10-08 the user said: "Let's go with A." The specification now records `**Selected implementation target:** \`./alternatives/a/index.html\``, with a `## Decision Attribution` row: "Candidate A is the implementation target | Human-approved · User specified | User (2026-10-08): \"Let's go with A.\"". Rows `b` … `e` were not edited after the selection and still read "Active alternative — kept at parity". TICKET-0012 (recurring weekly bookings) is approved and its canonical owners and specification requirements are updated. The user says: "Add the recurring-booking option and check that it works." Assume `a` passes your rendered checks.
+
+### Scenario I2 — Continued comparison explicitly requested at selection
+
+Same as I1, except that on 2026-10-08 the user said: "Let's go with A, but keep B and D at the same functionality as A; the client still wants to see those two." The specification records that sentence as the selection evidence. The user now says: "Add the recurring-booking option and check that it works." Assume every candidate you update passes your rendered checks.
+
+### Scenario I3 — One candidate updated for a demonstration, no selection
+
+Same five candidates and the same 2026-10-01 parity instruction as I1, but no selection: `**Selected implementation target:** \`Unresolved\``, and every row reads "Active alternative — arrival → availability → create booking → confirmation, plus cancellation and payment failure". TICKET-0012 is approved and its owners are updated. The user says: "Update only A for tomorrow's demo: add the recurring-booking option there and check it." Assume `a` passes your rendered checks.
+
+### Scenario I4 — A selection already supplied, with and without an existing ticket
+
+I4a. Five candidates `a` … `e`; the specification records `**Selected implementation target:** \`Unresolved\`` and every row reads "Active alternative". No ticket concerns the prototype direction. The user says: "I already told you in our call last week: A is the one we're building. Make sure the design package records that properly."
+
+I4b. A different package. Candidates `a` … `e`; the specification records `Unresolved`. TICKET-0020 "Booking prototype direction" is `decided`. Its resolution reads: "Keep candidates A–E at full functional parity until the client review; every candidate uses left-hand step navigation." Its `attribution` has two entries, both `human-approved/user-specified` with the user's words from 2026-10-01: one for keeping A–E at parity until the client review, one for left-hand step navigation. After the client review the user says: "Go with A."
