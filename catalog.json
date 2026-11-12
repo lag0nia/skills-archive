@@ -274,6 +274,46 @@
           "value": "14 Oct 2026 · unchanged"
         }
       ]
+    },
+    {
+      "id": "t3dotgg",
+      "name": "Theo Browne's council skill",
+      "path": "third-party/t3dotgg/",
+      "author": "Theo Browne",
+      "byline": "Theo Browne · tstack",
+      "subtitle": "t3dotgg",
+      "summary": "Cross-provider review: three flagship models from different providers review in rounds until all are satisfied.",
+      "groups": [
+        {
+          "name": "Review",
+          "description": "One skill; needs three providers reachable as subagents.",
+          "skills": [
+            "council"
+          ],
+          "sequence": false
+        }
+      ],
+      "beforeInstalling": [
+        "Needs subagents on three different providers' models (T3 Code's delegate_task, or a harness that runs them). It reports a missing provider instead of substituting one."
+      ],
+      "source": [
+        {
+          "label": "Upstream",
+          "value": "github.com/t3dotgg/tstack"
+        },
+        {
+          "label": "Revision",
+          "value": "11e37a7"
+        },
+        {
+          "label": "License",
+          "value": "MIT · Theo Browne"
+        },
+        {
+          "label": "Archived",
+          "value": "12 Nov 2026 · unchanged"
+        }
+      ]
     }
   ],
   "skills": {
@@ -690,6 +730,22 @@
       "prerequisites": [
         {
           "text": "The REA MCP server and analysis engines, set up separately; installing adds instructions only"
+        }
+      ]
+    },
+    "council": {
+      "collection": "t3dotgg",
+      "name": "Council",
+      "purpose": "Code quality",
+      "summary": "Review by three models from different providers, in rounds until all are satisfied",
+      "icon": "eye",
+      "effect": "Review",
+      "prerequisites": [
+        {
+          "text": "Subagents on three different providers' models"
+        },
+        {
+          "text": "An authenticated gh, for the PR score table"
         }
       ]
     }
