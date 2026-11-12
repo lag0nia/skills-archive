@@ -26,6 +26,8 @@ Agent skills that work in **Claude Code**, **Codex** and **Hermes**. The main co
 
 [Morluto’s REA skill](third-party/morluto/README.md): `reverse-engineer-anything`, investigating shipped artifacts and runtime behavior with REA. The upstream skill, six reference files, and MIT license are preserved; the root installer accepts its name. Using it requires REA tools to be configured separately.
 
+[Theo Browne’s council skill](third-party/t3dotgg/README.md): `council`, cross-provider review by one flagship model from each of three providers, repeated in rounds until all are satisfied. It needs those three providers reachable as subagents (T3 Code’s `delegate_task`, or a harness that runs them); the root installer accepts its name.
+
 ## Install
 
 ### Claude Code + Codex (one command)
