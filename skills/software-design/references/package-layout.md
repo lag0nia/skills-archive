@@ -5,6 +5,7 @@ Read this reference before creating, repairing, or structurally validating a Sof
 ## Contents
 
 - Canonical Layout
+- Workpack Location
 - Ownership And Audience
 - Canonical Terms
 - Conditional Creation
@@ -82,6 +83,10 @@ software-design/
     figures/                          # optional embedded mechanism figures (Hairline)
     assets/                           # explorer.json, graphs.json, manifest, local generator
 ```
+
+## Workpack Location
+
+Workpacks live beside the package, never inside it: `delivery-workpacks/<delivery-slice>/WORKPACK.md` as a sibling of `software-design/`, which is `design/delivery-workpacks/` in the default layout. `<delivery-slice>` is the selected Stage 9 handoff filename without `.md`, so each slice keeps one stable folder. `report-delivery-planning-gaps.mjs` reads this directory by default. [Workpack Planning](workpack-planning.md) owns the workpack's content, refresh, and validation.
 
 ## Ownership And Audience
 

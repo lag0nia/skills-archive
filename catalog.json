@@ -25,10 +25,8 @@
           "name": "Software delivery",
           "description": "From rough requirements to an implemented, verified workpack.",
           "skills": [
-            "software-design-intake",
             "software-design",
-            "delivery-planning",
-            "delivery-workpack-execution"
+            "software-design-execution"
           ],
           "sequence": true
         },
@@ -339,38 +337,22 @@
       "summary": "A branch per feature, small commits, a PR for every change",
       "icon": "git"
     },
-    "software-design-intake": {
-      "collection": "main",
-      "name": "Software design intake",
-      "purpose": "Planning and delivery",
-      "summary": "Turn rough requirements into a reviewed software brief",
-      "icon": "doc",
-      "compare": "software-design"
-    },
     "software-design": {
       "collection": "main",
       "name": "Software design",
       "purpose": "Planning and delivery",
-      "summary": "Design behavior, architecture, UI/UX, contracts and delivery readiness",
+      "summary": "From rough idea to reviewed brief, blueprint and delivery workpack",
       "icon": "map",
-      "compare": "software-design-intake"
+      "compare": "software-design-execution"
     },
-    "delivery-planning": {
+    "software-design-execution": {
       "collection": "main",
-      "name": "Delivery planning",
+      "name": "Software design execution",
       "purpose": "Planning and delivery",
-      "summary": "Turn a ready design handoff into a verifiable delivery workpack",
-      "icon": "route",
-      "compare": "delivery-workpack-execution"
-    },
-    "delivery-workpack-execution": {
-      "collection": "main",
-      "name": "Delivery workpack execution",
-      "purpose": "Planning and delivery",
-      "summary": "Implement and verify a delivery workpack",
+      "summary": "Implement and verify a Software Design delivery workpack",
       "icon": "check",
       "effect": "Changes code",
-      "compare": "delivery-planning"
+      "compare": "software-design"
     },
     "codebase-cleanup": {
       "collection": "main",
@@ -981,47 +963,33 @@
     },
     {
       "skills": [
-        "software-design-intake",
-        "software-design"
+        "software-design",
+        "software-design-execution"
       ],
       "rows": [
         {
           "aspect": "Starts from",
           "values": [
-            "Rough requirements",
-            "A software brief"
+            "Rough requirements, or a reviewed software brief",
+            "A validated delivery workpack"
           ]
         },
         {
           "aspect": "Produces",
           "values": [
-            "A reviewed software brief",
-            "Behavior, architecture, UI/UX and contracts, ready for delivery"
+            "A reviewed brief, the design blueprint, Stage 9 handoffs and delivery workpacks",
+            "Implemented and verified changes with delivery evidence"
+          ]
+        },
+        {
+          "aspect": "Changes code",
+          "values": [
+            "No",
+            "Yes, in the workpack’s target repository"
           ]
         }
-      ]
-    },
-    {
-      "skills": [
-        "delivery-planning",
-        "delivery-workpack-execution"
       ],
-      "rows": [
-        {
-          "aspect": "Starts from",
-          "values": [
-            "A ready design handoff",
-            "A delivery workpack"
-          ]
-        },
-        {
-          "aspect": "Produces",
-          "values": [
-            "A verifiable delivery workpack",
-            "Implemented and verified changes"
-          ]
-        }
-      ]
+      "note": "Execution reruns Software Design’s workpack validator, so install both."
     },
     {
       "skills": [

@@ -51,11 +51,11 @@ test("consumer and operator UI workflow is bounded but covers material experienc
 });
 
 test("Stage 7 establishes a task-led direction before expanding coverage", () => {
-  const skill = read("SKILL.md");
+  const buildDesign = read("references/build-design-and-delivery-readiness.md");
   const ui = read("references/ui-ux-design.md");
   const workflow = read("references/ui-ux/design-workflow.md");
   const staged = read("references/staged-design-workflow.md");
-  assert.match(skill, /selective routes into the portable design module/);
+  assert.match(buildDesign, /selective routes into the portable design module/);
   assert.match(ui, /arrival → task discovery → meaningful action → persistent result/);
   assert.match(workflow, /intended user who has not read the source material/);
   assert.match(workflow, /Derive navigation from user purposes rather than components, protocol transitions, personas, or coverage inventories/);
@@ -169,7 +169,6 @@ test("instruction contract: active alternatives stay comparable while retained s
 });
 
 test("instruction contract: an explicit selection ends exploration parity and needs no selection ticket", () => {
-  const skill = read("SKILL.md");
   const workflow = read("references/ui-ux/design-workflow.md");
   const integration = read("references/ui-ux-design.md");
   const tickets = read("references/implementation-detail-tickets.md");
@@ -178,7 +177,7 @@ test("instruction contract: an explicit selection ends exploration parity and ne
   // Comparison then choosing A: A alone is maintained; an exploration-time parity request does not outlive the choice.
   assert.match(parity, /An instruction to keep alternatives comparable while exploring, including full functional parity, governs the comparison only and ends with the selection/);
   assert.match(parity, /After a selection the user made or delegated, the selected candidate is the sole maintained target/);
-  assert.match(skill, /After an explicit selection it is the sole maintained target unless the user explicitly keeps other alternatives in comparison/);
+  assert.match(integration, /After an explicit selection it is the sole maintained target unless the user explicitly keeps other alternatives in comparison/);
   assert.match(integration, /after selection the selected candidate is the sole maintained target unless a standing parity instruction explicitly keeps others active/);
   assert.match(specification, /keeping alternatives comparable while exploring ends at selection/);
   // Explicit continued comparison after selection keeps the named alternatives active.
@@ -196,7 +195,7 @@ test("instruction contract: an explicit selection ends exploration parity and ne
   assert.match(integration, /An already supplied selection needs no implementation-detail ticket of its own, and a clearly recorded one is not asked again/);
   assert.match(tickets, /A prototype selection the user already supplied is recorded in the UI\/UX specification, not in a ticket of its own/);
   assert.match(tickets, /material product or interaction questions around it follow these rules/);
-  assert.match(skill, /record the selection in the specification without a selection-only ticket, and do not ask for it again/);
+  assert.match(integration, /record the selection in the specification without a selection-only ticket, and do not ask for it again/);
   assert.match(specification, /A supplied selection needs no ticket of its own; when an existing ticket holds it, link that ticket instead of attributing the selection again/);
   // An existing selection ticket is reconciled in place, without a second record.
   assert.match(integration, /When an existing ticket already holds the selection, keep that ticket and reconcile its resolution and attribution instead; link it from the specification rather than attributing the selection twice/);
@@ -223,7 +222,6 @@ test("instruction contract: selected prototype completeness is scoped and synchr
   const workflow = read("references/ui-ux/design-workflow.md");
   const specification = read("references/ui-ux/templates/specification.md");
   const handoff = read("assets/templates/build/delivery-planning-handoff.md");
-  const execution = fs.readFileSync(path.resolve(skillRoot, "../../delivery/delivery-workpack-execution/SKILL.md"), "utf8");
   assert.match(workflow, /required prototype coverage complete.*names its selected scope/);
   assert.match(ui, /full approved interface in that scope/);
   assert.match(specification, /Complete — <named selected scope>/);
@@ -231,7 +229,6 @@ test("instruction contract: selected prototype completeness is scoped and synchr
   assert.match(ui, /pending entries as leads.*empty pending list does not prove freshness/s);
   assert.match(workflow, /without automatically editing or rendering/);
   assert.match(ui, /Equivalent data combinations may share one established pattern/);
-  assert.match(execution, /missing materially different route, screen, state, or interaction makes the selected delivery scope incomplete/);
 });
 
 // Guidance and starter checks only: opening the launcher from disk in a browser is the portability proof.
@@ -589,7 +586,6 @@ function linkDeck(root, { specification = true, launcher = true } = {}) {
 test("instruction contract: review slideshows are optional, preference-reusing, and capability-gated", () => {
   const workflow = read("references/ui-ux/design-workflow.md");
   const integration = read("references/ui-ux-design.md");
-  const skill = read("SKILL.md");
   const specification = read("references/ui-ux/templates/specification.md");
   const choice = workflow.split("### Choose Prototype Count And Directions\n")[1]?.split("\n## ")[0] || "";
   const slides = workflow.split("## Optional Review Slideshows\n")[1]?.split("\n## ")[0] || "";
@@ -632,7 +628,7 @@ test("instruction contract: review slideshows are optional, preference-reusing, 
   assert.match(integration, /The one permitted derived export is the optional per-candidate `slides\.html`/);
   assert.match(integration, /slides never substitute for this inspection/);
   assert.match(integration, /The helper is a convenience, not a requirement/);
-  assert.match(skill, /produced only after opt-in/);
+  assert.match(integration, /produced only after opt-in/);
   assert.match(specification, /\*\*Review slideshows \(optional\):\*\*/);
   assert.match(specification, /never as a pending row/);
 });

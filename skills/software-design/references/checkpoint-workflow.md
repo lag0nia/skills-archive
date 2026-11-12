@@ -7,6 +7,7 @@ Read this reference before presenting a Software Design write checkpoint, interp
 - Checkpoint Rule
 - Active Section Passes
 - Approval Semantics
+- Consequential Ambiguity
 - Before Asking
 - Correction Handling
 - Upstream Repair Handling
@@ -19,7 +20,7 @@ Every stage requires a checkpoint before writing. Never write the whole package 
 Each stage follows this rhythm:
 
 1. Read the software brief and any approved earlier package files needed for this stage.
-2. Re-check mechanism trace and registers from the brief when present.
+2. Re-check the brief's mechanism trace and registers, defined in [mechanism-registers.md](mechanism-registers.md), when present.
 3. Show a stage interpretation checkpoint.
 4. Wait for explicit approval.
 5. Write only the files for that stage.
@@ -41,7 +42,7 @@ Reuse explicit approval already given for the requested change; these repair che
 
 ### Approval Semantics
 
-Use direct approval prompts. The single word `approve` is enough only when the current message is a stage checkpoint, package setup checkpoint, or repair checkpoint.
+Use direct approval prompts. The single word `approve` is enough only when the current message is a stage checkpoint, package setup checkpoint, repair checkpoint, or [brief write preview](brief-intake.md#write-gate-and-preview).
 
 If the user says `yes`, `correct`, or provides corrections, update the checkpoint interpretation. Do not write files unless approval to write the current stage is clear.
 
@@ -50,6 +51,14 @@ Do not ask the user to approve preparing another checkpoint. Checkpoints are int
 After a non-writing setup checkpoint is approved or corrected and no blockers remain, immediately show the next write-stage checkpoint in the same response when possible. The next user `approve` should write that stage.
 
 These rules decide when files may be written. Whether the user personally approved a particular choice is read separately, from the exchange and the choice actually presented, and recorded as its attribution under [Interpreting Approval](decision-attribution.md#interpreting-approval). A stage approval approves the consequential choices that checkpoint clearly presented; choices made afterward while writing the stage are Agent-chosen.
+
+## Consequential Ambiguity
+
+During design discussion, test terms, relationships, transitions, and rules for plausible interpretations that would materially change behavior, ownership, state, contracts, or a design decision. Investigate them under [Before Asking](#before-asking) before putting any question to the user. Code shows current behavior, not necessarily approved intent; identify a material unresolved conflict rather than silently letting either stale prose or code override approved truth. Harmless wording differences do not warrant questions or tickets.
+
+When a choice remains, use a concrete scenario if it exposes different outcomes: name the actor, objects, starting state, and action, then show what each interpretation permits or prevents. For example, an order has three items, one shipped: can the customer cancel the other two, or does any shipment prevent all cancellation? This distinguishes item-level eligibility from an order-wide cutoff; “What are cancellation semantics?” does not. Keep illustrative facts and hypothetical edge cases separate from approved requirements, and explore only distinctions consequential to the current scope.
+
+Ask a focused question with understandable alternatives and explicit consequences. Distinguish necessary consequences from possible downstream effects; label the latter as conditional rather than inventing a policy or transition. Recommend an answer when evidence supports it, stating the rationale and assumptions; do not manufacture certainty when evidence is insufficient or present a recommendation as approved. Keep unresolved choices visible under existing ticket and checkpoint rules. Record approved meaning in its existing canonical owner and reconcile affected questions through [Ticket And Canonical Owner Synchronization](implementation-detail-tickets.md#ticket-and-canonical-owner-synchronization), preserving authorization and manual prototype synchronization. Do not add a glossary, decision registry, questionnaire, or approval stage.
 
 ## Before Asking
 
@@ -110,6 +119,8 @@ After the authorized repair is written and its affected reconciliation is checke
 After an authorized repair, resume the affected pass without repeating approval when its scope remains covered.
 
 ## Checkpoint Content
+
+Intake checkpoints are a declared exception: they use the eight-part [Checkpoint Order](brief-intake-review.md#checkpoint-order) in place of the `Proposed Change`, `Route`, and `Expected Recording Plan` blocks and the item list below; the other rules in this section apply to them too.
 
 For any non-trivial proposed behavior, contract, invariant, decision, or repair, show a `Proposed Change` before asking for approval. It must explain the current gap; the concrete proposed model and material rules, records, identifiers, transitions, or rejection behavior; what becomes true across the system; what remains unchanged; affected System Responsibilities, flows, and correctness obligations; the classification (`Software Design repair`, `Build Design selection`, `Product decision`, or `Reversible local choice`) and why; and any unresolved user decision.
 

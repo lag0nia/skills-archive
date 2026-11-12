@@ -22,6 +22,7 @@ import { findTechnicalConstraintRecords } from "../model/technical-constraint-re
 import { deliverySnapshotErrors } from "../delivery-snapshot.mjs";
 import { validateRepositoryTicketMappings } from "../../validate-implementation-detail-tickets.mjs";
 import { validateHandoffSequence, validatePlannableHandoff } from "./handoff-sequence.mjs";
+import { escapeRegExp as escape, evidenceClassValues, matchedIds as ids } from "../model/markdown.mjs";
 
 const READINESS = new Set(["READY", "PARTIAL", "BLOCKED"]);
 const OUTCOMES = new Set([
@@ -248,16 +249,8 @@ const CONSTRAINT_PATTERN = /CONS-\d{3,}/g;
 const PRE_MAPPING_DISPOSITION = /^Realization mapping has not started\.?$/i;
 const UI_UX_APPLICABILITY = new Set(["applicable", "not-applicable"]);
 
-function escape(value) {
-  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
-
 function field(block, name) {
   return new RegExp("^\\*\\*" + escape(name) + ":\\*\\*\\s*(.+)$", "m").exec(block)?.[1]?.trim() || null;
-}
-
-function ids(text, pattern) {
-  return [...String(text || "").matchAll(pattern)].map((match) => match[0]);
 }
 
 function buildUnitScopes(text) {
@@ -904,10 +897,6 @@ function existingLocalLinks(value, baseDir) {
 
 function interactionBindingBody(unit) {
   return unit ? buildUnitSectionBody(unit.content, "Material Interaction Bindings") : null;
-}
-
-function evidenceClassValues(value) {
-  return [...String(value || "").matchAll(/`([a-z-]+)`/g)].map((match) => match[1]);
 }
 
 function statusWithDetail(value, allowed) {

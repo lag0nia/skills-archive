@@ -24,6 +24,7 @@ Every canonical record must:
 - declare relationships in frontmatter rather than making an agent infer them from prose;
 - state positive ownership and explicit exclusions;
 - link exact canonical owners instead of repeating their detail;
+- preserve external authority and source attribution when applicable;
 - use predictable required sections and `None.` only when the absence is meaningful;
 - keep rationale short and place durable rules in their exact contract owner; and
 - leave the reader-facing narrative to the [System Guide](system-guide.md) and route exhaustive rules to their exact owners.

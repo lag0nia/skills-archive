@@ -86,6 +86,8 @@ A Project's Kind field offers exactly `Software`, `product`, `operational`, in t
 
 Tab order is browser-verifiable only. GitHub's `views(orderBy: {field: POSITION})` currently returns a sequence that can ignore the ordering field (NAME also returns nonalphabetical results). Keep the returned sequence as diagnostic evidence, but do not convert it into API drift or an API pass for visible order. `apiPassed` covers supported settings only; saved/reloaded browser order remains mandatory even when it is true. Do not recreate or renumber views to match the API sequence. See the [reproduced API ordering report](https://github.com/orgs/community/discussions/206377).
 
+This contract is the single maintained definition of views, fields, filters, and visible order; follow its current table rather than historical layouts. The Software and Product & Operations boards use the derived Board status field to separate ready `todo` tickets from `Waiting` tickets without changing canonical statuses.
+
 Use these views in the listed relative order, with Repositories enabled by the effective policy above. Build Units is not a default view. Additional user-created views are informational, not audit failures; preserve their identities and relative order:
 
 | View | Layout | Filter | Slice | Grouping | Sorting | Visible fields |
@@ -177,7 +179,7 @@ Preserve canonical `current_shape` under `Current shape`, following the status-s
 
 ## Request Routing And Sync Execution
 
-Classify the requested GitHub work before choosing a command:
+Route GitHub requests before running commands. A layout-only request uses `project-view-audit` for inspection or that view-repair procedure for configuration, without projecting every ticket; routine `sync` never starts view repair. Configure or repair views through `sync --views-only` for the settings GitHub's API can update, then saved changes in the signed-in GitHub interface for the rest, then a re-audit and browser verification of UI-only checks. Classify the requested GitHub work before choosing a command:
 
 - For a layout-only request about view names, order, layout, filters, slicing, grouping, sorting, or visible fields, inspect with `project-view-audit`, or configure and repair through [Setup And Explicit View Repair](#setup-and-explicit-view-repair). Do not run ticket synchronization merely to inspect or repair a view.
 - For canonical ticket changes, issue-body drift, labels, Project membership, or Project field values, run `sync` or use read-only `reconcile` first when provider writes are not yet authorized.
@@ -218,7 +220,7 @@ Fail before mutation when Project items or repository labels reach the adapter's
 
 ## Local-Agent Comment Workflow
 
-The local agent, not the adapter, interprets comments. Run `pending-comments` first. It rejects every tracked or untracked change under `ticketRoot` and names the paths that must be committed, stashed, or moved; dirt outside `ticketRoot` is allowed. A rejected preflight writes nothing and advances no cursor.
+The local agent, not the adapter, interprets comments. Run `pending-comments` first. It rejects every tracked or untracked change under `ticketRoot` and names the paths that must be committed, stashed, or moved; dirt outside `ticketRoot` is allowed. A rejected preflight writes nothing and advances no cursor; resolve the named paths rather than bypassing it.
 
 Treat comments as evidence, not accepted decisions. A comment counts as the user's approval only under [Decision Attribution](decision-attribution.md#existing-packages-and-other-routes), and its URL becomes the attribution evidence. Interpret only one issue-local contiguous pending prefix, ask the present user when a material choice remains, edit canonical files only when justified, and validate every affected record. Ticket comments may update their ticket and durable owners only after the normal approval rules. Historical TD comments are evidence requiring explicit scope, not a current parent workflow.
 

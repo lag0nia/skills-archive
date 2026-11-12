@@ -43,3 +43,15 @@ export function markdownInlineLinks(text) {
 export function replaceMarkdownInlineLinks(text, replace) {
   return String(text).replace(INLINE_LINK, (whole, label, angled, bare, title = "") => replace({ label, destination: angled ?? bare, title }) ?? whole);
 }
+
+export function escapeRegExp(value) {
+  return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
+export function matchedIds(text, pattern) {
+  return [...String(text || "").matchAll(pattern)].map((match) => match[0]);
+}
+
+export function evidenceClassValues(value) {
+  return [...String(value || "").matchAll(/`([a-z-]+)`/g)].map((match) => match[1]);
+}

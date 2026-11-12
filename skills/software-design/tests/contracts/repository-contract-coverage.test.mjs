@@ -11,7 +11,6 @@ function read(relativePath) {
 }
 
 test("repository discovery requires all three contract coverage lanes", () => {
-  const skill = read("SKILL.md");
   const mode = read("references/build-design-and-delivery-readiness.md");
   const tickets = read("references/implementation-detail-tickets.md");
   const guidanceTemplate = read("assets/templates/build/repository-agent-guidance.md");
@@ -21,15 +20,14 @@ test("repository discovery requires all three contract coverage lanes", () => {
     "code-construction-public-api",
     "maintainability-agent-guidance",
   ]) {
-    assert.match(skill, new RegExp(lane));
     assert.match(mode, new RegExp(lane));
     assert.match(tickets, new RegExp(lane));
   }
 
   assert.match(mode, /repository_contract_area/);
   assert.match(mode, /AGENTS\.md/);
-  assert.match(skill, /stop readiness until its outcome is reflected in the Repository Build Design/);
-  assert.match(skill, /never present `maintainability-agent-guidance-baseline` as an opaque answer/i);
+  assert.match(mode, /stop readiness until its outcome is reflected in the Repository Build Design/);
+  assert.match(mode, /never present `maintainability-agent-guidance-baseline` as an opaque answer/i);
   assert.match(mode, /answerable decision packet/);
   assert.match(tickets, /numbered proposed rules/);
   for (const area of [
@@ -40,7 +38,6 @@ test("repository discovery requires all three contract coverage lanes", () => {
     "stop\/escalate conditions",
     "verification (?:plus|and) final-diff review",
   ]) {
-    assert.match(skill, new RegExp(area));
     assert.match(mode, new RegExp(area));
     assert.match(tickets, new RegExp(area));
   }
@@ -62,13 +59,12 @@ test("maintainability baseline preserves rationale and derived-agent guidance ru
 });
 
 test("complete repository discovery requires a version-control and generated-file policy", () => {
-  const skill = read("SKILL.md");
   const mode = read("references/build-design-and-delivery-readiness.md");
   const tickets = read("references/implementation-detail-tickets.md");
   const repositoryTemplate = read("assets/templates/build/repository-build-design.md");
   const validator = read("scripts/lib/validation/build-design-and-delivery-readiness.mjs");
 
-  for (const source of [skill, mode, tickets, repositoryTemplate, validator]) {
+  for (const source of [mode, tickets, repositoryTemplate, validator]) {
     assert.match(source, /Version-Control And Generated-File Policy|version-control (?:and generated-file )?policy/i);
   }
   for (const field of [
@@ -94,14 +90,13 @@ test("Build Design treats AGENTS guidance as a derived contract, not architectur
 });
 
 test("canonical build records add readable openings without replacing exact construction contracts", () => {
-  const skill = read("SKILL.md");
   const mode = read("references/build-design-and-delivery-readiness.md");
   const buildReadme = read("assets/templates/build/README.md");
   const unitTemplate = read("assets/templates/build/build-unit.md");
   const repositoryTemplate = read("assets/templates/build/repository-build-design.md");
   const validator = read("scripts/lib/validation/build-design-and-delivery-readiness.mjs");
 
-  for (const source of [skill, mode]) {
+  for (const source of [mode]) {
     assert.match(source, /dual-audience canonical construction records|both readers and agents/i);
     assert.match(source, /Never (?:trade construction precision|remove, merge, shorten, or replace)/i);
   }
@@ -148,13 +143,12 @@ test("canonical build records add readable openings without replacing exact cons
 });
 
 test("canonical build README is the detailed whole-construction guide without another summary surface", () => {
-  const skill = read("SKILL.md");
   const mode = read("references/build-design-and-delivery-readiness.md");
   const layout = read("references/package-layout.md");
   const buildReadme = read("assets/templates/build/README.md");
   const validator = read("scripts/lib/validation/build-design-and-delivery-readiness.mjs");
 
-  for (const source of [skill, mode, buildReadme, validator]) {
+  for (const source of [mode, buildReadme, validator]) {
     assert.match(source, /Construction At A Glance|whole-construction reading surface/);
   }
   assert.match(mode, /do not impose a one-sentence limit/i);
@@ -172,13 +166,12 @@ test("canonical build README is the detailed whole-construction guide without an
 });
 
 test("reader-facing Build Design prose is name-led while canonical IDs remain available", () => {
-  const skill = read("SKILL.md");
   const mode = read("references/build-design-and-delivery-readiness.md");
   const buildReadme = read("assets/templates/build/README.md");
   const unitTemplate = read("assets/templates/build/build-unit.md");
   const repositoryTemplate = read("assets/templates/build/repository-build-design.md");
 
-  for (const source of [skill, mode, buildReadme, unitTemplate, repositoryTemplate]) {
+  for (const source of [mode, buildReadme, unitTemplate, repositoryTemplate]) {
     assert.match(source, /use (?:Repository and Build Unit )?names/i);
     assert.match(source, /first cross-record mention/i);
     assert.match(source, /identifier in parentheses|ID in parentheses|identifier in parentheses/i);
@@ -189,7 +182,7 @@ test("reader-facing Build Design prose is name-led while canonical IDs remain av
 });
 
 test("material interactions close from logical contract through consumer fitness", () => {
-  const skill = read("SKILL.md");
+  const staged = read("references/staged-design-workflow.md");
   const systemModel = read("references/system-model-format.md");
   const inventory = read("references/ticket-inventory-mode.md");
   const readiness = read("references/build-design-and-delivery-readiness.md");
@@ -199,9 +192,9 @@ test("material interactions close from logical contract through consumer fitness
   const structureValidator = read("scripts/validate-software-design-structure.mjs");
   const readinessValidator = read("scripts/lib/validation/build-design-and-delivery-readiness.mjs");
 
-  for (const source of [skill, systemModel, interfaceTemplate]) assert.match(source, /IFACE-xxx\.ACT-NNN|ACT-NNN/);
-  for (const source of [skill, readiness, unitTemplate, readinessValidator]) assert.match(source, /Material Interaction Bindings/);
-  for (const source of [skill, readiness, handoffTemplate, readinessValidator]) assert.match(source, /Required Interaction Closure/);
+  for (const source of [staged, systemModel, interfaceTemplate]) assert.match(source, /IFACE-xxx\.ACT-NNN|ACT-NNN/);
+  for (const source of [staged, readiness, unitTemplate, readinessValidator]) assert.match(source, /Material Interaction Bindings/);
+  for (const source of [staged, readiness, handoffTemplate, readinessValidator]) assert.match(source, /Required Interaction Closure/);
   for (const evidenceClass of [
     "existence",
     "identity-freshness",

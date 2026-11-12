@@ -12,4 +12,4 @@ Use this route only when real historical execution evidence exists but its exact
 
 If a genuine matching receipt is recovered, use the ordinary lineage/classification path. If current readiness fails or authorization is absent, preserve the records and report the blocker; do not overwrite the stable workpack or bypass validation.
 
-A known newer unexecuted plan is not unknown historical lineage. Compare the prior report with its recoverable implemented workpack and exact summary; keep the current plan and prior receipt distinct. See [planning-execution-contract.md](planning-execution-contract.md).
+A known newer unexecuted plan is not unknown historical lineage. Compare the prior report with its recoverable implemented workpack and exact summary; keep the current plan and prior receipt distinct.

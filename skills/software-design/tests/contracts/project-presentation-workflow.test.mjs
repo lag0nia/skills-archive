@@ -74,8 +74,8 @@ test("documented view-repair outcomes match the CLI exit statuses", () => {
 
 test("skill routing sends view configuration to the repair procedure, never to routine ticket sync", () => {
   assert.match(skill, /configure or repair GitHub Project views[^\n]*\[references\/ticket-projection\.md\]/);
-  assert.match(skill, /`sync --views-only` for the settings GitHub's API can update, then saved changes in the signed-in GitHub interface for the rest, then a re-audit/);
-  assert.match(skill, /A layout-only request uses `project-view-audit` for inspection or that view-repair procedure for configuration, without projecting every ticket; routine `sync` never starts view repair/);
+  assert.match(reference, /`sync --views-only` for the settings GitHub's API can update, then saved changes in the signed-in GitHub interface for the rest, then a re-audit/);
+  assert.match(reference, /A layout-only request uses `project-view-audit` for inspection or that view-repair procedure for configuration, without projecting every ticket; routine `sync` never starts view repair/);
 });
 
 test("projection instructions follow the current ticket format and route retired formats to their rejection", () => {
