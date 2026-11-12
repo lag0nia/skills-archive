@@ -22,7 +22,7 @@ Create one ticket for each material, independently answerable implementation-det
 
 The ticket owns workflow state, the concise question, the resolution summary and its attribution, dependencies, links to every write target, and—after Build Design exists—affected Build Units. Canonical behavior remains in the approved architecture, Domain, System Responsibility, flow, contract, Technical Constraint, Build Unit record, or other durable owner. A ticket may summarize that truth but must not become a competing system specification. Domain and architecture explanations carry source-backed rationale at the appropriate scope; exact behavior stays with its authoritative owner.
 
-Apply the entrypoint's Consequential Ambiguity guidance before authoring the question. Make each ticket understandable without chat history: use `context` for the relevant approved meaning and remaining uncertainty, `question` for the actual choice, `options` for alternatives with practical consequences, and `recommendation` for supported advice with rationale and assumptions. Put a scenario in `context`, `question`, or beside its option only when its different outcomes reveal the decision; do not add schema fields or make examples mandatory. A label such as “partial cancellation” is insufficient when readers cannot tell which objects remain cancellable. Keep enough local explanation to understand the choice while linking canonical sources for the full specification. Recheck that an option does not contradict an already approved rule.
+Apply [Consequential Ambiguity](checkpoint-workflow.md#consequential-ambiguity) before authoring the question. Make each ticket understandable without chat history: use `context` for the relevant approved meaning and remaining uncertainty, `question` for the actual choice, `options` for alternatives with practical consequences, and `recommendation` for supported advice with rationale and assumptions. Put a scenario in `context`, `question`, or beside its option only when its different outcomes reveal the decision; do not add schema fields or make examples mandatory. A label such as “partial cancellation” is insufficient when readers cannot tell which objects remain cancellable. Keep enough local explanation to understand the choice while linking canonical sources for the full specification. Recheck that an option does not contradict an already approved rule.
 
 For a consequential question, use the existing `context` to identify the immediate participants, how they interact, and the outcome the choice affects when these are not already clear. Introduce an unfamiliar mechanism or term before the question or alternatives rely on it; define it through its role in this system, not an unrelated glossary. Keep the question itself focused on the missing choice. Explanation order is not a decision prerequisite and must not create `depends_on` edges. Simple, familiar choices may need only a sentence; neither diagrams nor scenarios are mandatory.
 
@@ -238,6 +238,24 @@ After a System Responsibility or named section has an approved high-level shape:
 When a ticket qualifies for `current_shape`, derive it only after the normal record and its canonical sources are accurate. Review or remove it whenever those sources change; visual presentation is never evidence that the ticket or backlog is complete.
 
 This ticket update is workflow recording inside an already approved active pass. It does not require a new checkpoint for every status change. A new checkpoint is still required when the proposed answer expands scope or changes a material authority, safety, product, or source-truth boundary outside the active pass.
+
+### Batch Ticket Question Sets
+
+When continuing a build unit or backlog, work through tickets one at a time; for the active ticket, present all its known material questions together. Give every question its own concise status line in this exact shape:
+
+```text
+TICKET-0042 · Q4/6 · Retry policy and failure evidence
+```
+
+The line names the ticket ID, question number, planned total questions, and a short label. A batch is not a compressed checklist: each question must retain the full one-question style—enough context to understand the decision, the actual choice, a clear recommendation and why, material consequences or alternatives where useful, and supporting sources when research was used. Never shorten a question merely because several questions are shown together. Do not manufacture extra questions for formatting or reversible local discretion.
+
+Present the ticket’s existing context before a question that depends on it, following [the ticket explanation guidance](#purpose-and-ownership). Reuse context already established in the live discussion, explain only unfamiliar concepts needed for the choice, and preserve the canonical meaning when adapting the wording to the user. A simple question should remain brief.
+
+The user may answer any subset directly (for example, `Q1 yes; Q2 explain; Q3 yes`). Record resolved answers, then discuss only the questions the user asks about; do not repeat or compress the whole batch in response. If the user explicitly asks to proceed one question at a time, follow that preference for the ticket instead.
+
+The total is a plan, not a false guarantee. If a genuinely material new decision is discovered, state the replan explicitly before continuing, for example `TICKET-0042 · replanned Q4/6 → Q4/7`, then use the new total. Never change the denominator silently. When all planned questions are resolved, say `✓ TICKET-0042 complete · 6/6 questions resolved`; when starting the next ticket, say `▶ TICKET-0043 · Q1/5 · Artifact publication binding`.
+
+Use this convention only while the live ticket-question interview is in progress. Do not use it in ordinary design discussion, clarifications outside that interview, commentary progress updates, validation results, GitHub synchronization messages, or unrelated work.
 
 ## Related Questions And Archived Records
 

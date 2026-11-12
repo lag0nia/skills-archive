@@ -69,6 +69,6 @@ test("journey-operation discovery starts from requirements and Stage 9 consumes 
   assert.match(staged, /return partial when material findings remain undispositioned or a contract gap found remains unrepaired/);
   assert.match(inventoryMode, /every contract gap found there is repaired;/);
   assert.match(format, /do not infer that a command surface also provides a read surface, or that a published event, projection, or simulation implies the command that initiates it/);
-  assert.match(skill, /also run the journey-operation census there/);
+  assert.match(staged, /also run the journey-operation census there/);
   assert.match(buildDesignMode, /An operation with neither blocks the affected slice and routes as the \[journey-operation census\]\(ticket-inventory-mode\.md#reverse-challenge-pass\) does/);
 });

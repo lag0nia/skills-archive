@@ -10,15 +10,7 @@ Keep executable skill commands in `../scripts/`. Place Node test files in the do
 
 Planning/execution regressions use disposable local fixtures. Explicit `--validation-mode planning|execution` is tested through the relevant CLI/wrapper; omitted mode stays strict. See [planning-execution-contract.md](../references/planning-execution-contract.md) for the additive INPUT/INT, OUTPUT, CAP and review formats. Automated checks establish declared structural invariants, not semantic completeness or observed application execution.
 
-The full new-consumer integration regression uses explicit caller-supplied installed skill directories (no installation discovery or filesystem dependency). To include the complete handoff/workpack/start/completion path, run:
-
-```sh
-DELIVERY_PLANNING_SKILL=<delivery-planning-skill-directory> \
-DELIVERY_EXECUTION_SKILL=<delivery-workpack-execution-skill-directory> \
-node <software-design-skill-directory>/tests/run.mjs
-```
-
-Without those directories only this cross-skill test is skipped; aggregate and new-consumer handoff checks remain local. The fixture observes actual disposable A bytes and an existing-reader probe, but A history and final B completion records are expressly synthetic validator fixtures. No application workpack is implemented and synthetic completion acceptance does not establish real B consumer fitness.
+The new-consumer regression runs locally from handoff to a validated workpack. The fixture observes actual disposable A bytes and an existing-reader probe, but A history and final B completion records are expressly synthetic validator fixtures. No application workpack is implemented and synthetic completion acceptance does not establish real B consumer fitness. The cross-skill path through execution start and delivery evidence is tested outside this portable skill.
 
 System Guide PDF export tests print real PDFs through a local Chromium-based browser found the same way as the exporter (`SOFTWARE_DESIGN_PDF_BROWSER`, the Playwright cache, `PATH` or standard install locations). Without one, only those printing tests are skipped and the report names the reason; argument, dependency-error and freshness checks still run. Printing checks establish text fidelity, fonts, bookmarks, links, header repetition and atomic replacement, not typographic quality; inspect rendered pages for that.
 

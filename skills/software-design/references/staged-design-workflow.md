@@ -63,6 +63,8 @@ Read [implementation-detail-tickets.md](implementation-detail-tickets.md) before
 
 ### 0. Package Confirmation
 
+For ordinary staged creation, read the complete brief before the first checkpoint; it need not follow [the brief template](../assets/templates/software-brief.md). Treat its technical summary, mechanism trace and registers, proposed logical boundaries, main flows, constraints, review points, open design-around items, deferred scope, and final Software Design goal as source truth when present. Carry its assumptions forward as labelled assumptions with their revisit triggers, never as approved behavior, and its other unknowns as [Unknowns](brief-intake.md#unknowns) maps them. Its IDs, such as `INV-001`, are local to the brief and never identify package records.
+
 Confirm:
 
 - the reviewed software brief and canonical destination;
@@ -70,16 +72,17 @@ Confirm:
 - target system scope and important exclusions;
 - the artifact-appropriate target outcome: intended actor or consumer, minimum observable result, and expected entrypoint;
 - for each human-facing surface, intended users, their main tasks, likely prior knowledge, what must be understandable without blueprint context, whether the target is a product, demo, or an explicit combination, and basic UI/UX expectations such as device context, accessibility, information density, and critical trust or recovery needs;
-- every named runtime profile and whether the target-version claim is build compatibility, verification only, runnable use, deployment, or activated operation;
+- every named runtime profile and whether the target-version claim is build compatibility, verification only, runnable use, deployment, or activated operation (one profile may carry several claims);
 - the proposed System Domain and `SR-xxx` identity scheme;
+- the brief's proposed assumptions, for confirmation;
 - optional Stage 8/9 intent, without activating it; and
 - the stage-by-stage approval rhythm.
 
 When source material proposes “components,” preserve their logical meaning as System Responsibilities unless a boundary is actually an independently buildable Build Unit. If the source boundary is ambiguous, stop and resolve it before Stage 1.
 
-Do not require the user to invent a demo for every artifact. For an application or service with a human or operator surface, normally propose at least one non-production runnable outcome unless the approved scope explicitly excludes it. For a CLI, library, SDK, pipeline, or infrastructure target, propose the corresponding invocation, real-consumer, input-to-output, or isolated-provision acceptance outcome. A profile name alone does not state what support means. Handle user-observable scope changes with existing product tickets and user approval inside Software Design; reconcile approved answers into canonical behavior owners. Route implementation/runtime choices to later tickets and Build Design. Do not create a separate maintained outcome manifest: preserve the approved contract through the applicable flows, scope boundaries, tickets, Build Units, and Stage 9 handoff.
+Do not require the user to invent a demo for every artifact. For an application or service with a human or operator surface, normally propose at least one non-production runnable outcome unless the approved scope explicitly excludes it. An explicitly design-only, specification-only, or later-activation scope may choose a narrower outcome; make that exclusion visible rather than assuming it. Establish this outcome for every code-bearing target before using broad completion language. For a CLI, library, SDK, pipeline, or infrastructure target, propose the corresponding invocation, real-consumer, input-to-output, or isolated-provision acceptance outcome. A profile name alone does not state what support means. Handle user-observable scope changes with existing product tickets and user approval inside Software Design; reconcile approved answers into canonical behavior owners. Route implementation/runtime choices to later tickets and Build Design. Do not create a separate maintained outcome manifest: preserve the approved contract through the applicable flows, scope boundaries, tickets, Build Units, and Stage 9 handoff.
 
-Reuse approved upstream UI/UX decisions and link their owner rather than repeating the rationale. Do not require a prototype or a separate UX questionnaire at Stage 0. Ask only material unresolved questions; recommend defaults for reversible details.
+Reuse approved upstream UI/UX decisions and link their owner rather than repeating the rationale. Do not require a prototype or a separate UX questionnaire at Stage 0. Ask only material unresolved questions; recommend defaults for reversible details. When the brief carries `Human-Facing Product Context`, take its items as given and ask only for what the brief template lacks (likely prior knowledge and what must be understandable without blueprint context) and for any item the brief leaves missing or `TBD`.
 
 ### 1. Architecture Foundation
 
@@ -166,7 +169,7 @@ Regenerate and inspect the complete transitions, conditions, failures, recovery,
 
 For human-facing scopes, this stage includes prototype prerequisites, exploration, reconciliation, and completion under [UI/UX Design](ui-ux-design.md). Preserve initial ticket visibility and the independent inventory below; do not wait for a prototype to expose tickets. Earlier bounded sketches are allowed. Establish canonical sources and representative journey prerequisites, explore explicit hypotheses, and reconcile approved findings at coherent journey boundaries through only affected canonical owners and dependencies. Complete agreed reviewed coverage with no unresolved material contradictions or usability blockers before claiming Stage 7 UI completion; that claim does not make the whole application interface final. Name the scope of any selected-prototype completion claim. Non-UI scopes require no prototype.
 
-Reconcile the canonical system model, then the System Guide against its final owners, and run every applicable decision, structure, ticket, and diagram check. When the user wants PDFs, export and inspect them by [guide-pdf-export.md](guide-pdf-export.md). Then complete:
+Reconcile the canonical system model, then the System Guide against its final owners, and run every applicable decision, structure, ticket, and diagram check. Run the inventory-lead report and the counterfactual System Responsibility review from [ticket-inventory-mode.md](ticket-inventory-mode.md), challenge every material `IFACE-xxx.ACT-NNN` from the consumer side, and, because that challenge starts from declared actions, also run the journey-operation census there. When the user wants PDFs, export and inspect them by [guide-pdf-export.md](guide-pdf-export.md). Then complete:
 
 1. **7A — Ticket/owner validation:** every ticket has truthful ownership, canonical write targets, and genuine dependency links.
 2. **7B — Independent discovery:** review every System Responsibility without starting from existing tickets and ask what material choices would still prevent implementation, verification, or the approved target outcome.
@@ -174,6 +177,8 @@ Reconcile the canonical system model, then the System Guide against its final ow
 4. **7D — Snapshot zero-delta:** preserve the initial whole-scope discovery and challenge, then verify repairs through the impact-based follow-up in [ticket-inventory-mode.md](ticket-inventory-mode.md#fixed-point-completion). Trace connected effects across the system; repeat the full review only when concrete evidence shows systemic omissions or unreliable coverage, including a destabilized responsibility/handoff map that invalidates prior coverage. Produce the per-responsibility coverage receipt, retained coverage, affected review scope, and snapshot boundary; return partial when material findings remain undispositioned or a contract gap found remains unrepaired, reporting the exact blocker when missing information or an unresolved decision prevents progress instead of repeating unchanged checks.
 
 Do not declare Stage 7 complete when only 7A is complete or the 7B–7D receipt is absent. Return `TICKET_INVENTORY_PARTIAL`. Report counts by owner/status, overlaps, and unresolved boundary questions.
+
+For a shared producer consumed by several independently delivered first-party Build Units or profiles, close its finite target-version public surface before that producer becomes executable: enumerate the known target-version actions, representations, compatibility rules, and consumer profiles, and finish only tickets capable of changing that surface. Unrelated tickets and unknown future consumers do not block it.
 
 The main Software Design is complete when architecture, Domains, System Responsibilities, flows, lifecycle, contracts, justified visuals, canonical choice rationale and ticket relationships, and ticket inventory are coherent. Remaining `todo`, `deferred`, or `out-of-scope` tickets affect later readiness, not inventory snapshot completion; material contradictions in required UI journeys still prevent Stage 7 UI completion. Do not activate Stage 8 or create a handoff automatically.
 
@@ -211,11 +216,11 @@ For every new or refreshed handoff, materialize `Physical Realizability Closure`
 
 When selected Build Units have structured VO assignments, also materialize `Required Verification Obligation Closure`. Enumerate every distinct selected assignment, route it to the affected Repository Build Design and planned `assurance/coverage.yaml` or exact external evidence owner, and inherit the VO's observation and risk. Planned evidence is allowed before implementation only when its selected owner and route are concrete; unassigned, unmapped, expired-exception, or silently skipped obligations block readiness.
 
-The handoff selects Build Units, not repositories. It routes each selected unit to its Repository Build Design and applicable constraints. A partial-repository slice names omitted Build Units and their disposition. If blocked, report the exact blockers and leave the handoff absent. Otherwise create one compact versioned current `build/workflow/handoffs/<delivery-slice>.md`, run validators, and offer the separate Delivery Planning workflow without starting it. Its Snapshot ID immutably identifies that revision; refresh the same file for later revisions and let version control preserve the superseded content.
+The handoff selects Build Units, not repositories. It routes each selected unit to its Repository Build Design and applicable constraints. A partial-repository slice names omitted Build Units and their disposition. If blocked, report the exact blockers and leave the handoff absent. Otherwise create one compact versioned current `build/workflow/handoffs/<delivery-slice>.md`, run validators, and offer [workpack planning](workpack-planning.md) without starting it. Its Snapshot ID immutably identifies that revision; refresh the same file for later revisions and let version control preserve the superseded content.
 
 ## Writing Contract
 
-The `system-model/` is agent-first: exact frontmatter relationships plus bounded Markdown sections. Use one record per independently retrievable concern, stable typed IDs, explicit exclusions, and canonical links. Do not make it a long-form book or a YAML-only database.
+Write canonical system records first; reader surfaces follow from them. The `system-model/` is agent-first: exact frontmatter relationships plus bounded Markdown sections. Use one record per independently retrievable concern, stable typed IDs, explicit exclusions, and canonical links. Do not make it a long-form book or a YAML-only database.
 
 The System Guide is the reader-facing explanation, written by [guide-writing.md](guide-writing.md). It restates the system model in connected prose and owns none of its facts.
 
@@ -241,4 +246,4 @@ After Stage 7, summarize:
 
 When the user asks whether the product or project is finished, report a compact completion matrix instead of one broad label: Software Design, Build Design, selected implementation slices, required target outcome by runtime profile, deployment, activation/operation, and production readiness. State `Not assessed` or `Not required for this target` where appropriate.
 
-When ready, offer the separate Delivery Planning workflow. Never start it automatically.
+When ready, offer [workpack planning](workpack-planning.md). Never start it automatically.

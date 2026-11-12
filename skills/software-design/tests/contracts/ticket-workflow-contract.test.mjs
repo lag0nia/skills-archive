@@ -23,8 +23,9 @@ test("ticket validation guidance resolves the validator from the active skill di
 test("all local instruction and reference links resolve", () => {
   const markdownFiles = [
     path.join(skillRoot, "SKILL.md"),
-    ...fs.readdirSync(path.join(skillRoot, "references"))
-      .filter((name) => name.endsWith(".md"))
+    ...fs.readdirSync(path.join(skillRoot, "references"), { recursive: true })
+      // Starter templates hold consumer-package links, not instruction links.
+      .filter((name) => name.endsWith(".md") && !name.split(path.sep).includes("templates"))
       .map((name) => path.join(skillRoot, "references", name)),
   ];
   const brokenLinks = [];

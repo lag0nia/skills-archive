@@ -134,13 +134,17 @@ export function formatReadinessReconciliationReport(report) {
   return lines.join("\n");
 }
 
+export function readinessReconciliationBlocker(report) {
+  if (!report.mismatchCount && !report.blockingTicketCount) return null;
+  return "Selected build units are not ready: " + report.mismatchCount + " reconciliation mismatch(es), " + report.blockingTicketCount + " mapped todo/deferred blocker(s).";
+}
+
 function main() {
   const args = parseArgs(process.argv);
   const report = buildReadinessReconciliationReport(args.root, args.units);
   console.log(args.json ? JSON.stringify(report, null, 2) : formatReadinessReconciliationReport(report));
-  if (args.assertReady && (report.mismatchCount || report.blockingTicketCount)) {
-    throw new Error("Selected build units are not ready: " + report.mismatchCount + " reconciliation mismatch(es), " + report.blockingTicketCount + " mapped todo/deferred blocker(s).");
-  }
+  const blocker = args.assertReady ? readinessReconciliationBlocker(report) : null;
+  if (blocker) throw new Error(blocker);
 }
 
 if (isEntryPoint(import.meta.url)) {
